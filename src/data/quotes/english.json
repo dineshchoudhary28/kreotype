@@ -1,0 +1,114 @@
+[
+  {
+    "text": "The only way to do great work is to love what you do.",
+    "source": "Steve Jobs",
+    "id": 1,
+    "length": 52,
+    "group": "short"
+  },
+  {
+    "text": "In the middle of difficulty lies opportunity.",
+    "source": "Albert Einstein",
+    "id": 2,
+    "length": 45,
+    "group": "short"
+  },
+  {
+    "text": "It is not the strongest of the species that survives, nor the most intelligent, but the one most responsive to change.",
+    "source": "Charles Darwin",
+    "id": 3,
+    "length": 119,
+    "group": "medium"
+  },
+  {
+    "text": "The greatest glory in living lies not in never falling, but in rising every time we fall.",
+    "source": "Nelson Mandela",
+    "id": 4,
+    "length": 88,
+    "group": "medium"
+  },
+  {
+    "text": "Life is what happens when you're busy making other plans.",
+    "source": "John Lennon",
+    "id": 5,
+    "length": 56,
+    "group": "short"
+  },
+  {
+    "text": "The future belongs to those who believe in the beauty of their dreams.",
+    "source": "Eleanor Roosevelt",
+    "id": 6,
+    "length": 69,
+    "group": "medium"
+  },
+  {
+    "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    "source": "Winston Churchill",
+    "id": 7,
+    "length": 86,
+    "group": "medium"
+  },
+  {
+    "text": "You must be the change you wish to see in the world.",
+    "source": "Mahatma Gandhi",
+    "id": 8,
+    "length": 52,
+    "group": "short"
+  },
+  {
+    "text": "The purpose of our lives is to be happy. That is the one truth we can all agree upon. Happiness is not something ready made. It comes from your own actions. If you want others to be happy, practice compassion. If you want to be happy, practice compassion.",
+    "source": "Dalai Lama",
+    "id": 9,
+    "length": 256,
+    "group": "long"
+  },
+  {
+    "text": "In three words I can sum up everything I've learned about life: it goes on.",
+    "source": "Robert Frost",
+    "id": 10,
+    "length": 75,
+    "group": "medium"
+  },
+  {
+    "text": "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.",
+    "source": "Ralph Waldo Emerson",
+    "id": 11,
+    "length": 109,
+    "group": "medium"
+  },
+  {
+    "text": "The only impossible journey is the one you never begin.",
+    "source": "Tony Robbins",
+    "id": 12,
+    "length": 55,
+    "group": "short"
+  },
+  {
+    "text": "Do not go where the path may lead, go instead where there is no path and leave a trail. The best way to predict the future is to create it. Everything you can imagine is real. What we think, we become.",
+    "source": "Various",
+    "id": 13,
+    "length": 201,
+    "group": "long"
+  },
+  {
+    "text": "It does not matter how slowly you go as long as you do not stop.",
+    "source": "Confucius",
+    "id": 14,
+    "length": 63,
+    "group": "short"
+  },
+  {
+    "text": "The mind is everything. What you think you become. Thousands of candles can be lighted from a single candle, and the life of the candle will not be shortened. Happiness never decreases by being shared.",
+    "source": "Buddha",
+    "id": 15,
+    "length": 200,
+    "group": "long"
+  },
+  {
+    "text": "We are what we repeatedly do. Excellence, then, is not an act, but a habit. It is during our darkest moments that we must focus to see the light. The only true wisdom is in knowing you know nothing.",
+    "source": "Various Philosophers",
+    "id": 16,
+    "length": 197,
+    "group": "long"
+  }
+]
