@@ -3,9 +3,11 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTypingStore } from "@/store/useTypingStore";
+import { useInputHistoryStore } from "@/store/useInputHistoryStore";
 import { useConfigStore } from "@/store/useConfigStore";
 import { useTestLifecycle } from "@/hooks/useTestLifecycle";
 import { useTypingInput } from "@/hooks/useTypingInput";
+import { useTypingSound } from "@/hooks/useTypingSound";
 import { useFocusManager } from "@/hooks/useFocusManager";
 import { WordsDisplay } from "./WordsDisplay";
 import { HiddenInput } from "./HiddenInput";
@@ -15,10 +17,12 @@ import { LiveStat } from "@/components/ui/LiveStat";
 import { TimerProgress } from "@/components/ui/TimerProgress";
 import { OutOfFocusWarning } from "@/components/ui/OutOfFocusWarning";
 import { CommandPalette } from "@/components/ui/CommandPalette";
+import { CapsWarning } from "@/components/ui/CapsWarning";
 
 export function TypingTestPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const isFinished = useTypingStore((s) => s.isFinished);
+  const testId = useTypingStore((s) => s.testId);
   const liveSpeedStyle = useConfigStore((s) => s.liveSpeedStyle);
   const liveAccStyle = useConfigStore((s) => s.liveAccStyle);
   const liveBurstStyle = useConfigStore((s) => s.liveBurstStyle);
@@ -26,10 +30,11 @@ export function TypingTestPage() {
   const [capsLock, setCapsLock] = useState(false);
 
   const mode = useConfigStore((s) => s.mode);
-  const { restartTest, finishTest, onFirstKeypress } = useTestLifecycle();
-  const { handleInput, handleKeyDown, handleKeyUp, handleCompositionStart, handleCompositionEnd } = useTypingInput(onFirstKeypress);
+  const { initTest, restartTest, finishTest, onFirstKeypress, replayRecorder } = useTestLifecycle();
+  const { handleInput, handleKeyDown, handleKeyUp, handleCompositionStart, handleCompositionEnd, capsLockRef } = useTypingInput(onFirstKeypress, finishTest, replayRecorder);
   const { showWarning, focusInput, handleFocus, handleBlur } =
     useFocusManager(inputRef);
+  useTypingSound();
 
   const doRestart = useCallback(() => {
     if (inputRef.current) {
@@ -38,6 +43,34 @@ export function TypingTestPage() {
     restartTest();
     setTimeout(() => inputRef.current?.focus(), 10);
   }, [restartTest]);
+
+  const doRepeat = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+    useTypingStore.getState().setRepeated(true);
+    initTest();
+    setTimeout(() => inputRef.current?.focus(), 10);
+  }, [initTest]);
+
+  const doPractice = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+    const missed = useInputHistoryStore.getState().missedWords;
+    const practiceWords = Object.keys(missed);
+    if (practiceWords.length === 0) {
+      doRestart();
+      return;
+    }
+    // Repeat missed words enough to fill a reasonable test
+    const repeated: string[] = [];
+    while (repeated.length < Math.max(practiceWords.length, 25)) {
+      repeated.push(...practiceWords);
+    }
+    useTypingStore.getState().initTest(repeated.slice(0, Math.max(practiceWords.length, 25)));
+    setTimeout(() => inputRef.current?.focus(), 10);
+  }, [doRestart]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -58,7 +91,8 @@ export function TypingTestPage() {
 
       if (
         (quickRestart === "tab" && e.key === "Tab") ||
-        (quickRestart === "esc" && e.key === "Escape")
+        (quickRestart === "esc" && e.key === "Escape") ||
+        (quickRestart === "enter" && e.key === "Enter")
       ) {
         e.preventDefault();
         doRestart();
@@ -97,7 +131,7 @@ export function TypingTestPage() {
 
             <div className="relative w-full">
               <OutOfFocusWarning show={showWarning} onClick={focusInput} />
-              <WordsDisplay />
+              <WordsDisplay key={testId} />
               <HiddenInput
                 ref={inputRef}
                 onInput={handleInput}
@@ -108,11 +142,7 @@ export function TypingTestPage() {
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
               />
-              {capsLock && (
-                <div className="absolute -bottom-6 left-0 right-0 text-center text-xs text-[var(--error)] font-mono">
-                  Caps Lock is on
-                </div>
-              )}
+              <CapsWarning capsLockOn={capsLock} />
             </div>
           </motion.div>
         )}
@@ -125,7 +155,7 @@ export function TypingTestPage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <TestResult onRestart={doRestart} />
+            <TestResult onRestart={doRestart} onRepeat={doRepeat} onPractice={doPractice} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,4 +1,5 @@
 import type { TestResult, TestValidation, TestMode } from "@/types/test";
+import { wasAfkAtEnd } from "./stats-calculator";
 
 const WPM_MAX = 350;
 const WPM_MAX_SHORT = 420;
@@ -7,11 +8,14 @@ const MIN_TEST_DURATION = 1;
 const TIMING_WPM_TOLERANCE = 0.15;
 const MIN_SPACING_STDDEV = 5;
 const DURATION_TOLERANCE = 0.20;
+const AFK_END_WINDOW = 5;
 
 interface ValidationContext {
   mode: TestMode;
   wordCount: number;
   timeConfig: number;
+  keypressCountHistory?: number[];
+  isRepeated?: boolean;
 }
 
 function stddev(values: number[]): number {
@@ -27,7 +31,7 @@ export function validateResult(
 ): TestValidation {
   const reasons: string[] = [];
 
-  // WPM bounds
+  // WPM bounds (matching Monkeytype: 350 general, 420 for short word tests)
   const maxWpm = context.mode === "words" && context.wordCount <= 10 ? WPM_MAX_SHORT : WPM_MAX;
   if (result.wpm > maxWpm) {
     reasons.push(`WPM ${result.wpm} exceeds maximum ${maxWpm}`);
@@ -57,9 +61,21 @@ export function validateResult(
     reasons.push(`AFK for ${result.afkDuration}s of ${result.time}s test`);
   }
 
+  // AFK at end check (last 5 seconds all idle - from Monkeytype finish() validation)
+  if (context.keypressCountHistory && context.keypressCountHistory.length >= AFK_END_WINDOW) {
+    if (wasAfkAtEnd(context.keypressCountHistory, AFK_END_WINDOW)) {
+      reasons.push(`AFK for last ${AFK_END_WINDOW} seconds of test`);
+    }
+  }
+
   // WPM consistency: WPM should not exceed raw
   if (result.wpm > result.rawWpm + 1) {
     reasons.push("WPM exceeds raw WPM");
+  }
+
+  // Repeated test invalidation
+  if (context.isRepeated) {
+    reasons.push("Result from repeated test - not eligible for leaderboard");
   }
 
   // --- Anti-cheat: Timing-WPM consistency ---

@@ -7,7 +7,11 @@ interface InputHistoryState {
   burstHistory: number[];
   errorHistory: number[];
   keypressCountHistory: number[];
+  afkHistory: boolean[];
   accuracy: { correct: number; incorrect: number };
+
+  // Missed words tracking (word -> count of times missed)
+  missedWords: Record<string, number>;
 
   // Keypress timing tracking
   keypressTimestamps: number[];
@@ -37,6 +41,8 @@ interface InputHistoryState {
   incrementKeypressCount: () => void;
   incrementErrorCount: () => void;
   resetCurrentSecond: () => void;
+  trackMissedWord: (word: string) => void;
+  pushAfkToHistory: (isAfk: boolean) => void;
   getKeypressTimings: (testEndTime: number) => KeypressTimings;
   reset: () => void;
 }
@@ -47,7 +53,9 @@ const initialState = {
   burstHistory: [] as number[],
   errorHistory: [] as number[],
   keypressCountHistory: [] as number[],
+  afkHistory: [] as boolean[],
   accuracy: { correct: 0, incorrect: 0 },
+  missedWords: {} as Record<string, number>,
   keypressTimestamps: [] as number[],
   keydownTimestamps: new Map<string, number>(),
   keypressSpacings: [] as number[],
@@ -68,11 +76,14 @@ export const useInputHistoryStore = create<InputHistoryState>((set, get) => ({
 
   pushSecondStats: (wpm, raw, errors, keypresses) => {
     const s = get();
+    // Determine AFK: no keypresses this second
+    const isAfk = keypresses === 0;
     set({
       wpmHistory: [...s.wpmHistory, wpm],
       rawHistory: [...s.rawHistory, raw],
       errorHistory: [...s.errorHistory, errors],
       keypressCountHistory: [...s.keypressCountHistory, keypresses],
+      afkHistory: [...s.afkHistory, isAfk],
       currentKeypressCount: 0,
       currentErrorCount: 0,
     });
@@ -149,6 +160,17 @@ export const useInputHistoryStore = create<InputHistoryState>((set, get) => ({
   resetCurrentSecond: () =>
     set({ currentKeypressCount: 0, currentErrorCount: 0 }),
 
+  trackMissedWord: (word) =>
+    set((s) => ({
+      missedWords: {
+        ...s.missedWords,
+        [word]: (s.missedWords[word] ?? 0) + 1,
+      },
+    })),
+
+  pushAfkToHistory: (isAfk) =>
+    set((s) => ({ afkHistory: [...s.afkHistory, isAfk] })),
+
   getKeypressTimings: (testEndTime: number): KeypressTimings => {
     const s = get();
     const keyOverlap = s.totalKeydowns > 0
@@ -167,5 +189,5 @@ export const useInputHistoryStore = create<InputHistoryState>((set, get) => ({
     };
   },
 
-  reset: () => set({ ...initialState, keydownTimestamps: new Map() }),
+  reset: () => set({ ...initialState, keydownTimestamps: new Map(), missedWords: {} }),
 }));

@@ -13,6 +13,18 @@ export interface IAccount {
   providerAccountId: string;
 }
 
+export interface ITag {
+  _id: Types.ObjectId;
+  name: string;
+  color: string;
+}
+
+export interface IPreset {
+  _id: Types.ObjectId;
+  name: string;
+  config: Record<string, unknown>;
+}
+
 export interface IEarnedBadge {
   badgeId: string;
   earnedAt: Date;
@@ -105,8 +117,7 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-userSchema.index({ username: 1 });
-userSchema.index({ email: 1 });
+// Indexes are already created by `unique: true` on the schema fields
 
 export const User =
   (mongoose.models.User as mongoose.Model<IUser>) ||

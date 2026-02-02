@@ -2,7 +2,6 @@
 
 import { useConfigStore } from "@/store/useConfigStore";
 import { useTypingStore } from "@/store/useTypingStore";
-import { cn } from "@/lib/utils"; // Assuming cn utility exists, if not I will use template literals
 
 const TIME_OPTIONS = [15, 30, 60, 120];
 const WORD_OPTIONS = [10, 25, 50, 100];

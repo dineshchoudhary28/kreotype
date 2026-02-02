@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Keyboard, Crown, ShoppingBag, Settings, Bell, User } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { Keyboard, Crown, ShoppingBag, Settings, Bell, User, LogOut } from "lucide-react";
 import { ThemeSelector } from "@/components/ThemeSelector";
 
 const navLinks = [
@@ -14,6 +15,7 @@ const navLinks = [
 
 export function Header() {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
     <header className="flex items-center justify-between w-full max-w-7xl mx-auto px-6 py-6 font-mono relative">
@@ -31,7 +33,7 @@ export function Header() {
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           const Icon = link.icon;
-          
+
           if (link.external) {
             return (
                <a
@@ -70,21 +72,39 @@ export function Header() {
         <ThemeSelector />
 
         {/* Notifications */}
-        <button 
+        <button
           className="text-secondary hover:text-text transition-colors p-2 rounded hover:bg-surface w-8 h-8 flex items-center justify-center"
           title="Notifications"
         >
           <Bell size={16} />
         </button>
 
-        {/* User Profile */}
-        <Link 
-          href="/login"
-          className="text-secondary hover:text-text transition-colors p-2 rounded hover:bg-surface w-8 h-8 flex items-center justify-center"
-          title="Profile"
-        >
-          <User size={16} />
-        </Link>
+        {session?.user ? (
+          <>
+            <Link
+              href="/account"
+              className="text-secondary hover:text-text transition-colors px-2 py-1 rounded hover:bg-surface text-sm"
+              title="Account"
+            >
+              {session.user.name || session.user.email}
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="text-secondary hover:text-text transition-colors p-2 rounded hover:bg-surface w-8 h-8 flex items-center justify-center"
+              title="Sign out"
+            >
+              <LogOut size={16} />
+            </button>
+          </>
+        ) : (
+          <Link
+            href="/login"
+            className="text-secondary hover:text-text transition-colors p-2 rounded hover:bg-surface w-8 h-8 flex items-center justify-center"
+            title="Sign in"
+          >
+            <User size={16} />
+          </Link>
+        )}
       </div>
     </header>
   );

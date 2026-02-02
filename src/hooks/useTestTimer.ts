@@ -8,11 +8,17 @@ import { countChars } from "@/core/char-counter";
 import { calculateWpmAndRaw } from "@/core/stats-calculator";
 import { createTestTimer, type TestTimer } from "@/core/timer";
 
+const SLOW_TIMER_DRIFT_WARN = 125;
+const SLOW_TIMER_DRIFT_FAIL = 500;
+const SLOW_TIMER_MAX_CONSECUTIVE = 5;
+
 export function useTestTimer(onFinish: () => void) {
   const timerRef = useRef<TestTimer | null>(null);
+  const slowTimerCountRef = useRef(0);
 
   const start = useCallback(() => {
     if (timerRef.current) return;
+    slowTimerCountRef.current = 0;
 
     const { mode, time: maxTime } = useConfigStore.getState();
     const maxSeconds = mode === "time" ? maxTime : undefined;
@@ -31,7 +37,9 @@ export function useTestTimer(onFinish: () => void) {
           elapsed
         );
 
-        history.pushSecondStats(wpm, raw, history.currentErrorCount, history.currentKeypressCount);
+        // Push per-second stats including AFK detection
+        const keypresses = history.currentKeypressCount;
+        history.pushSecondStats(wpm, raw, history.currentErrorCount, keypresses);
       },
       () => {
         onFinish();
@@ -45,6 +53,7 @@ export function useTestTimer(onFinish: () => void) {
   const stop = useCallback(() => {
     timerRef.current?.stop();
     timerRef.current = null;
+    slowTimerCountRef.current = 0;
   }, []);
 
   const getElapsedMs = useCallback(() => {

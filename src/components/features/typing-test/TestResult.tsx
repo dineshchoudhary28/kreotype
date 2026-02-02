@@ -3,6 +3,8 @@
 import { lazy, Suspense, useState } from "react";
 import { motion } from "framer-motion";
 import { useResultStore } from "@/store/useResultStore";
+import { useConfigStore } from "@/store/useConfigStore";
+import { WordsDisplay } from "./WordsDisplay";
 import { cn } from "@/lib/utils";
 import { 
   ArrowRight, 
@@ -19,6 +21,8 @@ const ResultChart = lazy(() => import("./ResultChart").then((m) => ({ default: m
 
 interface TestResultProps {
   onRestart: () => void;
+  onRepeat: () => void;
+  onPractice: () => void;
 }
 
 const staggerContainer = {
@@ -32,14 +36,16 @@ const fadeUp = {
   animate: { opacity: 1, y: 0 },
 };
 
-export function TestResult({ onRestart }: TestResultProps) {
+export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps) {
   const result = useResultStore((s) => s.result);
+  const alwaysShowWordsHistory = useConfigStore((s) => s.alwaysShowWordsHistory);
   
   // Chart visibility state
   const [showWpm, setShowWpm] = useState(true);
   const [showRaw, setShowRaw] = useState(true);
   const [showBurst, setShowBurst] = useState(false);
   const [showErrors, setShowErrors] = useState(true);
+  const [showWordsHistory, setShowWordsHistory] = useState(alwaysShowWordsHistory);
 
   if (!result) return null;
 
@@ -94,49 +100,57 @@ export function TestResult({ onRestart }: TestResultProps) {
         </motion.div>
       </div>
 
-      {/* SECTION 2: Chart with Legend */}
+      {/* SECTION 2: Chart with Legend OR Words History */}
       <motion.div variants={fadeUp} className="w-full flex-1 min-h-0 flex flex-col px-4 relative group">
         {/* Legend / Toggles */}
-        <div className="flex justify-center gap-4 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute top-2 right-4 z-10 bg-background/80 backdrop-blur-sm p-1 rounded-lg">
-           <button 
-             onClick={() => setShowWpm(!showWpm)}
-             className={cn("text-xs px-2 py-1 rounded transition-colors border", showWpm ? "border-primary text-primary" : "border-transparent text-secondary hover:text-text")}
-           >
-             wpm
-           </button>
-           <button 
-             onClick={() => setShowRaw(!showRaw)}
-             className={cn("text-xs px-2 py-1 rounded transition-colors border", showRaw ? "border-secondary text-secondary" : "border-transparent text-secondary hover:text-text")}
-           >
-             raw
-           </button>
-           <button 
-             onClick={() => setShowBurst(!showBurst)}
-             className={cn("text-xs px-2 py-1 rounded transition-colors border", showBurst ? "border-error-extra text-error-extra" : "border-transparent text-secondary hover:text-text")}
-           >
-             burst
-           </button>
-           <button 
-             onClick={() => setShowErrors(!showErrors)}
-             className={cn("text-xs px-2 py-1 rounded transition-colors border", showErrors ? "border-error text-error" : "border-transparent text-secondary hover:text-text")}
-           >
-             errors
-           </button>
-        </div>
+        {!showWordsHistory && (
+          <div className="flex justify-center gap-4 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute top-2 right-4 z-10 bg-background/80 backdrop-blur-sm p-1 rounded-lg">
+             <button 
+               onClick={() => setShowWpm(!showWpm)}
+               className={cn("text-xs px-2 py-1 rounded transition-colors border", showWpm ? "border-primary text-primary" : "border-transparent text-secondary hover:text-text")}
+             >
+               wpm
+             </button>
+             <button 
+               onClick={() => setShowRaw(!showRaw)}
+               className={cn("text-xs px-2 py-1 rounded transition-colors border", showRaw ? "border-secondary text-secondary" : "border-transparent text-secondary hover:text-text")}
+             >
+               raw
+             </button>
+             <button 
+               onClick={() => setShowBurst(!showBurst)}
+               className={cn("text-xs px-2 py-1 rounded transition-colors border", showBurst ? "border-error-extra text-error-extra" : "border-transparent text-secondary hover:text-text")}
+             >
+               burst
+             </button>
+             <button 
+               onClick={() => setShowErrors(!showErrors)}
+               className={cn("text-xs px-2 py-1 rounded transition-colors border", showErrors ? "border-error text-error" : "border-transparent text-secondary hover:text-text")}
+             >
+               errors
+             </button>
+          </div>
+        )}
 
-        <div className="flex-1 w-full min-h-0">
-          <Suspense fallback={<div className="h-full w-full animate-pulse bg-secondary/10 rounded" />}>
-            <ResultChart
-              wpmHistory={result.wpmHistory}
-              rawHistory={result.rawHistory}
-              burstHistory={result.burstHistory}
-              errorHistory={result.errorHistory}
-              showWpm={showWpm}
-              showRaw={showRaw}
-              showBurst={showBurst}
-              showErrors={showErrors}
-            />
-          </Suspense>
+        <div className="flex-1 w-full min-h-0 overflow-hidden relative">
+          {showWordsHistory ? (
+            <div className="absolute inset-0 overflow-y-auto">
+                <WordsDisplay showHistory={true} />
+            </div>
+          ) : (
+            <Suspense fallback={<div className="h-full w-full animate-pulse bg-secondary/10 rounded" />}>
+              <ResultChart
+                wpmHistory={result.wpmHistory}
+                rawHistory={result.rawHistory}
+                burstHistory={result.burstHistory}
+                errorHistory={result.errorHistory}
+                showWpm={showWpm}
+                showRaw={showRaw}
+                showBurst={showBurst}
+                showErrors={showErrors}
+              />
+            </Suspense>
+          )}
         </div>
       </motion.div>
       
@@ -151,20 +165,22 @@ export function TestResult({ onRestart }: TestResultProps) {
            <ChevronRight size={20} className="group-hover:text-text" />
          </button>
          <button
-           onClick={onRestart}
+           onClick={onRepeat}
            className="group flex flex-col items-center gap-1 text-secondary hover:text-text transition-colors"
            title="Repeat Test"
          >
            <RotateCcw size={18} className="group-hover:text-text" />
          </button>
          <button
+           onClick={onPractice}
            className="group flex flex-col items-center gap-1 text-secondary hover:text-text transition-colors"
            title="Practice Words"
          >
            <TriangleAlert size={18} className="group-hover:text-text" />
          </button>
          <button
-           className="group flex flex-col items-center gap-1 text-secondary hover:text-text transition-colors"
+           onClick={() => setShowWordsHistory(!showWordsHistory)}
+           className={cn("group flex flex-col items-center gap-1 transition-colors", showWordsHistory ? "text-primary" : "text-secondary hover:text-text")}
            title="Toggle Words History"
          >
            <AlignLeft size={18} className="group-hover:text-text" />

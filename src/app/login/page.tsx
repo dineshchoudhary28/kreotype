@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [registerUsername, setRegisterUsername] = useState("");
@@ -11,15 +14,80 @@ export default function LoginPage() {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerVerifyPassword, setRegisterVerifyPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
+  const [loginError, setLoginError] = useState("");
+  const [registerError, setRegisterError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: implement login
+    setLoginError("");
+    setLoading(true);
+    try {
+      const res = await signIn("credentials", {
+        email: loginEmail,
+        password: loginPassword,
+        redirect: false,
+      });
+      if (res?.error) {
+        setLoginError("Invalid email or password");
+      } else {
+        router.push("/account");
+      }
+    } catch {
+      setLoginError("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRegister = (e: FormEvent) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: implement registration
+    setRegisterError("");
+
+    if (registerEmail !== registerVerifyEmail) {
+      setRegisterError("Emails do not match");
+      return;
+    }
+    if (registerPassword !== registerVerifyPassword) {
+      setRegisterError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: registerUsername,
+          email: registerEmail,
+          password: registerPassword,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setRegisterError(data.error || "Registration failed");
+        return;
+      }
+
+      // Auto-login after successful registration
+      const loginRes = await signIn("credentials", {
+        email: registerEmail,
+        password: registerPassword,
+        redirect: false,
+      });
+
+      if (loginRes?.error) {
+        setRegisterError("Registered but failed to sign in. Please log in manually.");
+      } else {
+        router.push("/account");
+      }
+    } catch {
+      setRegisterError("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,6 +95,9 @@ export default function LoginPage() {
       {/* Register */}
       <div className="flex-1">
         <h2 className="text-lg text-primary mb-4">register</h2>
+        {registerError && (
+          <p className="text-error text-xs mb-3">{registerError}</p>
+        )}
         <form onSubmit={handleRegister} className="flex flex-col gap-3">
           <input
             type="text"
@@ -35,6 +106,7 @@ export default function LoginPage() {
             onChange={(e) => setRegisterUsername(e.target.value)}
             className="w-full px-4 py-2.5 bg-background border border-secondary rounded text-text outline-none focus:border-primary transition-colors placeholder:text-secondary text-sm"
             autoComplete="new-username"
+            required
           />
           <input
             type="email"
@@ -43,6 +115,7 @@ export default function LoginPage() {
             onChange={(e) => setRegisterEmail(e.target.value)}
             className="w-full px-4 py-2.5 bg-background border border-secondary rounded text-text outline-none focus:border-primary transition-colors placeholder:text-secondary text-sm"
             autoComplete="new-email"
+            required
           />
           <input
             type="email"
@@ -51,6 +124,7 @@ export default function LoginPage() {
             onChange={(e) => setRegisterVerifyEmail(e.target.value)}
             className="w-full px-4 py-2.5 bg-background border border-secondary rounded text-text outline-none focus:border-primary transition-colors placeholder:text-secondary text-sm"
             autoComplete="verify-email"
+            required
           />
           <input
             type="password"
@@ -59,6 +133,7 @@ export default function LoginPage() {
             onChange={(e) => setRegisterPassword(e.target.value)}
             className="w-full px-4 py-2.5 bg-background border border-secondary rounded text-text outline-none focus:border-primary transition-colors placeholder:text-secondary text-sm"
             autoComplete="new-password"
+            required
           />
           <input
             type="password"
@@ -67,12 +142,14 @@ export default function LoginPage() {
             onChange={(e) => setRegisterVerifyPassword(e.target.value)}
             className="w-full px-4 py-2.5 bg-background border border-secondary rounded text-text outline-none focus:border-primary transition-colors placeholder:text-secondary text-sm"
             autoComplete="verify-password"
+            required
           />
           <button
             type="submit"
-            className="px-4 py-2.5 rounded bg-primary text-background text-sm hover:opacity-90 transition-opacity"
+            disabled={loading}
+            className="px-4 py-2.5 rounded bg-primary text-background text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            sign up
+            {loading ? "..." : "sign up"}
           </button>
         </form>
       </div>
@@ -81,10 +158,18 @@ export default function LoginPage() {
       <div className="flex-1">
         <h2 className="text-lg text-primary mb-4">login</h2>
         <div className="flex gap-3 mb-4">
-          <button className="flex-1 px-4 py-2.5 rounded border border-secondary text-secondary hover:text-text hover:border-[var(--text)] transition-colors text-sm">
+          <button
+            onClick={() => signIn("google", { callbackUrl: "/account" })}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 rounded border border-secondary text-secondary hover:text-text hover:border-[var(--text)] transition-colors text-sm disabled:opacity-50"
+          >
             Google
           </button>
-          <button className="flex-1 px-4 py-2.5 rounded border border-secondary text-secondary hover:text-text hover:border-[var(--text)] transition-colors text-sm">
+          <button
+            onClick={() => signIn("github", { callbackUrl: "/account" })}
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 rounded border border-secondary text-secondary hover:text-text hover:border-[var(--text)] transition-colors text-sm disabled:opacity-50"
+          >
             GitHub
           </button>
         </div>
@@ -93,6 +178,9 @@ export default function LoginPage() {
           <span className="text-xs text-secondary">or</span>
           <div className="flex-1 h-px bg-secondary opacity-30" />
         </div>
+        {loginError && (
+          <p className="text-error text-xs mb-3">{loginError}</p>
+        )}
         <form onSubmit={handleLogin} className="flex flex-col gap-3">
           <input
             type="email"
@@ -101,6 +189,7 @@ export default function LoginPage() {
             onChange={(e) => setLoginEmail(e.target.value)}
             className="w-full px-4 py-2.5 bg-background border border-secondary rounded text-text outline-none focus:border-primary transition-colors placeholder:text-secondary text-sm"
             autoComplete="current-email"
+            required
           />
           <input
             type="password"
@@ -109,6 +198,7 @@ export default function LoginPage() {
             onChange={(e) => setLoginPassword(e.target.value)}
             className="w-full px-4 py-2.5 bg-background border border-secondary rounded text-text outline-none focus:border-primary transition-colors placeholder:text-secondary text-sm"
             autoComplete="current-password"
+            required
           />
           <label className="flex items-center gap-2 text-xs text-secondary cursor-pointer">
             <input
@@ -121,9 +211,10 @@ export default function LoginPage() {
           </label>
           <button
             type="submit"
-            className="px-4 py-2.5 rounded bg-primary text-background text-sm hover:opacity-90 transition-opacity"
+            disabled={loading}
+            className="px-4 py-2.5 rounded bg-primary text-background text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            sign in
+            {loading ? "..." : "sign in"}
           </button>
         </form>
         <button className="mt-3 text-xs text-secondary hover:text-text transition-colors">

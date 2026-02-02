@@ -1,137 +1,199 @@
 "use client";
 
 import { useConfigStore } from "@/store/useConfigStore";
-import type { Config } from "@/types/config";
-
-const SETTING_GROUPS = [
-  {
-    id: "behavior",
-    title: "behavior",
-    settings: [
-      { key: "difficulty", label: "difficulty", type: "select", options: ["normal", "expert", "master"] },
-      { key: "language", label: "language", type: "select", options: ["english"] },
-    ],
-  },
-  {
-    id: "input",
-    title: "input",
-    settings: [
-      { key: "stopOnError", label: "stop on error", type: "select", options: ["off", "letter", "word"] },
-    ],
-  },
-  {
-    id: "caret",
-    title: "caret",
-    settings: [
-      { key: "caretStyle", label: "caret style", type: "select", options: ["line", "block", "underline", "off"] },
-    ],
-  },
-  {
-    id: "appearance",
-    title: "appearance",
-    settings: [
-      { key: "timerStyle", label: "timer/progress style", type: "select", options: ["mini", "bar", "text", "off"] },
-      { key: "liveSpeedStyle", label: "live speed display", type: "select", options: ["mini", "text", "off"] },
-      { key: "liveAccStyle", label: "live accuracy display", type: "select", options: ["mini", "text", "off"] },
-      { key: "liveBurstStyle", label: "live burst display", type: "select", options: ["mini", "text", "off"] },
-      { key: "highlightMode", label: "highlight mode", type: "select", options: ["letter", "word", "off"] },
-      { key: "fontSize", label: "font size", type: "number" },
-    ],
-  },
-] as const;
+import { useThemeStore } from "@/store/themeStore";
+import { themes } from "@/data/themes";
+import { settingGroups } from "@/core/settings-metadata";
+import { SettingSection } from "@/components/features/settings/SettingSection";
+import { SettingsQuickNav } from "@/components/features/settings/SettingsQuickNav";
+import { useState } from "react";
 
 export default function SettingsPage() {
-  const config = useConfigStore();
+  const resetConfig = useConfigStore((s) => s.resetConfig);
+  const colorfulMode = useConfigStore((s) => s.colorfulMode);
+  const setConfig = useConfigStore((s) => s.setConfig);
+
+  // Groups that are rendered via SettingSection (generic)
+  const genericGroups = settingGroups.filter(
+    (g) => g.id !== "theme" && g.id !== "dangerZone"
+  );
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col gap-6 px-4 py-8 font-mono">
-      {/* Quick nav */}
-      <div className="flex flex-wrap gap-2 text-xs">
-        {SETTING_GROUPS.map((group) => (
-          <a
-            key={group.id}
-            href={`#group_${group.id}`}
-            className="text-secondary hover:text-text transition-colors"
-          >
-            {group.title}
-          </a>
-        ))}
-      </div>
-
-      <p className="text-xs text-secondary">
-        tip: You can also change all these settings quickly using the command
-        line (
-        <kbd className="px-1 py-0.5 rounded bg-secondary bg-opacity-10">ctrl/cmd</kbd>
-        +
-        <kbd className="px-1 py-0.5 rounded bg-secondary bg-opacity-10">shift</kbd>
-        +
-        <kbd className="px-1 py-0.5 rounded bg-secondary bg-opacity-10">p</kbd>
-        {" "}or{" "}
-        <kbd className="px-1 py-0.5 rounded bg-secondary bg-opacity-10">esc</kbd>
-        )
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 font-mono">
+      <h1 className="text-xl text-text mb-2">settings</h1>
+      <p className="text-xs text-secondary mb-6">
+        Changes are saved automatically.
       </p>
 
-      {SETTING_GROUPS.map((group) => (
-        <section key={group.id} id={`group_${group.id}`} className="flex flex-col gap-4">
-          <h2 className="text-base text-primary border-b border-secondary border-opacity-20 pb-2">
-            {group.title}
-          </h2>
-          {group.settings.map((setting) => (
-            <div key={setting.key} className="flex items-center justify-between gap-4">
-              <label className="text-sm text-text">{setting.label}</label>
-              {setting.type === "select" && (
-                <div className="flex gap-1">
-                  {setting.options.map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => config.setConfig(setting.key as keyof Config, opt as never)}
-                      className={`px-3 py-1 rounded text-xs transition-all duration-150 hover:scale-105 active:scale-95 ${
-                        config[setting.key as keyof Config] === opt
-                          ? "bg-primary text-background"
-                          : "text-secondary hover:text-text"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {setting.type === "number" && (
-                <input
-                  type="number"
-                  value={config[setting.key as keyof Config] as number}
-                  onChange={(e) =>
-                    config.setConfig(setting.key as keyof Config, parseFloat(e.target.value) as never)
-                  }
-                  step={0.25}
-                  min={0.75}
-                  max={3}
-                  className="w-20 px-2 py-1 bg-background border border-secondary rounded text-text text-xs outline-none focus:border-primary transition-colors"
-                />
-              )}
-            </div>
-          ))}
-        </section>
+      <SettingsQuickNav />
+
+      {/* Generic sections: behavior, input, sound, caret, appearance, hideElements */}
+      {genericGroups.map((group) => (
+        <SettingSection key={group.id} group={group} />
       ))}
 
+      {/* Theme section */}
+      <ThemeSection colorfulMode={colorfulMode} setColorful={(v) => setConfig("colorfulMode", v)} />
+
       {/* Danger Zone */}
-      <section id="group_dangerZone" className="flex flex-col gap-4">
-        <h2 className="text-base text-[var(--error)] border-b border-[var(--error)] border-opacity-20 pb-2">
-          danger zone
-        </h2>
-        <div className="flex items-center justify-between gap-4">
+      <DangerZoneSection onReset={resetConfig} />
+    </div>
+  );
+}
+
+// ── Theme Section ──
+
+function ThemeSection({
+  colorfulMode,
+  setColorful,
+}: {
+  colorfulMode: boolean;
+  setColorful: (v: boolean) => void;
+}) {
+  const currentTheme = useThemeStore((s) => s.currentTheme.name);
+  const setTheme = useThemeStore((s) => s.setTheme);
+
+  return (
+    <section id="settings-theme" className="scroll-mt-20 mt-4">
+      <h2 className="text-sm font-medium text-text py-3">theme</h2>
+      <p className="text-xs text-secondary mb-4">
+        Theme selection and color options
+      </p>
+
+      {/* Colorful mode toggle */}
+      <div className="flex items-center justify-between py-3 border-b border-secondary/10">
+        <div>
+          <h4 className="text-sm text-text">colorful mode</h4>
+          <p className="text-xs text-secondary mt-0.5">
+            Use multiple colors for the test text based on correctness.
+          </p>
+        </div>
+        <button
+          onClick={() => setColorful(!colorfulMode)}
+          className={`relative w-10 h-5 rounded-full transition-colors ${
+            colorfulMode ? "bg-primary" : "bg-secondary/30"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-background transition-transform ${
+              colorfulMode ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Theme grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-4">
+        {themes.map((theme) => {
+          const isActive = currentTheme === theme.name;
+          return (
+            <button
+              key={theme.name}
+              onClick={() => setTheme(theme.name)}
+              className={`flex flex-col gap-1 p-3 rounded border transition-colors ${
+                isActive
+                  ? "border-primary"
+                  : "border-secondary/10 hover:border-secondary/30"
+              }`}
+              style={{ backgroundColor: theme.colors.background }}
+            >
+              <span
+                className="text-xs font-medium"
+                style={{ color: theme.colors.text }}
+              >
+                {theme.label}
+              </span>
+              <div className="flex gap-1">
+                {(
+                  ["primary", "secondary", "accent", "error"] as const
+                ).map((c) => (
+                  <span
+                    key={c}
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: theme.colors[c] }}
+                  />
+                ))}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ── Danger Zone ──
+
+function DangerZoneSection({ onReset }: { onReset: () => void }) {
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const handleReset = () => {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      return;
+    }
+    onReset();
+    setConfirmReset(false);
+  };
+
+  return (
+    <section id="settings-dangerZone" className="scroll-mt-20 mt-8">
+      <h2 className="text-sm font-medium text-[var(--error)] py-3">
+        danger zone
+      </h2>
+
+      <div className="flex flex-col gap-4">
+        {/* Reset settings */}
+        <div className="flex items-start justify-between gap-4 py-4 border-b border-secondary/10">
           <div>
-            <div className="text-sm text-text">reset settings</div>
-            <div className="text-xs text-secondary">Reset all settings to default values.</div>
+            <h4 className="text-sm text-text">reset settings to default</h4>
+            <p className="text-xs text-secondary mt-0.5">
+              Resets all settings back to their default values. This cannot be
+              undone.
+            </p>
           </div>
           <button
-            onClick={() => config.resetConfig()}
-            className="px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background hover:opacity-90 transition-opacity"
+            onClick={handleReset}
+            className="shrink-0 px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background hover:opacity-90 transition-opacity"
           >
-            reset
+            {confirmReset ? "are you sure?" : "reset settings"}
           </button>
         </div>
-      </section>
-    </div>
+
+        {/* Clear local data */}
+        <div className="flex items-start justify-between gap-4 py-4 border-b border-secondary/10">
+          <div>
+            <h4 className="text-sm text-text">clear local data</h4>
+            <p className="text-xs text-secondary mt-0.5">
+              Clears all locally stored data including settings, personal bests,
+              and history. This cannot be undone.
+            </p>
+          </div>
+          <ClearLocalDataButton />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ClearLocalDataButton() {
+  const [confirm, setConfirm] = useState(false);
+
+  const handleClear = () => {
+    if (!confirm) {
+      setConfirm(true);
+      return;
+    }
+    localStorage.clear();
+    window.location.reload();
+  };
+
+  return (
+    <button
+      onClick={handleClear}
+      className="shrink-0 px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background hover:opacity-90 transition-opacity"
+    >
+      {confirm ? "are you sure?" : "clear local data"}
+    </button>
   );
 }

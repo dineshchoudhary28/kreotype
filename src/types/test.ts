@@ -47,6 +47,7 @@ export interface TestResult {
   charStats: CharStats;
   afkDuration: number;
   validation?: TestValidation;
+  isPb?: boolean;
 }
 
 export type TestMode = "time" | "words" | "quote" | "zen";

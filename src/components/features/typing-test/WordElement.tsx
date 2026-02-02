@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { CharState } from "@/types/test";
 import { LetterElement } from "./LetterElement";
+import { useConfigStore } from "@/store/useConfigStore";
 
 interface WordElementProps {
   word: string;
@@ -12,16 +13,27 @@ interface WordElementProps {
 }
 
 export const WordElement = memo(function WordElement({ word, input, isActive, isTyped }: WordElementProps) {
+  const blindMode = useConfigStore((s) => s.blindMode);
+  const hideExtraLetters = useConfigStore((s) => s.hideExtraLetters);
+  
   const typedInput = input ?? "";
-  const letters: { char: string; state: CharState }[] = [];
+  const letters: { char: string; state: CharState; typedChar?: string }[] = [];
 
   for (let i = 0; i < word.length; i++) {
     if (!isTyped && !isActive && typedInput.length === 0) {
       letters.push({ char: word[i], state: CharState.Untyped });
     } else if (i < typedInput.length) {
+      let state = typedInput[i] === word[i] ? CharState.Correct : CharState.Incorrect;
+      const typedChar = typedInput[i];
+
+      if (blindMode && state === CharState.Incorrect) {
+        state = CharState.Correct; // Mask error
+      }
+      
       letters.push({
         char: word[i],
-        state: typedInput[i] === word[i] ? CharState.Correct : CharState.Incorrect,
+        state,
+        typedChar: state === CharState.Incorrect ? typedChar : undefined
       });
     } else if (isTyped) {
       letters.push({ char: word[i], state: CharState.Missed });
@@ -31,13 +43,15 @@ export const WordElement = memo(function WordElement({ word, input, isActive, is
   }
 
   // Extra characters beyond target word length
-  if (typedInput.length > word.length) {
+  if (!hideExtraLetters && typedInput.length > word.length) {
     for (let i = word.length; i < typedInput.length; i++) {
-      letters.push({ char: typedInput[i], state: CharState.Extra });
+       const state = blindMode ? CharState.Correct : CharState.Extra;
+       letters.push({ char: typedInput[i], state, typedChar: typedInput[i] });
     }
   }
 
-  const errorUnderline = isTyped && typedInput !== word ? "border-b-2 border-[var(--error)]" : "";
+  const errorUnderline = !blindMode && isTyped && typedInput !== word ? "border-b-2 border-[var(--error)]" : "";
+  // In blind mode, we don't underline errors
 
   // Dim non-active words: typed words get reduced opacity, future words slightly less
   const opacityClass = isActive
@@ -49,7 +63,7 @@ export const WordElement = memo(function WordElement({ word, input, isActive, is
   return (
     <span className={`inline-block mr-[0.5em] ${errorUnderline} ${opacityClass} transition-opacity duration-200`} data-word>
       {letters.map((l, i) => (
-        <LetterElement key={i} char={l.char} state={l.state} />
+        <LetterElement key={i} char={l.char} state={l.state} typedChar={l.typedChar} />
       ))}
     </span>
   );
