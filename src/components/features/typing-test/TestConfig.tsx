@@ -32,7 +32,7 @@ export function TestConfig({ onRestart }: { onRestart: () => void }) {
   const showWordOptions = mode === "words";
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-6 font-mono select-none bg-surface/80 backdrop-blur px-6 py-2 rounded-xl shadow-lg border border-white/5 mx-auto max-w-4xl w-fit">
+    <div className="flex flex-wrap items-center justify-center gap-6 select-none bg-surface/80 backdrop-blur px-6 py-2 rounded-xl shadow-lg border border-white/5 mx-auto max-w-4xl w-fit">
       {/* Toggles - hidden for quote/zen */}
       {showToggles && (
         <div className="flex gap-1">

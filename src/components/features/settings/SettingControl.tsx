@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { Info } from "lucide-react";
 import { useConfigStore } from "@/store/useConfigStore";
 import type { SettingMeta } from "@/core/settings-metadata";
 import type { Config } from "@/types/config";
@@ -8,18 +10,36 @@ import { cn } from "@/lib/utils";
 export function SettingControl({ meta }: { meta: SettingMeta }) {
   const value = useConfigStore((s) => s[meta.key]);
   const setConfig = useConfigStore((s) => s.setConfig);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const setValue = (v: Config[typeof meta.key]) => {
     setConfig(meta.key, v);
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-b border-secondary/10 last:border-b-0 hover:bg-surface/30 px-2 rounded transition-colors">
-      <div className="flex-1 min-w-0 pr-4">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-secondary/10 last:border-b-0 hover:bg-surface/30 px-2 rounded transition-colors">
+      <div className="flex items-center gap-2 flex-1 min-w-0 pr-4">
         <h4 className="text-sm font-medium text-text">{meta.label}</h4>
-        <p className="text-xs text-secondary mt-1 leading-relaxed opacity-80">{meta.description}</p>
+        <div className="relative">
+          <button
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            onFocus={() => setShowTooltip(true)}
+            onBlur={() => setShowTooltip(false)}
+            className="text-secondary/50 hover:text-secondary transition-colors"
+            aria-label={`Info about ${meta.label}`}
+          >
+            <Info size={14} />
+          </button>
+          {showTooltip && (
+            <div className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 px-3 py-2 text-xs text-text bg-surface border border-secondary/20 rounded-lg shadow-lg pointer-events-none">
+              {meta.description}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-surface border-r border-b border-secondary/20 rotate-45 -mt-1" />
+            </div>
+          )}
+        </div>
       </div>
-      <div className="shrink-0 pt-2 sm:pt-0">{renderControl(meta, value, setValue)}</div>
+      <div className="shrink-0 pt-1 sm:pt-0">{renderControl(meta, value, setValue)}</div>
     </div>
   );
 }

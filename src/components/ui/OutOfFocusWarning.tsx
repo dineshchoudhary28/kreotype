@@ -19,7 +19,7 @@ export function OutOfFocusWarning({ show, onClick }: OutOfFocusWarningProps) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          <span className="text-secondary text-lg font-mono">
+          <span className="text-secondary text-lg">
             Click or press any key to focus
           </span>
         </motion.div>

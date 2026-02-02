@@ -5,9 +5,9 @@ const WPM_MAX = 350;
 const WPM_MAX_SHORT = 420;
 const ACCURACY_MIN = 50;
 const MIN_TEST_DURATION = 1;
-const TIMING_WPM_TOLERANCE = 0.15;
-const MIN_SPACING_STDDEV = 5;
-const DURATION_TOLERANCE = 0.20;
+const TIMING_WPM_TOLERANCE = 0.30;
+const MIN_SPACING_STDDEV = 3;
+const DURATION_TOLERANCE = 0.35;
 const AFK_END_WINDOW = 5;
 
 interface ValidationContext {
@@ -56,13 +56,13 @@ export function validateResult(
     reasons.push(`Test duration ${result.time}s below minimum ${MIN_TEST_DURATION}s`);
   }
 
-  // AFK check: if more than half the test was AFK
-  if (result.afkDuration > result.time * 0.5 && result.time > 5) {
+  // AFK check: if more than 75% of the test was AFK
+  if (result.afkDuration > result.time * 0.75 && result.time > 5) {
     reasons.push(`AFK for ${result.afkDuration}s of ${result.time}s test`);
   }
 
-  // AFK at end check (last 5 seconds all idle - from Monkeytype finish() validation)
-  if (context.keypressCountHistory && context.keypressCountHistory.length >= AFK_END_WINDOW) {
+  // AFK at end check — skip for time mode (timer naturally expires after typing stops)
+  if (context.mode !== "time" && context.keypressCountHistory && context.keypressCountHistory.length >= AFK_END_WINDOW) {
     if (wasAfkAtEnd(context.keypressCountHistory, AFK_END_WINDOW)) {
       reasons.push(`AFK for last ${AFK_END_WINDOW} seconds of test`);
     }

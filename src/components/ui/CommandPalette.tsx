@@ -113,7 +113,7 @@ export function CommandPalette({ onRestart }: { onRestart: () => void }) {
             onClick={(e) => e.stopPropagation()}
           >
             <Command
-              className="w-full max-w-md bg-background border border-secondary rounded-lg shadow-xl font-mono overflow-hidden"
+              className="w-full max-w-md bg-background border border-secondary rounded-lg shadow-xl overflow-hidden"
               label="Command palette"
               shouldFilter={true}
             >

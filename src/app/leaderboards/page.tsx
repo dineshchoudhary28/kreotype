@@ -110,7 +110,7 @@ export default function LeaderboardsPage() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto flex gap-6 px-4 py-8 font-mono">
+    <div className="w-full max-w-5xl mx-auto flex gap-6 px-4 py-8">
       {/* Main table area */}
       <div className="flex-1">
         <h2 className="text-lg text-primary mb-1">
@@ -119,7 +119,7 @@ export default function LeaderboardsPage() {
           {type === "daily" && "Daily Leaderboard"}
         </h2>
         <div className="text-xs text-secondary mb-4">
-          {type === "allTime" && `time ${timeMode}`}
+          time {timeMode}
         </div>
 
         {/* Navigation buttons */}
@@ -157,19 +157,10 @@ export default function LeaderboardsPage() {
             <tr className="text-secondary text-xs border-b border-secondary border-opacity-20">
               <td className="py-2 pr-3">#</td>
               <td className="py-2">name</td>
-              {type !== "weekly" ? (
-                <>
-                  <td className="py-2 text-right">wpm</td>
-                  <td className="py-2 text-right">accuracy</td>
-                  <td className="py-2 text-right">raw</td>
-                  <td className="py-2 text-right">consistency</td>
-                </>
-              ) : (
-                <>
-                  <td className="py-2 text-right">xp gained</td>
-                  <td className="py-2 text-right">time typed</td>
-                </>
-              )}
+              <td className="py-2 text-right">wpm</td>
+              <td className="py-2 text-right">accuracy</td>
+              <td className="py-2 text-right">raw</td>
+              <td className="py-2 text-right">consistency</td>
               <td className="py-2 text-right">date</td>
             </tr>
           </thead>
@@ -177,14 +168,14 @@ export default function LeaderboardsPage() {
             {loading ? (
               [...Array(10)].map((_, i) => (
                 <tr key={i}>
-                  <td colSpan={type !== "weekly" ? 7 : 5} className="py-3">
+                  <td colSpan={7} className="py-3">
                     <div className="h-4 rounded bg-secondary bg-opacity-10 animate-pulse" />
                   </td>
                 </tr>
               ))
             ) : entries.length === 0 ? (
               <tr className="text-secondary text-center">
-                <td colSpan={type !== "weekly" ? 7 : 5} className="py-8">
+                <td colSpan={7} className="py-8">
                   No data available.
                 </td>
               </tr>
@@ -200,19 +191,10 @@ export default function LeaderboardsPage() {
                   >
                     <td className="py-2 pr-3 text-secondary">{entry.rank}</td>
                     <td className="py-2">{entry.username}</td>
-                    {type !== "weekly" ? (
-                      <>
-                        <td className="py-2 text-right">{Math.round(entry.wpm)}</td>
-                        <td className="py-2 text-right">{Math.round(entry.accuracy)}%</td>
-                        <td className="py-2 text-right">{Math.round(entry.rawWpm)}</td>
-                        <td className="py-2 text-right">{Math.round(entry.consistency)}%</td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="py-2 text-right">-</td>
-                        <td className="py-2 text-right">-</td>
-                      </>
-                    )}
+                    <td className="py-2 text-right">{Math.round(entry.wpm)}</td>
+                    <td className="py-2 text-right">{Math.round(entry.accuracy)}%</td>
+                    <td className="py-2 text-right">{Math.round(entry.rawWpm)}</td>
+                    <td className="py-2 text-right">{Math.round(entry.consistency)}%</td>
                     <td className="py-2 text-right">{formatDate(entry.timestamp)}</td>
                   </tr>
                 );
@@ -249,26 +231,22 @@ export default function LeaderboardsPage() {
           ))}
         </div>
 
-        {type === "allTime" && (
-          <>
-            <div className="w-full h-px bg-secondary opacity-20" />
-            <div className="flex flex-col gap-1">
-              {(["15", "60"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setTimeMode(m)}
-                  className={`px-3 py-2 rounded text-xs text-left transition-all duration-150 hover:scale-105 active:scale-95 ${
-                    timeMode === m
-                      ? "bg-primary text-background"
-                      : "text-secondary hover:text-text"
-                  }`}
-                >
-                  time {m}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+        <div className="w-full h-px bg-secondary opacity-20" />
+        <div className="flex flex-col gap-1">
+          {(["15", "60"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setTimeMode(m)}
+              className={`px-3 py-2 rounded text-xs text-left transition-all duration-150 hover:scale-105 active:scale-95 ${
+                timeMode === m
+                  ? "bg-primary text-background"
+                  : "text-secondary hover:text-text"
+              }`}
+            >
+              time {m}
+            </button>
+          ))}
+        </div>
 
         {userRank !== null && (
           <>

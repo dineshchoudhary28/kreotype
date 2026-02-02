@@ -138,7 +138,7 @@ export default function FriendsPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="w-full max-w-4xl mx-auto px-4 py-8 font-mono">
+      <div className="w-full max-w-4xl mx-auto px-4 py-8">
         <div className="flex flex-col gap-6">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="h-16 rounded bg-secondary bg-opacity-10 animate-pulse" />
@@ -149,7 +149,7 @@ export default function FriendsPage() {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 px-4 py-8 font-mono">
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 px-4 py-8">
       {error && (
         <p className="text-xs text-error">{error}</p>
       )}

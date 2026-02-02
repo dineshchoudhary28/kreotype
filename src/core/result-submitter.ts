@@ -16,6 +16,11 @@ export interface SubmitResponse {
   newBadges: Array<{ id: string; name: string }>;
 }
 
+export interface SubmitError {
+  type: "unauthenticated" | "failed";
+  message: string;
+}
+
 function getMode2(mode: TestMode, config: SubmitConfig): number | string {
   if (mode === "time") return config.time;
   if (mode === "words") return config.words;
@@ -25,9 +30,9 @@ function getMode2(mode: TestMode, config: SubmitConfig): number | string {
 export async function submitResult(
   result: TestResult,
   config: SubmitConfig
-): Promise<SubmitResponse | null> {
+): Promise<{ data: SubmitResponse | null; error: SubmitError | null }> {
   // Always submit — backend stores isValid as metadata, not a gate
-  if (!result.validation) return null;
+  if (!result.validation) return { data: null, error: null };
 
   const event: CompletedEvent = {
     wpm: result.wpm,
@@ -61,14 +66,20 @@ export async function submitResult(
       body: JSON.stringify(event),
     });
 
+    if (res.status === 401) {
+      return { data: null, error: { type: "unauthenticated", message: "Log in to save results" } };
+    }
+
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       console.error("Result submission failed:", res.status, body);
-      return null;
+      return { data: null, error: { type: "failed", message: `Server error (${res.status})` } };
     }
-    return await res.json();
+
+    const data = await res.json();
+    return { data, error: null };
   } catch (err) {
     console.error("Failed to submit result:", err);
-    return null;
+    return { data: null, error: { type: "failed", message: "Network error — result not saved" } };
   }
 }

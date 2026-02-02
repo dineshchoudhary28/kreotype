@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Roboto_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -7,15 +7,37 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
 
-const robotoMono = Roboto_Mono({
-  variable: "--font-mono",
+const geist = Geist({
+  variable: "--font-primary",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-secondary",
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Kreotype",
-  description: "A minimalist typing test",
+  title: "Kreotype — Minimalist Typing Test",
+  description: "A minimalist, open-source typing test. Track your speed, accuracy, and consistency.",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
+  openGraph: {
+    title: "Kreotype — Minimalist Typing Test",
+    description: "A minimalist, open-source typing test. Track your speed, accuracy, and consistency.",
+    images: [{ url: "/images/og-image.svg", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kreotype — Minimalist Typing Test",
+    description: "A minimalist, open-source typing test.",
+    images: ["/images/og-image.svg"],
+  },
 };
 
 export default function RootLayout({
@@ -27,7 +49,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         suppressHydrationWarning
-        className={`${robotoMono.variable} antialiased font-mono flex flex-col min-h-screen`}
+        className={`${geist.variable} ${geistMono.variable} antialiased font-sans flex flex-col min-h-screen`}
       >
         <AuthProvider>
           <ThemeProvider>

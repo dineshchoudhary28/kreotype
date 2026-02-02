@@ -23,7 +23,7 @@ export function calculateWpmAndRaw(
 export function calculateAccuracy(correct: number, incorrect: number): number {
   const total = correct + incorrect;
   if (total === 0) return 100;
-  return roundTo2((correct / total) * 100);
+  return Math.min(100, Math.max(0, roundTo2((correct / total) * 100)));
 }
 
 /**
@@ -45,7 +45,8 @@ export function calculateConsistency(rawPerSecond: number[]): number {
   const sd = stdDev(rawPerSecond);
   const m = mean(rawPerSecond);
   if (m === 0) return 0;
-  return kogasa(sd / m);
+  const val = kogasa(sd / m);
+  return isNaN(val) ? 0 : Math.min(100, Math.max(0, val));
 }
 
 /**
@@ -56,7 +57,8 @@ export function calculateKeyConsistency(keypressSpacings: number[]): number {
   const sd = stdDev(keypressSpacings);
   const m = mean(keypressSpacings);
   if (m === 0) return 0;
-  return kogasa(sd / m);
+  const val = kogasa(sd / m);
+  return isNaN(val) ? 0 : Math.min(100, Math.max(0, val));
 }
 
 /**

@@ -18,10 +18,11 @@ export function Header() {
   const { data: session } = useSession();
 
   return (
-    <header className="flex items-center justify-between w-full max-w-7xl mx-auto px-6 py-6 font-mono relative">
+    <header className="flex items-center justify-between w-full max-w-7xl mx-auto px-6 py-6 relative">
       {/* LEFT: Logo */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center gap-2 group">
+          <img src="/logo.svg" alt="Kreotype" className="w-7 h-7" />
           <h1 className="text-2xl font-bold text-primary tracking-wider">
             kreotype
           </h1>

@@ -420,12 +420,13 @@ export const settingsMetadata: SettingMeta[] = [
     description: "The font used for the test words.",
     controlType: "select",
     options: [
-      { value: "roboto_mono", label: "Roboto Mono" },
+      { value: "geist_mono", label: "Geist Mono" },
       { value: "fira_code", label: "Fira Code" },
       { value: "jetbrains_mono", label: "JetBrains Mono" },
       { value: "source_code_pro", label: "Source Code Pro" },
       { value: "ubuntu_mono", label: "Ubuntu Mono" },
       { value: "inconsolata", label: "Inconsolata" },
+      { value: "roboto_mono", label: "Roboto Mono" },
     ],
   },
   {

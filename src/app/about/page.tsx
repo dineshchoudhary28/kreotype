@@ -2,7 +2,7 @@
 
 export default function AboutPage() {
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col gap-10 px-4 py-8 font-mono">
+    <div className="w-full max-w-3xl mx-auto flex flex-col gap-10 px-4 py-8">
       {/* Stats */}
       <div className="flex flex-wrap gap-8 justify-center">
         <div className="text-center">

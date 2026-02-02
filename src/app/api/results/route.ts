@@ -68,13 +68,8 @@ export async function POST(request: NextRequest) {
     timestamp: new Date(data.timestamp),
   });
 
-  // Update user stats
-  const updates: Record<string, unknown> = {
-    $inc: {
-      testsCompleted: 1,
-      timeTyping: data.testDuration,
-    },
-  };
+  // Update user stats (only PBs and badges — testsCompleted/timeTyping are computed from Results)
+  const updates: Record<string, unknown> = {};
 
   if (isPb) {
     const pb: IPersonalBest = {
@@ -87,12 +82,15 @@ export async function POST(request: NextRequest) {
     updates.$set = { [`personalBests.${pbKey}`]: pb };
   }
 
-  // Evaluate badges
-  const recentResults = await Result.find({ userId })
-    .sort({ timestamp: -1 })
-    .limit(30)
-    .select("timestamp")
-    .lean();
+  // Evaluate badges — compute testsCompleted from Results (source of truth)
+  const [recentResults, totalResults] = await Promise.all([
+    Result.find({ userId })
+      .sort({ timestamp: -1 })
+      .limit(30)
+      .select("timestamp")
+      .lean(),
+    Result.countDocuments({ userId }),
+  ]);
 
   const recentTestDates = recentResults.map((r) =>
     r.timestamp.toISOString().slice(0, 10)
@@ -103,7 +101,7 @@ export async function POST(request: NextRequest) {
     accuracy: data.accuracy,
     consistency: data.consistency,
     timestamp: new Date(data.timestamp),
-    testsCompleted: user.testsCompleted + 1,
+    testsCompleted: totalResults,
     earnedBadgeIds: buildEarnedBadgeIds(user.badges ?? []),
     recentTestDates,
   });
@@ -117,7 +115,10 @@ export async function POST(request: NextRequest) {
     updates.$push = { badges: { $each: badgeEntries } };
   }
 
-  await User.findByIdAndUpdate(userId, updates);
+  // Only update if there's something to write (PBs or badges)
+  if (Object.keys(updates).length > 0) {
+    await User.findByIdAndUpdate(userId, updates);
+  }
 
   return NextResponse.json({
     message: "Result saved",

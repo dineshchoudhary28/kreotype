@@ -20,7 +20,7 @@ export async function GET(
   await connectDB();
   const user = await User.findOne({ username })
     .select(
-      "username image testsStarted testsCompleted timeTyping personalBests badges createdAt"
+      "username image testsStarted personalBests badges createdAt"
     )
     .lean();
 
@@ -28,7 +28,25 @@ export async function GET(
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const response: Record<string, unknown> = { user };
+  // Compute testsCompleted and timeTyping from Results (source of truth)
+  const [countStats] = await Result.aggregate([
+    { $match: { userId: user._id } },
+    {
+      $group: {
+        _id: null,
+        testsCompleted: { $sum: 1 },
+        timeTyping: { $sum: "$testDuration" },
+      },
+    },
+  ]);
+
+  const userWithStats = {
+    ...user,
+    testsCompleted: countStats?.testsCompleted ?? 0,
+    timeTyping: countStats?.timeTyping ?? 0,
+  };
+
+  const response: Record<string, unknown> = { user: userWithStats };
 
   if (includes.includes("activity")) {
     const oneYearAgo = new Date();

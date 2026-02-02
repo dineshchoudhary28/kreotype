@@ -21,13 +21,14 @@
   --color-text: var(--text);
   --color-error: var(--error);
   --color-error-extra: var(--error-extra);
-  --font-mono: "Roboto Mono", ui-monospace, monospace;
+  --font-mono: var(--font-secondary), ui-monospace, monospace;
+  --font-sans: var(--font-primary), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--text);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -40,4 +41,9 @@ body {
 
 * {
   scrollbar-width: none;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }

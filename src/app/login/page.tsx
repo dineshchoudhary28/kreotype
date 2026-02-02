@@ -91,7 +91,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-12 px-4 py-8 font-mono">
+    <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-12 px-4 py-8">
       {/* Register */}
       <div className="flex-1">
         <h2 className="text-lg text-primary mb-4">register</h2>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect width="48" height="48" rx="10" fill="#323437"/>
+  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="monospace" font-weight="700" font-size="26" fill="#e2b714">K</text>
+  <rect x="4" y="38" width="40" height="3" rx="1.5" fill="#e2b714" opacity="0.3"/>
+  <rect x="4" y="38" width="20" height="3" rx="1.5" fill="#e2b714"/>
+</svg>

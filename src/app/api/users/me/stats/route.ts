@@ -14,10 +14,22 @@ export async function GET() {
 
   const userId = new mongoose.Types.ObjectId(session.user!.id);
 
-  const [user, allTimeStats, last10Stats] = await Promise.all([
+  // Compute testsCompleted and timeTyping from Results (source of truth)
+  // Only testsStarted lives on User (cannot be derived from completed results)
+  const [user, countStats, allTimeStats, last10Stats] = await Promise.all([
     User.findById(session.user!.id)
-      .select("testsStarted testsCompleted timeTyping")
+      .select("testsStarted")
       .lean(),
+    Result.aggregate([
+      { $match: { userId } },
+      {
+        $group: {
+          _id: null,
+          testsCompleted: { $sum: 1 },
+          timeTyping: { $sum: "$testDuration" },
+        },
+      },
+    ]),
     Result.aggregate([
       { $match: { userId } },
       {
@@ -50,13 +62,14 @@ export async function GET() {
     ]),
   ]);
 
+  const counts = countStats[0] || { testsCompleted: 0, timeTyping: 0 };
   const all = allTimeStats[0] || {};
   const recent = last10Stats[0] || {};
 
   return NextResponse.json({
     testsStarted: user?.testsStarted ?? 0,
-    testsCompleted: user?.testsCompleted ?? 0,
-    timeTyping: user?.timeTyping ?? 0,
+    testsCompleted: counts.testsCompleted,
+    timeTyping: counts.timeTyping,
     highestWpm: all.highestWpm ?? 0,
     avgWpm: Math.round((all.avgWpm ?? 0) * 100) / 100,
     avgWpmLast10: Math.round((recent.avgWpmLast10 ?? 0) * 100) / 100,

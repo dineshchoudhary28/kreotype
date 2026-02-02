@@ -40,7 +40,7 @@ export const ThemeSelector = () => {
                 setTheme(theme.name);
                 setIsOpen(false);
               }}
-              className="w-full text-left px-4 py-2 text-xs font-mono hover:bg-background hover:text-primary transition-colors flex items-center justify-between group"
+              className="w-full text-left px-4 py-2 text-xs hover:bg-background hover:text-primary transition-colors flex items-center justify-between group"
               style={{
                 color: currentTheme.name === theme.name ? 'var(--primary)' : 'var(--text)'
               }}

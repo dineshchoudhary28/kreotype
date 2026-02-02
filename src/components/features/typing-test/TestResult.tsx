@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useState } from "react";
 import { motion } from "framer-motion";
-import { useResultStore } from "@/store/useResultStore";
+import { useResultStore, type SaveStatus } from "@/store/useResultStore";
 import { useConfigStore } from "@/store/useConfigStore";
 import { WordsDisplay } from "./WordsDisplay";
 import { cn } from "@/lib/utils";
@@ -36,10 +36,32 @@ const fadeUp = {
   animate: { opacity: 1, y: 0 },
 };
 
+function SaveStatusIndicator({ status }: { status: SaveStatus }) {
+  if (status === "idle") return null;
+  const labels: Record<SaveStatus, { text: string; color: string }> = {
+    idle: { text: "", color: "" },
+    saving: { text: "saving...", color: "text-secondary" },
+    saved: { text: "saved", color: "text-primary" },
+    failed: { text: "not saved", color: "text-error" },
+    unauthenticated: { text: "log in to save results", color: "text-secondary" },
+  };
+  const { text, color } = labels[status];
+  return <span className={`text-xs ${color}`}>{text}</span>;
+}
+
 export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps) {
   const result = useResultStore((s) => s.result);
+  const error = useResultStore((s) => s.error);
+  const saveStatus = useResultStore((s) => s.saveStatus);
   const alwaysShowWordsHistory = useConfigStore((s) => s.alwaysShowWordsHistory);
-  
+  const mode = useConfigStore((s) => s.mode);
+  const time = useConfigStore((s) => s.time);
+  const words = useConfigStore((s) => s.words);
+  const language = useConfigStore((s) => s.language);
+
+  const mode2 = mode === "time" ? time : mode === "words" ? words : "";
+  const testTypeLabel = `${mode} ${mode2}`.trim();
+
   // Chart visibility state
   const [showWpm, setShowWpm] = useState(true);
   const [showRaw, setShowRaw] = useState(true);
@@ -47,11 +69,27 @@ export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps)
   const [showErrors, setShowErrors] = useState(true);
   const [showWordsHistory, setShowWordsHistory] = useState(alwaysShowWordsHistory);
 
-  if (!result) return null;
+  if (!result) {
+    if (error) {
+      return (
+        <div className="w-full max-w-6xl flex flex-col items-center justify-center h-[calc(100vh-140px)] gap-4">
+          <p className="text-secondary text-sm">Something went wrong calculating your results.</p>
+          <p className="text-secondary/60 text-xs">{error}</p>
+          <button
+            onClick={onRestart}
+            className="px-4 py-2 text-sm text-primary border border-primary/30 rounded hover:bg-primary/10 transition-colors"
+          >
+            Try another test
+          </button>
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
     <motion.div
-      className="w-full max-w-6xl flex flex-col font-mono h-[calc(100vh-140px)] py-2 gap-4"
+      className="w-full max-w-6xl flex flex-col h-[calc(100vh-140px)] py-2 gap-4"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -76,7 +114,7 @@ export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps)
            {/* Row 1 */}
            <div>
             <div className="text-xs text-secondary">test type</div>
-            <div className="text-text font-medium">time 60<br/>english</div>
+            <div className="text-text font-medium">{testTypeLabel}<br/>{language}</div>
           </div>
           <div>
             <div className="text-xs text-secondary">raw</div>
@@ -155,7 +193,9 @@ export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps)
       </motion.div>
       
       {/* SECTION 3: Action Toolbar */}
-       <motion.div variants={fadeUp} className="flex justify-center gap-6 px-4 py-2 flex-shrink-0">
+       <motion.div variants={fadeUp} className="flex flex-col items-center gap-2 px-4 py-2 flex-shrink-0">
+         <SaveStatusIndicator status={saveStatus} />
+         <div className="flex justify-center gap-6">
          <button
            onClick={onRestart}
            className="group flex flex-col items-center gap-1 text-secondary hover:text-text transition-colors"
@@ -197,30 +237,29 @@ export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps)
          >
            <ImageIcon size={18} className="group-hover:text-text" />
          </button>
+         </div>
        </motion.div>
 
-      {/* SECTION 4: Ad Banner (Bottom, 16:9, centered) */}
+      {/* SECTION 4: Ad Banner */}
       <motion.div variants={fadeUp} className="w-full flex justify-center flex-shrink-0 pb-2">
-        <a 
-          href="https://kreo-tech.com" 
-          target="_blank" 
+        <a
+          href="https://kreo-tech.com"
+          target="_blank"
           rel="noopener noreferrer"
-          className="relative block w-64 aspect-video bg-surface/30 border border-secondary/20 rounded-xl overflow-hidden hover:border-primary/50 transition-colors group"
+          className="relative block w-72 rounded-xl overflow-hidden group"
         >
-          <div className="absolute inset-0 p-3 flex flex-col justify-between">
-            <div className="flex items-start justify-between">
-               <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold uppercase tracking-wider bg-surface px-1.5 py-0.5 rounded text-secondary border border-secondary/20">Ad</span>
-               </div>
-               <Star size={14} className="text-primary fill-current" />
+          {/* Shimmer background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-[shimmer_3s_ease-in-out_infinite] -translate-x-full"
+               style={{ animation: "shimmer 3s ease-in-out infinite" }} />
+          <div className="relative flex items-center gap-3 px-4 py-3 bg-surface/20 border border-secondary/10 rounded-xl backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+              <Star size={16} className="text-primary" />
             </div>
-            
-            <div className="mt-auto">
-               <h3 className="text-xs font-bold text-text group-hover:text-primary transition-colors leading-tight mb-1">Kreo Hive</h3>
-               <div className="flex items-center gap-1 text-[10px] font-bold text-primary group-hover:translate-x-1 transition-transform">
-                 Shop <ArrowRight size={10} />
-               </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold text-text group-hover:text-primary transition-colors">Kreo Hive</div>
+              <div className="text-[10px] text-secondary">Keyboards & gear</div>
             </div>
+            <ArrowRight size={14} className="text-secondary group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
           </div>
         </a>
       </motion.div>

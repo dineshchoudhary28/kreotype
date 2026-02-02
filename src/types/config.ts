@@ -90,7 +90,7 @@ export const defaultConfig: Config = {
   soundOnClick: "off",
   soundOnError: "off",
   theme: "serika_dark",
-  fontFamily: "roboto_mono",
+  fontFamily: "geist_mono",
   pageWidth: "100",
   keyTips: true,
   outOfFocusWarning: true,

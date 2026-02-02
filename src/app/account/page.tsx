@@ -128,7 +128,7 @@ export default function AccountPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="w-full max-w-4xl mx-auto px-4 py-8 font-mono">
+      <div className="w-full max-w-4xl mx-auto px-4 py-8">
         <div className="flex flex-col gap-6">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-16 rounded bg-secondary bg-opacity-10 animate-pulse" />
@@ -159,7 +159,7 @@ export default function AccountPage() {
     : [];
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 px-4 py-8 font-mono">
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 px-4 py-8">
       {/* Profile Details */}
       <div className="flex items-start gap-6">
         <div className="w-16 h-16 rounded-full bg-secondary bg-opacity-20 flex items-center justify-center text-secondary overflow-hidden">

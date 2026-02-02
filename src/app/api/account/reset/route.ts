@@ -16,8 +16,8 @@ export async function POST() {
     User.findByIdAndUpdate(session.user!.id, {
       $set: {
         testsStarted: 0,
-        testsCompleted: 0,
-        timeTyping: 0,
+        // testsCompleted and timeTyping are computed from Results,
+        // so deleting Results automatically zeroes them out.
         personalBests: {},
       },
     }),

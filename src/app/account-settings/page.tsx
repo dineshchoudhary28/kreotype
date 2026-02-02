@@ -111,14 +111,14 @@ export default function AccountSettingsPage() {
 
   if (status === "loading") {
     return (
-      <div className="w-full max-w-4xl mx-auto px-4 py-8 font-mono">
+      <div className="w-full max-w-4xl mx-auto px-4 py-8">
         <div className="h-64 rounded bg-secondary bg-opacity-10 animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-6 px-4 py-8 font-mono">
+    <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-6 px-4 py-8">
       {/* Tabs */}
       <div className="flex flex-row md:flex-col gap-1 shrink-0 md:w-48">
         {tabs.map((tab) => (

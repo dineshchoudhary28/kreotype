@@ -19,7 +19,7 @@ export default function SettingsPage() {
   );
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8 font-mono">
+    <div className="w-full max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-xl text-text mb-2">settings</h1>
       <p className="text-xs text-secondary mb-6">
         Changes are saved automatically.
@@ -126,6 +126,9 @@ function ThemeSection({
 
 function DangerZoneSection({ onReset }: { onReset: () => void }) {
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmAccount, setConfirmAccount] = useState(false);
+  const [confirmLocal, setConfirmLocal] = useState(false);
+  const [accountResetting, setAccountResetting] = useState(false);
 
   const handleReset = () => {
     if (!confirmReset) {
@@ -134,6 +137,35 @@ function DangerZoneSection({ onReset }: { onReset: () => void }) {
     }
     onReset();
     setConfirmReset(false);
+  };
+
+  const handleAccountReset = async () => {
+    if (!confirmAccount) {
+      setConfirmAccount(true);
+      return;
+    }
+    setAccountResetting(true);
+    try {
+      const res = await fetch("/api/account/reset", { method: "POST" });
+      if (res.ok) {
+        localStorage.clear();
+        window.location.reload();
+      }
+    } catch {
+      // failed silently
+    } finally {
+      setAccountResetting(false);
+      setConfirmAccount(false);
+    }
+  };
+
+  const handleClearLocal = () => {
+    if (!confirmLocal) {
+      setConfirmLocal(true);
+      return;
+    }
+    localStorage.clear();
+    window.location.reload();
   };
 
   return (
@@ -148,8 +180,7 @@ function DangerZoneSection({ onReset }: { onReset: () => void }) {
           <div>
             <h4 className="text-sm text-text">reset settings to default</h4>
             <p className="text-xs text-secondary mt-0.5">
-              Resets all settings back to their default values. This cannot be
-              undone.
+              Resets all settings back to their default values.
             </p>
           </div>
           <button
@@ -160,40 +191,39 @@ function DangerZoneSection({ onReset }: { onReset: () => void }) {
           </button>
         </div>
 
+        {/* Reset account (server-side) */}
+        <div className="flex items-start justify-between gap-4 py-4 border-b border-secondary/10">
+          <div>
+            <h4 className="text-sm text-text">reset account</h4>
+            <p className="text-xs text-secondary mt-0.5">
+              Deletes all test results, personal bests, and resets stats to zero. This cannot be undone.
+            </p>
+          </div>
+          <button
+            onClick={handleAccountReset}
+            disabled={accountResetting}
+            className="shrink-0 px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {accountResetting ? "resetting..." : confirmAccount ? "are you sure?" : "reset account"}
+          </button>
+        </div>
+
         {/* Clear local data */}
         <div className="flex items-start justify-between gap-4 py-4 border-b border-secondary/10">
           <div>
             <h4 className="text-sm text-text">clear local data</h4>
             <p className="text-xs text-secondary mt-0.5">
-              Clears all locally stored data including settings, personal bests,
-              and history. This cannot be undone.
+              Clears locally stored settings and preferences. Does not affect server data.
             </p>
           </div>
-          <ClearLocalDataButton />
+          <button
+            onClick={handleClearLocal}
+            className="shrink-0 px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background hover:opacity-90 transition-opacity"
+          >
+            {confirmLocal ? "are you sure?" : "clear local data"}
+          </button>
         </div>
       </div>
     </section>
-  );
-}
-
-function ClearLocalDataButton() {
-  const [confirm, setConfirm] = useState(false);
-
-  const handleClear = () => {
-    if (!confirm) {
-      setConfirm(true);
-      return;
-    }
-    localStorage.clear();
-    window.location.reload();
-  };
-
-  return (
-    <button
-      onClick={handleClear}
-      className="shrink-0 px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background hover:opacity-90 transition-opacity"
-    >
-      {confirm ? "are you sure?" : "clear local data"}
-    </button>
   );
 }

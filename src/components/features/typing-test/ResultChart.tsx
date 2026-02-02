@@ -68,11 +68,11 @@ export function ResultChart({
               backgroundColor: "var(--background)",
               border: "1px solid var(--secondary)",
               borderRadius: 8,
-              fontFamily: "monospace",
+              fontFamily: "var(--font-secondary)",
               fontSize: 12,
             }}
           />
-          <Legend wrapperStyle={{ fontSize: 12, fontFamily: "monospace" }} />
+          <Legend wrapperStyle={{ fontSize: 12, fontFamily: "var(--font-secondary)" }} />
           
           {showErrors && (
             <Bar

@@ -38,21 +38,24 @@ export function useTestLifecycle() {
   const replayRecorder = useMemo(() => createReplayRecorder(), []);
 
   const finishTest = useCallback(() => {
+    // Capture elapsed BEFORE stopping timer (stop nulls the ref, losing the value)
+    const elapsedMs = getElapsedMs();
     stopTimer();
     replayRecorder.stop();
 
     const { words, wordInputs, currentInput, activeWordIndex, isActive } =
       useTypingStore.getState();
-    // Moved finishTest() call to end to prevent race condition
 
-    const elapsedMs = getElapsedMs();
     const elapsed = elapsedMs / 1000;
     const testEndTime = performance.now();
     const history = useInputHistoryStore.getState();
 
-    // Track incomplete test if bailed out early
-    if (isActive && activeWordIndex < words.length - 1) {
-      const acc = calculateAccuracy(history.accuracy.correct, history.accuracy.incorrect);
+    // Check if this is a time-mode natural completion (timer expired)
+    const config = useConfigStore.getState();
+    const isTimeModeCompletion = config.mode === "time" && elapsed >= config.time - 1;
+
+    // Track incomplete test if bailed out early (NOT for time-mode timer expiration)
+    if (isActive && activeWordIndex < words.length - 1 && !isTimeModeCompletion) {
       useTypingStore.getState().addIncompleteTestSeconds(elapsed);
       useTypingStore.getState().incrementRestartCount();
 
@@ -80,12 +83,14 @@ export function useTestLifecycle() {
       const afkDuration = calculateAfkDuration(history.keypressCountHistory, elapsed);
       const keypressTimings = history.getKeypressTimings(testEndTime);
 
+      const safeNum = (v: number, fallback = 0) => (isNaN(v) || !isFinite(v) ? fallback : v);
+
       const result: TestResult = {
-        wpm,
-        rawWpm: raw,
-        accuracy,
-        consistency,
-        keyConsistency,
+        wpm: safeNum(wpm),
+        rawWpm: safeNum(raw),
+        accuracy: safeNum(accuracy, 100),
+        consistency: safeNum(consistency, 100),
+        keyConsistency: safeNum(keyConsistency, 100),
         correctChars: chars.allCorrectChars,
         incorrectChars: chars.incorrectChars,
         extraChars: chars.extraChars,
@@ -119,8 +124,8 @@ export function useTestLifecycle() {
       const finalResult = { ...result, validation };
       useResultStore.getState().setResult(finalResult);
 
-      // Fire-and-forget result submission to backend
-      submitResult(finalResult, {
+      // Submit result to backend with status tracking
+      const submitConfig = {
         mode: config.mode,
         time: config.time,
         words: config.words,
@@ -129,13 +134,33 @@ export function useTestLifecycle() {
         punctuation: config.punctuation,
         numbers: config.numbers,
         blindMode: config.blindMode,
-      }).then((res) => {
-        if (res?.isPb) {
+      };
+      useResultStore.getState().setSaveStatus("saving");
+      submitResult(finalResult, submitConfig).then(({ data, error }) => {
+        if (error) {
+          useResultStore.getState().setSaveStatus(
+            error.type === "unauthenticated" ? "unauthenticated" : "failed"
+          );
+          // Cache failed result to localStorage for retry
+          if (error.type === "failed") {
+            useResultStore.getState().savePendingResult(finalResult, submitConfig);
+          }
+          return;
+        }
+        useResultStore.getState().setSaveStatus("saved");
+        useResultStore.getState().clearPendingResult();
+        if (data?.isPb) {
           useResultStore.getState().setResult({ ...finalResult, isPb: true });
         }
+      }).catch(() => {
+        useResultStore.getState().setSaveStatus("failed");
+        useResultStore.getState().savePendingResult(finalResult, submitConfig);
       });
     } catch (err) {
       console.error("Error calculating test results:", err);
+      useResultStore.getState().setError(
+        err instanceof Error ? err.message : "Failed to calculate test results"
+      );
     } finally {
       // Always finish the test state, even if calculation fails
       useTypingStore.getState().finishTest();
@@ -230,12 +255,27 @@ export function useTestLifecycle() {
     useInputHistoryStore.getState().setTestStartTime(now);
     useInputHistoryStore.getState().setBurstStart(performance.now());
     startTimer();
+
+    // Track test started (fire-and-forget)
+    fetch("/api/users/me/test-started", { method: "POST" }).catch(() => {});
   }, [startTimer]);
 
   useEffect(() => {
     if (!hasInitRef.current) {
       hasInitRef.current = true;
       initTest();
+
+      // Retry any pending result from a previous failed submission
+      const pending = useResultStore.getState().getPendingResult();
+      if (pending) {
+        submitResult(pending.result as TestResult, pending.config as unknown as Parameters<typeof submitResult>[1])
+          .then(({ error }) => {
+            if (!error) {
+              useResultStore.getState().clearPendingResult();
+            }
+          })
+          .catch(() => {});
+      }
     }
   }, [initTest]);
 

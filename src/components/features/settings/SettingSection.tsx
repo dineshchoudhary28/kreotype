@@ -7,7 +7,7 @@ import type { SettingGroupMeta } from "@/core/settings-metadata";
 import { getSettingsByGroup } from "@/core/settings-metadata";
 
 export function SettingSection({ group }: { group: SettingGroupMeta }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const settings = getSettingsByGroup(group.id);
 
   if (group.id === "dangerZone" || group.id === "theme") {
