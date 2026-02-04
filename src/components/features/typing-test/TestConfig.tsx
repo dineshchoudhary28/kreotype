@@ -23,7 +23,7 @@ export function TestConfig({ onRestart }: { onRestart: () => void }) {
     onRestart();
   };
 
-  const btnBase = "px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2";
+  const btnBase = "px-4 py-2 rounded-lg text-base font-medium transition-colors duration-200 flex items-center gap-2";
   const activeClass = "text-primary bg-background/50 shadow-sm";
   const inactiveClass = "text-secondary hover:text-text hover:bg-background/30";
 
@@ -32,7 +32,7 @@ export function TestConfig({ onRestart }: { onRestart: () => void }) {
   const showWordOptions = mode === "words";
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-6 select-none bg-surface/80 backdrop-blur px-6 py-2 rounded-xl shadow-lg border border-white/5 mx-auto max-w-4xl w-fit">
+    <div className="flex flex-wrap items-center justify-center gap-6 select-none bg-surface/80 backdrop-blur px-8 py-3 rounded-xl shadow-lg border border-white/5 mx-auto max-w-5xl w-fit">
       {/* Toggles - hidden for quote/zen */}
       {showToggles && (
         <div className="flex gap-1">
@@ -51,7 +51,7 @@ export function TestConfig({ onRestart }: { onRestart: () => void }) {
         </div>
       )}
 
-      {showToggles && <div className="w-px h-6 bg-secondary/20" />}
+      {showToggles && <div className="w-px h-8 bg-secondary/20" />}
 
       {/* Mode */}
       <div className="flex gap-1">
@@ -69,7 +69,7 @@ export function TestConfig({ onRestart }: { onRestart: () => void }) {
       {/* Separator + options */}
       {(showTimeOptions || showWordOptions) && (
         <>
-          <div className="w-px h-6 bg-secondary/20" />
+          <div className="w-px h-8 bg-secondary/20" />
           <div className="flex gap-1">
             {showTimeOptions &&
               TIME_OPTIONS.map((t) => (

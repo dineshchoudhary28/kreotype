@@ -29,6 +29,12 @@ interface InputHistoryState {
   currentKeypressCount: number;
   currentErrorCount: number;
 
+  // Anti-cheat: mouse and window tracking
+  mouseWasMoved: boolean;
+  windowWasBlurred: boolean;
+  setMouseMoved: (moved: boolean) => void;
+  setWindowBlurred: (blurred: boolean) => void;
+
   pushSecondStats: (wpm: number, raw: number, errors: number, keypresses: number) => void;
   pushBurst: (burst: number) => void;
   incrementCorrect: () => void;
@@ -69,6 +75,8 @@ const initialState = {
   currentBurstStart: null as number | null,
   currentKeypressCount: 0,
   currentErrorCount: 0,
+  mouseWasMoved: false,
+  windowWasBlurred: false,
 };
 
 export const useInputHistoryStore = create<InputHistoryState>((set, get) => ({
@@ -170,6 +178,10 @@ export const useInputHistoryStore = create<InputHistoryState>((set, get) => ({
 
   pushAfkToHistory: (isAfk) =>
     set((s) => ({ afkHistory: [...s.afkHistory, isAfk] })),
+
+  setMouseMoved: (moved) => set({ mouseWasMoved: moved }),
+
+  setWindowBlurred: (blurred) => set({ windowWasBlurred: blurred }),
 
   getKeypressTimings: (testEndTime: number): KeypressTimings => {
     const s = get();

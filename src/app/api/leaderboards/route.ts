@@ -6,6 +6,11 @@ import { leaderboardQuerySchema } from "@/server/validators/leaderboard";
 import { redis } from "@/lib/redis";
 import { auth } from "@/lib/auth";
 import mongoose from "mongoose";
+import { corsHeaders, handleCorsOptions } from "@/server/middleware/cors";
+
+export async function OPTIONS(request: NextRequest) {
+  return handleCorsOptions(request) || NextResponse.json({});
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -13,30 +18,34 @@ export async function GET(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid query", details: parsed.error.issues },
-      { status: 400 }
+      { status: 400, headers: corsHeaders(request) }
     );
   }
 
   const { type, mode, mode2, page, limit } = parsed.data;
 
-  // Build cache key
+  // Build cache key and Cache-Control header
   let cacheKey: string;
   let cacheTtl: number;
+  let cacheControl: string;
   const now = new Date();
 
   if (type === "allTime") {
     cacheKey = `lb:allTime:${mode}:${mode2}:page:${page}`;
     cacheTtl = 300;
+    cacheControl = "public, s-maxage=300, stale-while-revalidate=600";
   } else if (type === "daily") {
     const date = now.toISOString().split("T")[0];
     cacheKey = `lb:daily:${mode}:${mode2}:${date}:page:${page}`;
     cacheTtl = 120;
+    cacheControl = "public, s-maxage=120, stale-while-revalidate=240";
   } else {
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - now.getDay());
     const week = weekStart.toISOString().split("T")[0];
     cacheKey = `lb:weekly:${mode}:${mode2}:${week}:page:${page}`;
     cacheTtl = 120;
+    cacheControl = "public, s-maxage=120, stale-while-revalidate=240";
   }
 
   // Check cache
@@ -49,7 +58,9 @@ export async function GET(request: NextRequest) {
       if (session?.user?.id) {
         data.userRank = await getUserRank(session.user!.id, mode, mode2, type);
       }
-      return NextResponse.json(data);
+      return NextResponse.json(data, {
+        headers: { ...corsHeaders(request), "Cache-Control": cacheControl },
+      });
     }
   } catch {
     // Cache miss or Redis down
@@ -149,7 +160,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  return NextResponse.json(responseData);
+  return NextResponse.json(responseData, {
+    headers: { ...corsHeaders(request), "Cache-Control": cacheControl },
+  });
 }
 
 async function getUserRank(

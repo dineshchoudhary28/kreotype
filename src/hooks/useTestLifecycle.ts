@@ -113,12 +113,15 @@ export function useTestLifecycle() {
 
       const config = useConfigStore.getState();
       const typingState = useTypingStore.getState();
+      const inputHistory = useInputHistoryStore.getState();
       const validation = validateResult(result, {
         mode: config.mode,
         wordCount: config.words,
         timeConfig: config.time,
         keypressCountHistory: history.keypressCountHistory,
         isRepeated: typingState.isRepeated,
+        mouseWasMoved: inputHistory.mouseWasMoved,
+        windowWasBlurred: inputHistory.windowWasBlurred,
       });
 
       const finalResult = { ...result, validation };

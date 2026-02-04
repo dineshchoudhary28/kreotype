@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
+import { useFocusModeStore } from "@/store/useFocusModeStore";
 
 export function AnnouncementBanner() {
   const [isVisible, setIsVisible] = useState(true);
+  const pathname = usePathname();
+  const isFocused = useFocusModeStore((s) => s.isFocused);
+
+  // Hide during focus mode on homepage
+  if (pathname === "/" && isFocused) return null;
 
   if (!isVisible) return null;
 

@@ -17,7 +17,7 @@ export function TimerProgress() {
 
   if (timerStyle === "mini" || timerStyle === "text") {
     return (
-      <div className="text-2xl text-primary tabular-nums">
+      <div className="text-4xl text-primary tabular-nums font-medium">
         {remaining}
       </div>
     );

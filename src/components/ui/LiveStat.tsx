@@ -40,16 +40,16 @@ export function LiveStat({ type, style }: LiveStatProps) {
 
   if (style === "mini") {
     return (
-      <div className="text-sm text-secondary tabular-nums">
+      <div className="text-lg text-secondary tabular-nums">
         {Math.round(value)}
       </div>
     );
   }
 
   return (
-    <div className="flex items-baseline gap-1 tabular-nums">
-      <span className="text-2xl text-primary">{Math.round(value)}</span>
-      <span className="text-xs text-secondary">{label}</span>
+    <div className="flex items-baseline gap-1.5 tabular-nums">
+      <span className="text-4xl text-primary font-medium">{Math.round(value)}</span>
+      <span className="text-base text-secondary">{label}</span>
     </div>
   );
 }

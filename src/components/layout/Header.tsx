@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Keyboard, Crown, ShoppingBag, Settings, Bell, User, LogOut } from "lucide-react";
 import { ThemeSelector } from "@/components/ThemeSelector";
+import { useConfigStore } from "@/store/useConfigStore";
+import { useFocusModeStore } from "@/store/useFocusModeStore";
+import { getPageWidthClass } from "@/lib/page-width";
 
 const navLinks = [
   { href: "/", icon: Keyboard, label: "test" },
@@ -16,9 +19,18 @@ const navLinks = [
 export function Header() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const pageWidth = useConfigStore((s) => s.pageWidth);
+  const isFocused = useFocusModeStore((s) => s.isFocused);
+
+  // Hide header completely during focus mode (active typing) on homepage
+  const shouldHideHeader = pathname === "/" && isFocused;
+
+  if (shouldHideHeader) return null;
 
   return (
-    <header className="flex items-center justify-between w-full max-w-7xl mx-auto px-6 py-6 relative">
+    <header
+      className={`flex items-center justify-between w-full ${getPageWidthClass(pageWidth)} mx-auto px-6 py-6 relative`}
+    >
       {/* LEFT: Logo */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center gap-2 group">

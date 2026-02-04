@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/server/models/User";
 import { Result } from "@/server/models/Result";
 import { requireAuth } from "@/server/middleware/auth";
+import mongoose from "mongoose";
 
 export async function GET() {
   const authResult = await requireAuth();
@@ -32,10 +33,12 @@ export async function GET() {
   ]);
 
   const statsMap = new Map(
-    friendStats.map((s: { _id: unknown; testsCompleted: number; timeTyping: number }) => [
-      s._id.toString(),
-      { testsCompleted: s.testsCompleted, timeTyping: s.timeTyping },
-    ])
+    friendStats.map(
+      (s: { _id: mongoose.Types.ObjectId; testsCompleted: number; timeTyping: number }) => [
+        s._id.toString(),
+        { testsCompleted: s.testsCompleted, timeTyping: s.timeTyping },
+      ]
+    )
   );
 
   const enrichedFriends = friends.map((f) => ({

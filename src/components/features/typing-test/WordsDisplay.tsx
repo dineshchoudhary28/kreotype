@@ -34,6 +34,17 @@ export function WordsDisplay({ showHistory = false }: WordsDisplayProps) {
   const paceCaretStartRef = useRef<number>(0);
   const isTestActive = useTypingStore((s) => s.isActive);
 
+  // Precompute cumulative character positions for pace caret (O(log n) binary search)
+  const wordCharPositions = useMemo(() => {
+    const positions: number[] = [];
+    let cumulative = 0;
+    for (let i = 0; i < words.length; i++) {
+      cumulative += words[i].length + 1; // +1 for space
+      positions.push(cumulative);
+    }
+    return positions;
+  }, [words]);
+
   // Word buffer: only render words within a window around the active word
   const { startIdx, endIdx } = useMemo(() => {
     const start = Math.max(0, activeWordIndex - 10);
@@ -120,36 +131,58 @@ export function WordsDisplay({ showHistory = false }: WordsDisplayProps) {
       const elapsed = performance.now() - paceCaretStartRef.current;
       const charIndex = Math.floor(elapsed * charsPerMs);
 
-      // Walk through words to find the right position
-      let charsRemaining = charIndex;
-      const wordEls = container.querySelectorAll("[data-word]");
-      let found = false;
+      // Binary search for word index based on character position
+      let left = 0;
+      let right = wordCharPositions.length - 1;
+      let wordIdx = 0;
 
-      for (let w = 0; w < wordEls.length && w < words.length - startIdx; w++) {
-        const word = words[startIdx + w];
-        const wordLen = word.length + 1; // +1 for space
-        if (charsRemaining < wordLen) {
-          const el = wordEls[w] as HTMLElement;
-          const letterEls = el.children;
-          const ci = Math.min(charsRemaining, letterEls.length - 1);
-          if (ci >= 0 && letterEls[ci]) {
-            const letterEl = letterEls[ci] as HTMLElement;
-            setPaceCaretPos({ top: letterEl.offsetTop, left: letterEl.offsetLeft });
-          }
-          found = true;
+      while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        const prevPos = mid === 0 ? 0 : wordCharPositions[mid - 1];
+        const currPos = wordCharPositions[mid];
+
+        if (charIndex >= prevPos && charIndex < currPos) {
+          wordIdx = mid;
           break;
         }
-        charsRemaining -= wordLen;
+        if (charIndex < prevPos) {
+          right = mid - 1;
+        } else {
+          left = mid + 1;
+        }
       }
 
-      if (found) {
+      // Calculate character position within the word
+      const prevCumulative = wordIdx === 0 ? 0 : wordCharPositions[wordIdx - 1];
+      const charInWord = charIndex - prevCumulative;
+
+      // Find the DOM element
+      const wordEls = container.querySelectorAll("[data-word]");
+      const relativeIdx = wordIdx - startIdx;
+
+      if (relativeIdx >= 0 && relativeIdx < wordEls.length) {
+        const el = wordEls[relativeIdx] as HTMLElement;
+        const letterEls = el.children;
+        const ci = Math.min(charInWord, letterEls.length - 1);
+        if (ci >= 0 && letterEls[ci]) {
+          const letterEl = letterEls[ci] as HTMLElement;
+          setPaceCaretPos({ top: letterEl.offsetTop, left: letterEl.offsetLeft });
+        }
         paceCaretAnimRef.current = requestAnimationFrame(tick);
       }
     };
 
     paceCaretAnimRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(paceCaretAnimRef.current);
-  }, [paceCaretCustomSpeed, showHistory, isFinished, isTestActive, words, startIdx]);
+  }, [
+    paceCaretCustomSpeed,
+    showHistory,
+    isFinished,
+    isTestActive,
+    words,
+    startIdx,
+    wordCharPositions,
+  ]);
 
   if ((isFinished && !showHistory) || words.length === 0) return null;
 

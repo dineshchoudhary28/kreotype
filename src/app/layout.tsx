@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
+import { FocusModeWrapper } from "@/components/layout/FocusModeWrapper";
 
 const geist = Geist({
   variable: "--font-primary",
@@ -53,12 +54,14 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider>
-            <AnnouncementBanner />
-            <Header />
-            <main className="flex-1 flex flex-col items-center w-full">
-              {children}
-            </main>
-            <Footer />
+            <FocusModeWrapper>
+              <AnnouncementBanner />
+              <Header />
+              <main className="flex-1 flex flex-col items-center w-full">
+                {children}
+              </main>
+              <Footer />
+            </FocusModeWrapper>
           </ThemeProvider>
         </AuthProvider>
       </body>

@@ -20,7 +20,9 @@ async function loadSound(url: string): Promise<AudioBuffer | null> {
     bufferCache.set(url, audioBuffer);
     return audioBuffer;
   } catch (err) {
-    console.warn("Failed to load sound:", url, err);
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Failed to load sound:", url, err);
+    }
     return null;
   }
 }

@@ -6,6 +6,13 @@ import { completedEventSchema } from "@/server/validators/result";
 import { requireAuth } from "@/server/middleware/auth";
 import { rateLimit } from "@/server/middleware/rateLimit";
 import { evaluateBadges, buildEarnedBadgeIds } from "@/core/badge-engine";
+import { corsHeaders, handleCorsOptions } from "@/server/middleware/cors";
+import { redis } from "@/lib/redis";
+import mongoose from "mongoose";
+
+export async function OPTIONS(request: NextRequest) {
+  return handleCorsOptions(request) || NextResponse.json({});
+}
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
@@ -21,7 +28,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Validation failed", details: parsed.error.issues },
-      { status: 400 }
+      { status: 400, headers: corsHeaders(request) }
     );
   }
 
@@ -33,7 +40,10 @@ export async function POST(request: NextRequest) {
   const pbKey = `${data.mode}|${data.mode2}`;
   const user = await User.findById(userId);
   if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "User not found" },
+      { status: 404, headers: corsHeaders(request) }
+    );
   }
 
   const currentPb = user.personalBests.get(pbKey);
@@ -120,12 +130,22 @@ export async function POST(request: NextRequest) {
     await User.findByIdAndUpdate(userId, updates);
   }
 
-  return NextResponse.json({
-    message: "Result saved",
-    resultId: result._id,
-    isPb,
-    newBadges: newBadgeIds,
-  });
+  // Invalidate stats cache
+  try {
+    await redis.del(`stats:${userId}`);
+  } catch {
+    // Continue even if cache invalidation fails
+  }
+
+  return NextResponse.json(
+    {
+      message: "Result saved",
+      resultId: result._id,
+      isPb,
+      newBadges: newBadgeIds,
+    },
+    { headers: corsHeaders(request) }
+  );
 }
 
 export async function GET(request: NextRequest) {
@@ -134,26 +154,56 @@ export async function GET(request: NextRequest) {
   const { session } = authResult;
 
   const { searchParams } = new URL(request.url);
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+  const cursor = searchParams.get("cursor");
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "25")));
   const mode = searchParams.get("mode");
 
   await connectDB();
 
+  // Decode cursor
+  const cursorData = cursor
+    ? JSON.parse(Buffer.from(cursor, "base64").toString())
+    : null;
+
+  // Build filter
   const filter: Record<string, unknown> = { userId: session.user!.id };
   if (mode) filter.mode = mode;
 
-  const [results, total] = await Promise.all([
-    Result.find(filter)
-      .sort({ timestamp: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
-    Result.countDocuments(filter),
-  ]);
+  if (cursorData) {
+    filter.$or = [
+      { timestamp: { $lt: new Date(cursorData.timestamp) } },
+      {
+        timestamp: new Date(cursorData.timestamp),
+        _id: { $lt: new mongoose.Types.ObjectId(cursorData._id) },
+      },
+    ];
+  }
 
-  return NextResponse.json({
-    results,
-    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
-  });
+  // Fetch limit + 1 to check if more exist
+  const results = await Result.find(filter)
+    .sort({ timestamp: -1, _id: -1 })
+    .limit(limit + 1)
+    .lean();
+
+  const hasMore = results.length > limit;
+  const data = results.slice(0, limit);
+
+  // Generate next cursor
+  const nextCursor =
+    hasMore && data.length > 0
+      ? Buffer.from(
+          JSON.stringify({
+            timestamp: data[data.length - 1].timestamp.toISOString(),
+            _id: data[data.length - 1]._id.toString(),
+          })
+        ).toString("base64")
+      : null;
+
+  return NextResponse.json(
+    {
+      results: data,
+      pagination: { nextCursor, hasMore },
+    },
+    { headers: corsHeaders(request) }
+  );
 }

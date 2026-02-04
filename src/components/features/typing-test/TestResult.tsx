@@ -6,16 +6,17 @@ import { useResultStore, type SaveStatus } from "@/store/useResultStore";
 import { useConfigStore } from "@/store/useConfigStore";
 import { WordsDisplay } from "./WordsDisplay";
 import { cn } from "@/lib/utils";
-import { 
-  ArrowRight, 
-  Star, 
-  ChevronRight, 
-  RotateCcw, 
-  TriangleAlert, 
+import {
+  ArrowRight,
+  Star,
+  ChevronRight,
+  RotateCcw,
+  TriangleAlert,
   Image as ImageIcon,
   AlignLeft,
   Rewind
 } from "lucide-react";
+import { getPageWidthClass } from "@/lib/page-width";
 
 const ResultChart = lazy(() => import("./ResultChart").then((m) => ({ default: m.ResultChart })));
 
@@ -58,6 +59,7 @@ export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps)
   const time = useConfigStore((s) => s.time);
   const words = useConfigStore((s) => s.words);
   const language = useConfigStore((s) => s.language);
+  const pageWidth = useConfigStore((s) => s.pageWidth);
 
   const mode2 = mode === "time" ? time : mode === "words" ? words : "";
   const testTypeLabel = `${mode} ${mode2}`.trim();
@@ -72,7 +74,9 @@ export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps)
   if (!result) {
     if (error) {
       return (
-        <div className="w-full max-w-6xl flex flex-col items-center justify-center h-[calc(100vh-140px)] gap-4">
+        <div
+          className={`w-full ${getPageWidthClass(pageWidth)} flex flex-col items-center justify-center h-[calc(100vh-140px)] gap-4`}
+        >
           <p className="text-secondary text-sm">Something went wrong calculating your results.</p>
           <p className="text-secondary/60 text-xs">{error}</p>
           <button
@@ -89,7 +93,7 @@ export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps)
 
   return (
     <motion.div
-      className="w-full max-w-6xl flex flex-col h-[calc(100vh-140px)] py-2 gap-4"
+      className={`w-full ${getPageWidthClass(pageWidth)} flex flex-col h-[calc(100vh-140px)] py-2 gap-4`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -110,19 +114,19 @@ export function TestResult({ onRestart, onRepeat, onPractice }: TestResultProps)
         </motion.div>
 
         {/* Secondary Stats Grid */}
-        <motion.div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-2 text-sm pb-2" variants={fadeUp}>
+        <motion.div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-2 text-base pb-2" variants={fadeUp}>
            {/* Row 1 */}
            <div>
-            <div className="text-xs text-secondary">test type</div>
-            <div className="text-text font-medium">{testTypeLabel}<br/>{language}</div>
+            <div className="text-sm text-secondary">test type</div>
+            <div className="text-text font-medium text-base">{testTypeLabel}<br/>{language}</div>
           </div>
           <div>
-            <div className="text-xs text-secondary">raw</div>
-            <div className="text-2xl text-text font-medium leading-none">{Math.round(result.rawWpm)}</div>
+            <div className="text-sm text-secondary">raw</div>
+            <div className="text-3xl text-text font-medium leading-none">{Math.round(result.rawWpm)}</div>
           </div>
           <div>
-             <div className="text-xs text-secondary">characters</div>
-             <div className="text-2xl text-text font-medium leading-none">
+             <div className="text-sm text-secondary">characters</div>
+             <div className="text-3xl text-text font-medium leading-none">
                {result.correctChars}/{result.incorrectChars}/{result.extraChars}/{result.missedChars}
              </div>
           </div>

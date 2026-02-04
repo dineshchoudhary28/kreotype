@@ -5,10 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTypingStore } from "@/store/useTypingStore";
 import { useInputHistoryStore } from "@/store/useInputHistoryStore";
 import { useConfigStore } from "@/store/useConfigStore";
+import { useFocusModeStore } from "@/store/useFocusModeStore";
 import { useTestLifecycle } from "@/hooks/useTestLifecycle";
 import { useTypingInput } from "@/hooks/useTypingInput";
 import { useTypingSound } from "@/hooks/useTypingSound";
 import { useFocusManager } from "@/hooks/useFocusManager";
+import { useFocusMode } from "@/hooks/useFocusMode";
+import { useWindowBlurDetection } from "@/hooks/useWindowBlurDetection";
+import { useAltTracker } from "@/hooks/useAltTracker";
 import { WordsDisplay } from "./WordsDisplay";
 import { HiddenInput } from "./HiddenInput";
 import { TestConfig } from "./TestConfig";
@@ -18,23 +22,31 @@ import { TimerProgress } from "@/components/ui/TimerProgress";
 import { OutOfFocusWarning } from "@/components/ui/OutOfFocusWarning";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { CapsWarning } from "@/components/ui/CapsWarning";
+import { MinimalHeader } from "@/components/layout/MinimalHeader";
+import { getPageWidthClass } from "@/lib/page-width";
 
 export function TypingTestPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const isFinished = useTypingStore((s) => s.isFinished);
+  const isActive = useTypingStore((s) => s.isActive);
   const testId = useTypingStore((s) => s.testId);
   const liveSpeedStyle = useConfigStore((s) => s.liveSpeedStyle);
   const liveAccStyle = useConfigStore((s) => s.liveAccStyle);
   const liveBurstStyle = useConfigStore((s) => s.liveBurstStyle);
   const quickRestart = useConfigStore((s) => s.quickRestart);
+  const pageWidth = useConfigStore((s) => s.pageWidth);
   const [capsLock, setCapsLock] = useState(false);
 
   const mode = useConfigStore((s) => s.mode);
+  const isFocused = useFocusModeStore((s) => s.isFocused);
   const { initTest, restartTest, finishTest, onFirstKeypress, replayRecorder } = useTestLifecycle();
   const { handleInput, handleKeyDown, handleKeyUp, handleCompositionStart, handleCompositionEnd, capsLockRef } = useTypingInput(onFirstKeypress, finishTest, replayRecorder);
   const { showWarning, focusInput, handleFocus, handleBlur } =
     useFocusManager(inputRef);
   useTypingSound();
+  useFocusMode(); // Manages focus mode (hides UI during typing, shows on mouse movement)
+  useWindowBlurDetection();
+  useAltTracker(); // Track Alt key state for anti-cheat
 
   const doRestart = useCallback(() => {
     if (inputRef.current) {
@@ -107,7 +119,12 @@ export function TypingTestPage() {
   }, [isFinished]);
 
   return (
-    <div className="flex flex-col items-center w-full max-w-7xl mx-auto gap-6 px-4">
+    <div
+      className={`flex flex-col items-center w-full ${getPageWidthClass(pageWidth)} mx-auto gap-6 px-4`}
+    >
+      {/* Show minimal logo during focus mode (active typing with UI hidden) */}
+      {isFocused && <MinimalHeader />}
+
       <CommandPalette onRestart={doRestart} />
 
       <AnimatePresence mode="wait">
@@ -120,7 +137,8 @@ export function TypingTestPage() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <TestConfig onRestart={doRestart} />
+            {/* Hide test config during focus mode */}
+            {!isFocused && <TestConfig onRestart={doRestart} />}
 
             <div className="flex items-center gap-4 min-h-[2rem]">
               <TimerProgress />

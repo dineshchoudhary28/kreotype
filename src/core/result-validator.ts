@@ -16,6 +16,8 @@ interface ValidationContext {
   timeConfig: number;
   keypressCountHistory?: number[];
   isRepeated?: boolean;
+  mouseWasMoved?: boolean;
+  windowWasBlurred?: boolean;
 }
 
 function stddev(values: number[]): number {
@@ -128,6 +130,16 @@ export function validateResult(
         `Insufficient keystrokes: ${totalKeystrokes} vs expected ~${Math.round(expectedChars)}`
       );
     }
+  }
+
+  // 11. ANTI-CHEAT: Mouse movement during test
+  if (context.mouseWasMoved) {
+    reasons.push("Mouse movement detected during test");
+  }
+
+  // 12. ANTI-CHEAT: Window blur/Alt+Tab during test
+  if (context.windowWasBlurred) {
+    reasons.push("Window lost focus during test (Alt+Tab)");
   }
 
   return {

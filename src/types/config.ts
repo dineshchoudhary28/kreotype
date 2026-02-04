@@ -74,7 +74,7 @@ export const defaultConfig: Config = {
   liveBurstStyle: "off",
   stopOnError: "off",
   highlightMode: "letter",
-  fontSize: 1.5,
+  fontSize: 1,  // 1rem base font size
   confidenceMode: "off",
   freedomMode: false,
   quickRestart: "tab",
@@ -91,7 +91,7 @@ export const defaultConfig: Config = {
   soundOnError: "off",
   theme: "serika_dark",
   fontFamily: "geist_mono",
-  pageWidth: "100",
+  pageWidth: "125",  // Increased from "100" (1152px -> 1280px)
   keyTips: true,
   outOfFocusWarning: true,
   capsLockWarning: true,
