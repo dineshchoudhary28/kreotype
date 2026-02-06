@@ -12,6 +12,27 @@ import {
   AreaChart,
 } from "recharts";
 import { RefreshCw, ChevronRight, Share2, Info, ExternalLink, AlertTriangle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
+const swarm65Images = [
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Frame1000006038.png?v=1764739426&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.622.png?v=1764825408&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.623.png?v=1764825408&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.626.png?v=1764825408&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.624.png?v=1764825408&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.620.png?v=1764825408&width=1080"
+];
+
+const swarmWhiteImages = [
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.489.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.491.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.490.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.427_ded55aee-2e01-4dcc-bc87-79d332dbbaed.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.493.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.494.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.429.png?v=1763559972&width=1080"
+];
 
 interface TestResultsProps {
   stats: TestStats;
@@ -23,6 +44,17 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
   const mode = useConfigStore((s) => s.mode);
   const value = useConfigStore((s) => s.value);
   
+  const [swarm65Index, setSwarm65Index] = useState(0);
+  const [swarmWhiteIndex, setSwarmWhiteIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSwarm65Index((prev) => (prev + 1) % swarm65Images.length);
+      setSwarmWhiteIndex((prev) => (prev + 1) % swarmWhiteImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Get cheating counts from store
   const afkCount = useTypingTestStore(s => s.afkCount);
   const tabCount = useTypingTestStore(s => s.tabCount);
@@ -190,34 +222,38 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         </div>
 
         {/* Kreo Advertisement - Horizontal Bottom - Adjusted for mobile */}
-        <div className="group relative w-full overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] bg-black border border-white/5 shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          <div className="absolute inset-0 bg-[url('https://kreo-tech.com/cdn/shop/files/banner_1.jpg')] bg-cover bg-center opacity-20 scale-110 group-hover:scale-100 transition-transform duration-1000 blur-[3px] group-hover:blur-0" />
+        <div className="group relative w-full overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] bg-black border border-white/5 shadow-2xl h-[250px] md:h-[300px]">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
           
-          <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 px-6 md:px-12 py-8 md:py-10 z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={swarm65Images[swarm65Index]}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.4 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+              className="absolute inset-0 bg-cover bg-center scale-110 group-hover:scale-100 transition-transform duration-1000 blur-[2px] group-hover:blur-0"
+              style={{ backgroundImage: `url('${swarm65Images[swarm65Index]}')` }}
+            />
+          </AnimatePresence>
+          
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 px-6 md:px-12 py-8 md:py-10 z-10 h-full">
             <div className="flex flex-col gap-2 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-4">
                 <div className="bg-primary text-background text-[8px] md:text-[9px] font-black px-2 md:px-2.5 py-0.5 md:py-1 rounded-full uppercase tracking-widest shadow-lg shadow-primary/30">
-                  Kreo Hardware
+                  New Arrival
                 </div>
                 <div className="hidden md:block h-px w-12 bg-white/10" />
               </div>
               <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter text-white uppercase leading-tight">
-                Built for <span className="text-primary group-hover:text-white transition-colors">Precision</span>
+                Swarm65 <span className="text-primary group-hover:text-white transition-colors">Black Purple</span>
               </h3>
               <p className="text-secondary text-[11px] md:text-sm font-medium max-w-sm opacity-60 group-hover:opacity-100 transition-opacity">
-                              Upgrade your mechanical game with Kreo&apos;s high-performance gear.
-                            </p>            </div>
+                Wireless Mechanical Gaming Keyboard with premium switches and elite purple accents.
+              </p>
+            </div>
             
             <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 w-full md:w-auto">
-              <div className="hidden sm:flex flex-col items-center md:items-end">
-                <span className="text-[8px] md:text-[9px] text-secondary font-black uppercase tracking-[0.3em] opacity-40">Collection 2026</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xs text-primary font-bold">₹</span>
-                  <span className="text-2xl md:text-4xl font-black text-white tracking-tighter">2,499</span>
-                </div>
-              </div>
-              
               <a 
                 href="https://kreo-tech.com" 
                 target="_blank" 
@@ -244,45 +280,47 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         </div>
       </div>
 
-      {/* Right Sidebar Ad (Vertical) - Hidden on medium, shown as separate block on mobile if needed? 
-          For now let's keep it as is, it's hidden lg:flex. */}
+      {/* Right Sidebar Ad (Vertical) */}
       <aside className="hidden lg:flex flex-col w-[320px] gap-6 shrink-0 pt-4">
         <div className="sticky top-24 flex flex-col gap-6">
-          <div className="relative group overflow-hidden rounded-[2rem] bg-surface/30 border border-white/5 p-6 flex flex-col gap-6">
+          <div className="relative group overflow-hidden rounded-[2rem] bg-surface/30 border border-white/5 p-6 flex flex-col gap-6 min-h-[500px]">
             <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-black/40">
-              <img 
-                src="https://kreo-tech.com/cdn/shop/files/Product_1.jpg" 
-                alt="Kreo Product" 
-                className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000"
-              />
-              <div className="absolute top-4 left-4 bg-primary text-background text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter shadow-lg shadow-primary/20">
-                Hot Seller
+              <AnimatePresence mode="wait">
+                <motion.img 
+                  key={swarmWhiteImages[swarmWhiteIndex]}
+                  src={swarmWhiteImages[swarmWhiteIndex]} 
+                  alt="Swarm White Purple" 
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.8 }}
+                  className="w-full h-full object-cover transition-transform duration-1000"
+                />
+              </AnimatePresence>
+              <div className="absolute top-4 left-4 bg-primary text-background text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter shadow-lg shadow-primary/20 z-10">
+                Wireless Elite
               </div>
             </div>
 
             <div className="relative flex flex-col gap-3">
               <div className="flex flex-col gap-1">
-                <span className="text-primary text-[10px] font-black uppercase tracking-widest">Mechanical Series</span>
-                <h4 className="text-xl font-black text-white uppercase tracking-tighter leading-tight">Kreo <span className="text-primary italic">Element</span> Pro</h4>
+                <span className="text-primary text-[10px] font-black uppercase tracking-widest">Swarm Series</span>
+                <h4 className="text-xl font-black text-white uppercase tracking-tighter leading-tight">Swarm <span className="text-primary italic">White</span> Purple</h4>
               </div>
               <p className="text-secondary text-xs font-medium opacity-60 leading-relaxed">
-                Hot-swappable switches, Gasket mount, and tri-mode connectivity for the ultimate typing feel.
+                Clean aesthetic meets mechanical precision. Tri-mode connectivity for seamless gaming.
               </p>
               
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex flex-col">
-                  <span className="text-[8px] text-secondary font-bold uppercase tracking-widest opacity-40">Price</span>
-                  <span className="text-2xl font-black text-white tracking-tighter italic">₹4,999</span>
-                </div>
+              <div className="flex items-center justify-end mt-2">
                 <a 
                   href="https://kreo-tech.com" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="bg-white text-black p-3 rounded-full hover:bg-primary hover:text-white transition-all hover:scale-110 shadow-xl"
                 >
-                  <ExternalLink size={18} />
+                  <ExternalLink className="w-4 h-4 md:w-4.5 md:h-4.5" />
                 </a>
               </div>
             </div>
@@ -322,7 +360,7 @@ function StatItem({
   tooltip 
 }: { 
   label: string; 
-  value: string; 
+  value: string | number | undefined; 
   subValue?: string;
   tooltip?: string;
 }) {
@@ -343,7 +381,7 @@ function StatItem({
       </div>
       <div className="flex items-baseline gap-2">
         <span className="text-text text-4xl font-black tabular-nums tracking-tighter">
-          {value}
+          {value ?? "-"}
         </span>
         {subValue && (
           <span className="text-secondary text-sm font-bold uppercase tracking-widest opacity-40">

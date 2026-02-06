@@ -4,6 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useFocusModeStore } from "@/store/useFocusModeStore";
+import { useThemeStore } from "@/store/themeStore";
+import { themes } from "@/data/themes";
+import { useState, useRef, useEffect } from "react";
+import { Palette, Check, ChevronDown } from "lucide-react";
 
 const navLinks = [
   {
@@ -65,6 +69,23 @@ export function Header() {
   const { data: session } = useSession();
   const isFocused = useFocusModeStore((s) => s.isFocused);
   const showUITemporarily = useFocusModeStore((s) => s.showUITemporarily);
+  
+  const currentTheme = useThemeStore((s) => s.currentTheme);
+  const setTheme = useThemeStore((s) => s.setTheme);
+  
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsThemeOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // In focus mode on home page
   if (pathname === "/" && isFocused) {
@@ -132,12 +153,50 @@ export function Header() {
 
         {/* Right: Actions and Profile */}
         <div className="flex items-center gap-3 sm:gap-6 text-secondary">
-          {/* Theme Toggle - Hidden on small mobile to save space */}
-          <button className="hover:text-text transition-colors cursor-pointer hidden sm:block" title="Change Theme">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
-          </button>
+          {/* Theme Changer Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              className={`hover:text-text transition-all cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-surface ${isThemeOpen ? 'text-text bg-surface' : ''}`}
+              title="Change Theme"
+              onClick={() => setIsThemeOpen(!isThemeOpen)}
+            >
+              <Palette size={20} />
+              <span className="hidden lg:inline text-[11px] font-bold uppercase tracking-widest">{currentTheme.label}</span>
+              <ChevronDown size={14} className={`transition-transform duration-200 ${isThemeOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isThemeOpen && (
+              <div className="absolute right-0 mt-2 w-64 max-h-[400px] overflow-y-auto bg-surface border border-gray-900 rounded-xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 scrollbar-hide">
+                <div className="p-2 grid grid-cols-1 gap-1">
+                  <div className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-secondary opacity-40">Select Theme</div>
+                  {themes.map((theme) => {
+                    const isActive = currentTheme.name === theme.name;
+                    return (
+                      <button
+                        key={theme.name}
+                        onClick={() => {
+                          setTheme(theme.name);
+                          setIsThemeOpen(false);
+                        }}
+                        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all text-left group cursor-pointer ${
+                          isActive ? 'bg-primary/10 text-primary' : 'hover:bg-background text-secondary hover:text-text'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-3 h-3 rounded-full border border-black/20"
+                            style={{ backgroundColor: theme.colors.primary }}
+                          />
+                          <span className="text-xs font-bold">{theme.label}</span>
+                        </div>
+                        {isActive && <Check size={14} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Notifications - Hidden on small mobile */}
           <button className="hover:text-text transition-colors cursor-pointer relative hidden sm:block" title="Notifications">
