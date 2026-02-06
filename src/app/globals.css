@@ -27,7 +27,7 @@
 
 @layer base {
   * {
-    @apply border-gray-900;
+    @apply border-surface;
   }
   body {
     @apply bg-background text-text transition-colors duration-300;

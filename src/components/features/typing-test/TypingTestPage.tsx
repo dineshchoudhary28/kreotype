@@ -518,11 +518,11 @@ export function TypingTestPage() {
         {!isActive && (
           <div className="flex gap-4 sm:gap-8 text-secondary text-[10px] md:text-[11px] font-medium opacity-50">
             <div className="flex items-center gap-1.5 md:gap-2">
-              <kbd className="bg-surface px-1.5 py-0.5 rounded border border-gray-900 text-secondary font-sans">
+              <kbd className="bg-surface px-1.5 py-0.5 rounded border border-surface text-secondary font-sans">
                 tab
               </kbd>
               <span className="hidden sm:inline">+</span>
-              <kbd className="bg-surface px-1.5 py-0.5 rounded border border-gray-900 text-secondary font-sans hidden sm:inline">
+              <kbd className="bg-surface px-1.5 py-0.5 rounded border border-surface text-secondary font-sans hidden sm:inline">
                 enter
               </kbd>
               <span>restart test</span>

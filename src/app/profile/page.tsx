@@ -161,7 +161,7 @@ export default function ProfilePage() {
             placeholder="Search for a profile..."
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-surface border border-gray-900 rounded-2xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/50 text-sm"
+            className="w-full pl-12 pr-4 py-3 bg-surface border border-surface rounded-2xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/50 text-sm"
           />
           <button
             type="submit"
@@ -181,8 +181,8 @@ export default function ProfilePage() {
       </div>
 
       {!profile && !loading && !error && (
-        <div className="flex flex-col items-center justify-center py-20 text-center gap-4 bg-surface/30 rounded-3xl border border-dashed border-gray-900/50">
-          <div className="p-4 rounded-full bg-surface border border-gray-900 text-secondary/30">
+        <div className="flex flex-col items-center justify-center py-20 text-center gap-4 bg-surface/30 rounded-3xl border border-dashed border-surface/50">
+          <div className="p-4 rounded-full bg-surface border border-surface text-secondary/30">
             <User size={48} />
           </div>
           <div className="flex flex-col gap-1">
@@ -205,7 +205,7 @@ export default function ProfilePage() {
       {profile && (
         <>
           {/* Profile Header */}
-          <div className="relative overflow-hidden rounded-3xl bg-surface border border-gray-900/50 p-8 shadow-sm">
+          <div className="relative overflow-hidden rounded-3xl bg-surface border border-surface/50 p-8 shadow-sm">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
             
             <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8">
@@ -267,7 +267,7 @@ export default function ProfilePage() {
 
           {/* Leaderboard snapshot */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm relative overflow-hidden group">
+            <div className="rounded-2xl bg-surface border border-surface/50 p-6 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 text-primary/10 group-hover:text-primary/20 transition-colors">
                 <Trophy size={64} />
               </div>
@@ -285,7 +285,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm relative overflow-hidden group">
+            <div className="rounded-2xl bg-surface border border-surface/50 p-6 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 text-primary/10 group-hover:text-primary/20 transition-colors">
                 <Award size={64} />
               </div>
@@ -306,7 +306,7 @@ export default function ProfilePage() {
 
           {/* PB Breakdown */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <section className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm">
+            <section className="rounded-2xl bg-surface border border-surface/50 p-6 shadow-sm">
               <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
                 <Clock size={14} className="text-primary" /> Time Breakdown
               </h3>
@@ -314,7 +314,7 @@ export default function ProfilePage() {
                 {PB_TIMES.map(({ label, key }) => {
                   const pb = pbs[key];
                   return (
-                    <div key={key} className="flex items-center justify-between p-3 rounded-xl hover:bg-background/50 transition-colors border border-transparent hover:border-gray-900/50 group">
+                    <div key={key} className="flex items-center justify-between p-3 rounded-xl hover:bg-background/50 transition-colors border border-transparent hover:border-surface/50 group">
                       <span className="text-sm font-medium text-secondary group-hover:text-text">{label}</span>
                       <div className="flex items-center gap-4">
                         <span className="text-sm font-bold text-text">{pb ? `${Math.round(pb.wpm)} wpm` : "-"}</span>
@@ -326,7 +326,7 @@ export default function ProfilePage() {
               </div>
             </section>
 
-            <section className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm">
+            <section className="rounded-2xl bg-surface border border-surface/50 p-6 shadow-sm">
               <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
                 <Activity size={14} className="text-primary" /> Words Breakdown
               </h3>
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                 {PB_WORDS.map(({ label, key }) => {
                   const pb = pbs[key];
                   return (
-                    <div key={key} className="flex items-center justify-between p-3 rounded-xl hover:bg-background/50 transition-colors border border-transparent hover:border-gray-900/50 group">
+                    <div key={key} className="flex items-center justify-between p-3 rounded-xl hover:bg-background/50 transition-colors border border-transparent hover:border-surface/50 group">
                       <span className="text-sm font-medium text-secondary group-hover:text-text">{label} words</span>
                       <div className="flex items-center gap-4">
                         <span className="text-sm font-bold text-text">{pb ? `${Math.round(pb.wpm)} wpm` : "-"}</span>
@@ -349,7 +349,7 @@ export default function ProfilePage() {
 
           {/* Recent Tests Speed Chart */}
           {recentTests.length > 0 && (
-            <section className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm">
+            <section className="rounded-2xl bg-surface border border-surface/50 p-6 shadow-sm">
               <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
                 <Activity size={14} className="text-primary" /> Recent Performance
               </h3>
@@ -358,7 +358,7 @@ export default function ProfilePage() {
           )}
 
           {/* Test Activity Heatmap */}
-          <section className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm">
+          <section className="rounded-2xl bg-surface border border-surface/50 p-6 shadow-sm">
             <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
               <Calendar size={14} className="text-primary" /> Activity Map
             </h3>
@@ -384,7 +384,7 @@ export default function ProfilePage() {
                           key={key}
                           className="w-[11px] h-[11px] rounded-[2px] cursor-default transition-all hover:scale-150 hover:z-10"
                           style={{ 
-                            backgroundColor: count === 0 ? 'var(--secondary)' : 'var(--primary)',
+                            backgroundColor: count === 0 ? 'var(--color-secondary)' : 'var(--color-primary)',
                             opacity: opacity 
                           }}
                           title={`${key}: ${count} tests${day ? `, avg ${Math.round(day.avgWpm)} wpm` : ""}`}
@@ -425,7 +425,7 @@ function RecentTestsChart({ tests }: { tests: RecentTest[] }) {
   return (
     <div className="flex flex-col gap-6">
       {/* SVG chart */}
-      <div className="w-full bg-background/50 rounded-2xl border border-gray-900/50 p-6">
+      <div className="w-full bg-background/50 rounded-2xl border border-surface/50 p-6">
         <svg
           viewBox={`0 0 ${sorted.length * 40} ${chartHeight + 20}`}
           className="w-full h-32"
@@ -439,19 +439,18 @@ function RecentTestsChart({ tests }: { tests: RecentTest[] }) {
               y1={chartHeight - frac * chartHeight}
               x2={sorted.length * 40}
               y2={chartHeight - frac * chartHeight}
-              stroke="currentColor"
-              className="text-secondary/10"
+              stroke="var(--color-secondary)"
+              strokeOpacity={0.1}
               strokeWidth={1}
             />
           ))}
           {/* WPM line */}
           <polyline
             fill="none"
-            stroke="var(--primary)"
+            stroke="var(--color-primary)"
             strokeWidth={2}
             strokeLinejoin="round"
             strokeLinecap="round"
-            className="drop-shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
             points={sorted
               .map((t, i) => `${i * 40 + 20},${chartHeight - (t.wpm / maxWpm) * chartHeight}`)
               .join(" ")}
@@ -463,7 +462,7 @@ function RecentTestsChart({ tests }: { tests: RecentTest[] }) {
               cx={i * 40 + 20}
               cy={chartHeight - (t.wpm / maxWpm) * chartHeight}
               r={3}
-              fill="var(--primary)"
+              fill="var(--color-primary)"
               className="cursor-pointer hover:r-4 transition-all"
             >
               <title>{`${Math.round(t.wpm)} wpm | ${Math.round(t.accuracy)}% acc`}</title>
@@ -475,7 +474,7 @@ function RecentTestsChart({ tests }: { tests: RecentTest[] }) {
       {/* List below chart */}
       <div className="space-y-3">
         {tests.map((t) => (
-          <div key={t._id} className="flex items-center justify-between p-4 rounded-xl bg-background/30 border border-gray-900/30 group hover:border-primary/20 transition-all">
+          <div key={t._id} className="flex items-center justify-between p-4 rounded-xl bg-background/30 border border-surface/30 group hover:border-primary/20 transition-all">
             <div className="flex flex-col">
               <span className="text-sm font-bold text-text capitalize">{t.mode} {t.mode2}</span>
               <span className="text-[10px] text-secondary font-medium">{formatDate(t.timestamp)}</span>

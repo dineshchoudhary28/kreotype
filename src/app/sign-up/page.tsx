@@ -129,7 +129,7 @@ export default function SignUpPage() {
                 placeholder="johndoe"
                 value={registerUsername}
                 onChange={(e) => setRegisterUsername(e.target.value)}
-                className="w-full px-4 py-3.5 bg-surface border border-gray-900 rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm"
+                className="w-full px-4 py-3.5 bg-surface border border-surface rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm"
                 autoComplete="username"
                 required
               />
@@ -141,7 +141,7 @@ export default function SignUpPage() {
                 placeholder="name@example.com"
                 value={registerEmail}
                 onChange={(e) => setRegisterEmail(e.target.value)}
-                className="w-full px-4 py-3.5 bg-surface border border-gray-900 rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm"
+                className="w-full px-4 py-3.5 bg-surface border border-surface rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm"
                 autoComplete="email"
                 required
               />
@@ -153,7 +153,7 @@ export default function SignUpPage() {
                 placeholder="••••••••"
                 value={registerPassword}
                 onChange={(e) => setRegisterPassword(e.target.value)}
-                className="w-full px-4 py-3.5 bg-surface border border-gray-900 rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm"
+                className="w-full px-4 py-3.5 bg-surface border border-surface rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm"
                 autoComplete="new-password"
                 required
               />
@@ -187,7 +187,7 @@ export default function SignUpPage() {
                 placeholder="123456"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="w-full px-4 py-3.5 bg-surface border border-gray-900 rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-center text-2xl tracking-[0.5em] font-bold"
+                className="w-full px-4 py-3.5 bg-surface border border-surface rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-center text-2xl tracking-[0.5em] font-bold"
                 maxLength={6}
                 required
               />

@@ -97,11 +97,11 @@ export function TestConfig() {
 
   return (
     <div className="flex flex-col items-center w-full mt-4 px-4 md:px-0">
-      <div className="bg-surface rounded-xl flex flex-col shadow-2xl border border-surface/50 overflow-hidden w-full max-w-[1000px] md:w-fit">
+      <div className="bg-surface rounded-xl flex flex-col shadow-2xl border border-surface overflow-hidden w-full max-w-[1000px] md:w-fit">
         {/* Top Row: Basic Config */}
-        <div className="px-4 md:px-6 py-2.5 flex flex-wrap md:flex-nowrap items-center justify-center md:justify-start gap-4 md:gap-8 text-[12px] md:text-[13px] font-medium text-secondary border-b border-surface/50">
+        <div className="px-4 md:px-6 py-2.5 flex flex-wrap md:flex-nowrap items-center justify-center md:justify-start gap-4 md:gap-8 text-[12px] md:text-[13px] font-medium text-secondary border-b border-surface">
           {/* Toggles */}
-          <div className="flex items-center gap-4 md:gap-6 border-b md:border-b-0 md:border-r border-surface/50 pb-2 md:pb-0 md:pr-8 w-full md:w-auto justify-center md:justify-start">
+          <div className="flex items-center gap-4 md:gap-6 border-b md:border-b-0 md:border-r border-surface pb-2 md:pb-0 md:pr-8 w-full md:w-auto justify-center md:justify-start">
             <button
               onClick={() => setConfig("punctuation", !punctuation)}
               className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer ${punctuation ? "text-primary" : ""}`}
@@ -119,7 +119,7 @@ export function TestConfig() {
           </div>
 
           {/* Modes */}
-          <div className="flex items-center flex-wrap justify-center gap-4 md:gap-6 md:border-r border-surface/50 md:pr-8">
+          <div className="flex items-center flex-wrap justify-center gap-4 md:gap-6 md:border-r border-surface md:pr-8">
             {modes.map((m) => (
               <button
                 key={m}
@@ -157,7 +157,7 @@ export function TestConfig() {
         {/* Bottom Row: Visual Config */}
         <div className="px-4 md:px-6 py-2.5 flex flex-wrap md:flex-nowrap items-center justify-center md:justify-start gap-4 md:gap-8 text-[12px] md:text-[13px] font-medium text-secondary">
           {/* Patterns */}
-          <div className="flex items-center gap-4 md:gap-6 md:border-r border-surface/50 md:pr-8">
+          <div className="flex items-center gap-4 md:gap-6 md:border-r border-surface md:pr-8">
             {patternItems.map((p) => (
               <button
                 key={p.id}
@@ -173,7 +173,7 @@ export function TestConfig() {
           </div>
 
           {/* Line Modes */}
-          <div className="flex items-center gap-4 md:gap-6 md:border-r border-surface/50 md:pr-8">
+          <div className="flex items-center gap-4 md:gap-6 md:border-r border-surface md:pr-8">
             <button
               onClick={() => setConfig("lineMode", "single")}
               className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer ${

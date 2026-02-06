@@ -166,7 +166,7 @@ export function Header() {
             </button>
 
             {isThemeOpen && (
-              <div className="absolute right-0 mt-2 w-64 max-h-[400px] overflow-y-auto bg-surface border border-gray-900 rounded-xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 scrollbar-hide">
+              <div className="absolute right-0 mt-2 w-64 max-h-[400px] overflow-y-auto bg-surface border border-surface rounded-xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 scrollbar-hide">
                 <div className="p-2 grid grid-cols-1 gap-1">
                   <div className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-secondary opacity-40">Select Theme</div>
                   {themes.map((theme) => {
@@ -212,7 +212,7 @@ export function Header() {
             <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/account"
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface border border-gray-900 flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface border border-surface flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
                 title="Account"
               >
                 <span className="text-xs md:text-sm font-medium text-secondary">
@@ -234,7 +234,7 @@ export function Header() {
           ) : (
             <Link
               href="/login"
-              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface border border-gray-900 flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface border border-surface flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
               title="Sign in"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary w-5 h-5 md:w-6 md:h-6">

@@ -136,7 +136,7 @@ export default function LeaderboardsPage() {
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Type Selectors */}
-          <div className="flex bg-surface p-1 rounded-xl border border-gray-900">
+          <div className="flex bg-surface p-1 rounded-xl border border-surface">
             {(["allTime", "weekly", "daily"] as const).map((t) => (
               <button
                 key={t}
@@ -155,7 +155,7 @@ export default function LeaderboardsPage() {
           <div className="w-px h-8 bg-surface mx-2 hidden md:block" />
 
           {/* Time Selectors */}
-          <div className="flex bg-surface p-1 rounded-xl border border-gray-900">
+          <div className="flex bg-surface p-1 rounded-xl border border-surface">
             {(["15", "60"] as const).map((m) => (
               <button
                 key={m}
@@ -261,7 +261,7 @@ export default function LeaderboardsPage() {
                         <td className="px-4 md:px-6 py-4">
                           <div className="flex items-center gap-2 md:gap-3">
                             <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-[9px] md:text-[10px] font-bold border ${
-                              isCurrentUser ? "bg-primary border-primary text-background" : "bg-surface border-gray-900 text-secondary"
+                              isCurrentUser ? "bg-primary border-primary text-background" : "bg-surface border-surface text-secondary"
                             }`}>
                               {entry.username.charAt(0).toUpperCase()}
                             </div>

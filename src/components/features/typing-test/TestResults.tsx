@@ -106,10 +106,10 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
           )}
 
           {/* Graph Section */}
-          <div className="md:col-span-9 h-[250px] md:h-[400px] w-full bg-surface/40 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 relative group overflow-hidden border border-white/[0.03] shadow-2xl">
+          <div className="md:col-span-9 h-[250px] md:h-[400px] w-full bg-surface/40 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 relative group overflow-hidden border border-surface shadow-2xl">
             <div className="absolute top-4 md:top-6 left-4 md:left-8 flex items-center gap-4 md:gap-6 z-10">
               <div className="flex items-center gap-2 group/legend cursor-help">
-                <div className="w-2 md:w-2.5 h-2 md:h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(104,90,202,0.5)]" />
+                <div className="w-2 md:w-2.5 h-2 md:h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--color-primary),0.5)]" />
                 <span className="text-[9px] md:text-[10px] text-secondary font-black uppercase tracking-widest opacity-40 group-hover/legend:opacity-100 transition-opacity">wpm</span>
               </div>
               <div className="flex items-center gap-2 group/legend cursor-help">
@@ -122,17 +122,15 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
               <AreaChart data={chartData} margin={{ top: 50, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorWpm" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#685ACA" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#685ACA" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(255,255,255,0.02)" />
-                <XAxis 
-                  dataKey="time" 
-                  hide 
-                />
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--color-secondary)" strokeOpacity={0.1} />
+                <XAxis dataKey="time" hide />
                 <YAxis 
-                  stroke="rgba(255,255,255,0.1)" 
+                  stroke="var(--color-secondary)" 
+                  strokeOpacity={0.3}
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
@@ -141,19 +139,19 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#0a0a0a', 
-                    border: '1px solid rgba(255,255,255,0.05)',
+                    backgroundColor: 'var(--color-surface)', 
+                    border: '1px solid var(--color-surface)',
                     borderRadius: '12px',
                     fontSize: '11px',
                     boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
                   }}
-                  itemStyle={{ color: '#685ACA', fontWeight: 'bold' }}
-                  cursor={{ stroke: '#685ACA', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  itemStyle={{ color: 'var(--color-primary)', fontWeight: 'bold' }}
+                  cursor={{ stroke: 'var(--color-primary)', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="raw" 
-                  stroke="#6b7280" 
+                  stroke="var(--color-secondary)" 
                   strokeWidth={2} 
                   strokeOpacity={0.2}
                   fill="transparent" 
@@ -161,11 +159,11 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                 <Area 
                   type="monotone" 
                   dataKey="wpm" 
-                  stroke="#685ACA" 
+                  stroke="var(--color-primary)" 
                   strokeWidth={4} 
                   fillOpacity={1} 
                   fill="url(#colorWpm)" 
-                  activeDot={{ r: 6, strokeWidth: 0, fill: '#685ACA' }} 
+                  activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--color-primary)' }} 
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -173,7 +171,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
 
           {/* Desktop Integrity Indicators */}
           {(afkCount > 0 || tabCount > 0 || blurCount > 0) && (
-            <div className="hidden md:flex col-span-3 flex-col gap-2 p-4 bg-error/5 border border-error/10 rounded-xl mt-[-2rem]">
+            <div className="hidden md:flex col-span-3 flex-col gap-2 p-4 bg-error/5 border border-surface rounded-xl mt-[-2rem]">
               <div className="flex items-center gap-2 text-error text-[10px] font-black uppercase tracking-widest">
                 <AlertTriangle size={12} />
                 Integrity Report
@@ -188,7 +186,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         </div>
 
         {/* Secondary Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8 mb-12">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8 mb-10">
           <StatItem label="test type" value={mode} subValue={value} />
           <StatItem label="raw wpm" value={stats.rawWpm.toString()} />
           <StatItem label="consistency" value={`${stats.consistency}%`} />
@@ -198,38 +196,45 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
             value={`${stats.correctChars}/${stats.incorrectChars}/${stats.extraChars}/${stats.missedChars}`} 
             tooltip="correct/incorrect/extra/missed"
           />
-          <div className="flex flex-col justify-end gap-3 col-span-2 sm:col-span-1 lg:col-span-1">
+        </div>
+
+        {/* Action Buttons Row - Centered */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
+          <div className="flex gap-2 order-2 sm:order-1">
             <button 
-              onClick={onNext}
-              className="flex items-center justify-center gap-2 md:gap-3 bg-primary text-background font-black py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all group shadow-2xl shadow-primary/20 cursor-pointer uppercase text-[10px] md:text-xs tracking-[0.1em]"
+              onClick={onRestart}
+              className="flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover text-text px-4 py-2 rounded-lg transition-colors cursor-pointer border border-surface active:scale-95 group"
+              title="Restart Test"
             >
-              <span>Next Test</span>
-              <ChevronRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
+              <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Restart</span>
             </button>
-            <div className="flex gap-2">
-              <button 
-                onClick={onRestart}
-                className="flex-1 flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover text-text py-2 md:py-3 rounded-lg md:rounded-xl transition-colors cursor-pointer border border-white/[0.03] active:scale-95"
-              >
-                <RefreshCw className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Restart</span>
-              </button>
-              <button className="p-2 md:p-3 bg-surface hover:bg-surface-hover text-text rounded-lg md:rounded-xl transition-colors cursor-pointer border border-white/[0.03] active:scale-95">
-                <Share2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
-              </button>
-            </div>
+            <button 
+              className="p-2.5 bg-surface hover:bg-surface-hover text-text rounded-lg transition-colors cursor-pointer border border-surface active:scale-95"
+              title="Share Results"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+            </button>
           </div>
+
+          <button 
+            onClick={onNext}
+            className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-primary text-background font-black py-2.5 px-8 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all group shadow-xl shadow-primary/10 cursor-pointer uppercase text-[10px] tracking-[0.1em] order-1 sm:order-2"
+          >
+            <span>Next Test</span>
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </button>
         </div>
 
         {/* Kreo Advertisement - Horizontal Bottom - Adjusted for mobile */}
-        <div className="group relative w-full overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] bg-black border border-white/5 shadow-2xl h-[250px] md:h-[300px]">
+        <div className="group relative w-full overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] bg-surface border border-surface shadow-2xl h-[250px] md:h-[300px]">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
           
           <AnimatePresence mode="wait">
             <motion.div
               key={swarm65Images[swarm65Index]}
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
+              animate={{ opacity: 0.2 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1 }}
               className="absolute inset-0 bg-cover bg-center scale-110 group-hover:scale-100 transition-transform duration-1000 blur-[2px] group-hover:blur-0"
@@ -243,12 +248,12 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                 <div className="bg-primary text-background text-[8px] md:text-[9px] font-black px-2 md:px-2.5 py-0.5 md:py-1 rounded-full uppercase tracking-widest shadow-lg shadow-primary/30">
                   New Arrival
                 </div>
-                <div className="hidden md:block h-px w-12 bg-white/10" />
+                <div className="hidden md:block h-px w-12 bg-secondary/20" />
               </div>
-              <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter text-white uppercase leading-tight">
-                Swarm65 <span className="text-primary group-hover:text-white transition-colors">Black Purple</span>
+              <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter text-text uppercase leading-tight">
+                Swarm65 <span className="text-primary group-hover:text-text transition-colors">Black Purple</span>
               </h3>
-              <p className="text-secondary text-[11px] md:text-sm font-medium max-w-sm opacity-60 group-hover:opacity-100 transition-opacity">
+              <p className="text-secondary text-[11px] md:text-sm font-medium max-w-sm opacity-80 group-hover:opacity-100 transition-opacity">
                 Wireless Mechanical Gaming Keyboard with premium switches and elite purple accents.
               </p>
             </div>
@@ -258,7 +263,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                 href="https://kreo-tech.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-full md:w-auto flex items-center justify-center gap-3 bg-white text-black px-6 md:px-8 py-3 md:py-4 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest hover:bg-primary hover:text-white transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-primary/50 group/btn"
+                className="w-full md:w-auto flex items-center justify-center gap-3 bg-primary text-background px-6 md:px-8 py-3 md:py-4 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest hover:opacity-90 transition-all shadow-xl group/btn"
               >
                 Shop Now
                 <ExternalLink className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
@@ -270,11 +275,11 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         {/* Shortcuts - hidden on mobile */}
         <div className="mt-8 md:mt-10 flex justify-center gap-10">
           <div className="hidden md:flex items-center gap-3 group">
-            <kbd className="bg-surface px-2 py-1 rounded-lg border border-white/5 text-[10px] text-text font-black group-hover:border-primary/50 transition-colors shadow-inner">TAB</kbd>
+            <kbd className="bg-surface px-2 py-1 rounded-lg border border-surface text-[10px] text-text font-black group-hover:border-primary/50 transition-colors shadow-inner">TAB</kbd>
             <span className="text-[9px] text-secondary font-black uppercase tracking-[0.2em] opacity-30 group-hover:opacity-100 transition-opacity">next test</span>
           </div>
           <div className="hidden md:flex items-center gap-3 group">
-            <kbd className="bg-surface px-2 py-1 rounded-lg border border-white/5 text-[10px] text-text font-black group-hover:border-primary/50 transition-colors shadow-inner">ESC</kbd>
+            <kbd className="bg-surface px-2 py-1 rounded-lg border border-surface text-[10px] text-text font-black group-hover:border-primary/50 transition-colors shadow-inner">ESC</kbd>
             <span className="text-[9px] text-secondary font-black uppercase tracking-[0.2em] opacity-30 group-hover:opacity-100 transition-opacity">restart</span>
           </div>
         </div>
@@ -283,10 +288,10 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
       {/* Right Sidebar Ad (Vertical) */}
       <aside className="hidden lg:flex flex-col w-[320px] gap-6 shrink-0 pt-4">
         <div className="sticky top-24 flex flex-col gap-6">
-          <div className="relative group overflow-hidden rounded-[2rem] bg-surface/30 border border-white/5 p-6 flex flex-col gap-6 min-h-[500px]">
+          <div className="relative group overflow-hidden rounded-[2rem] bg-surface border border-surface p-6 flex flex-col gap-6 min-h-[500px]">
             <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-black/40">
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-background/40">
               <AnimatePresence mode="wait">
                 <motion.img 
                   key={swarmWhiteImages[swarmWhiteIndex]}
@@ -307,9 +312,9 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
             <div className="relative flex flex-col gap-3">
               <div className="flex flex-col gap-1">
                 <span className="text-primary text-[10px] font-black uppercase tracking-widest">Swarm Series</span>
-                <h4 className="text-xl font-black text-white uppercase tracking-tighter leading-tight">Swarm <span className="text-primary italic">White</span> Purple</h4>
+                <h4 className="text-xl font-black text-text uppercase tracking-tighter leading-tight">Swarm <span className="text-primary italic">White</span> Purple</h4>
               </div>
-              <p className="text-secondary text-xs font-medium opacity-60 leading-relaxed">
+              <p className="text-secondary text-xs font-medium opacity-80 leading-relaxed">
                 Clean aesthetic meets mechanical precision. Tri-mode connectivity for seamless gaming.
               </p>
               
@@ -318,29 +323,29 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                   href="https://kreo-tech.com" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="bg-white text-black p-3 rounded-full hover:bg-primary hover:text-white transition-all hover:scale-110 shadow-xl"
+                  className="bg-primary text-background p-3 rounded-full hover:opacity-90 transition-all hover:scale-110 shadow-xl"
                 >
                   <ExternalLink className="w-4 h-4 md:w-4.5 md:h-4.5" />
                 </a>
               </div>
             </div>
             
-            <div className="h-px w-full bg-white/5" />
+            <div className="h-px w-full bg-secondary/10" />
             
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="w-6 h-6 rounded-full border-2 border-surface bg-zinc-800" />
+                  <div key={i} className="w-6 h-6 rounded-full border-2 border-surface bg-surface" />
                 ))}
               </div>
               <span className="text-[9px] text-secondary font-bold uppercase tracking-widest opacity-60">+200 reviews</span>
             </div>
           </div>
 
-          <div className="relative p-6 rounded-[2rem] bg-gradient-to-br from-zinc-900 to-black border border-white/5 overflow-hidden group">
+          <div className="relative p-6 rounded-[2rem] bg-surface border border-surface overflow-hidden group">
             <div className="relative z-10 flex flex-col gap-4 text-center">
               <span className="text-primary text-[9px] font-black uppercase tracking-[0.3em]">Join the Crew</span>
-              <h5 className="text-lg font-black text-white uppercase italic tracking-tighter leading-none">Get 10% OFF Your First Order</h5>
+              <h5 className="text-lg font-black text-text uppercase italic tracking-tighter leading-none">Get 10% OFF Your First Order</h5>
               <button className="bg-primary text-background py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">
                 Claim Offer
               </button>
@@ -373,7 +378,7 @@ function StatItem({
         {tooltip && (
           <div className="relative group/tip">
             <Info size={12} className="text-secondary opacity-20 hover:opacity-100 cursor-help" />
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-surface text-[10px] text-text rounded-xl font-bold whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-all border border-white/5 pointer-events-none z-50 shadow-2xl translate-y-2 group-hover/tip:translate-y-0">
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-surface text-[10px] text-text rounded-xl font-bold whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-all border border-surface pointer-events-none z-50 shadow-2xl translate-y-2 group-hover/tip:translate-y-0">
               {tooltip}
             </div>
           </div>
@@ -393,4 +398,3 @@ function StatItem({
     </div>
   );
 }
-

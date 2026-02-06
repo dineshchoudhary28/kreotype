@@ -167,7 +167,7 @@ export default function AccountSettingsPage() {
                   placeholder="Display Name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="flex-1 max-w-xs px-4 py-2.5 bg-background border border-gray-900 rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                  className="flex-1 max-w-xs px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
                 />
                 <button
                   onClick={() => apiAction("/api/account/name", "PATCH", { name: displayName })}
@@ -189,7 +189,7 @@ export default function AccountSettingsPage() {
                   placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="flex-1 max-w-xs px-4 py-2.5 bg-background border border-gray-900 rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                  className="flex-1 max-w-xs px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
                 />
                 <button
                   onClick={() => apiAction("/api/account/name", "PATCH", { username })}
@@ -206,7 +206,7 @@ export default function AccountSettingsPage() {
               description="Manage how your account appears to others on leaderboards."
             >
               <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between p-4 bg-background/50 rounded-2xl border border-gray-900/50">
+                <div className="flex items-center justify-between p-4 bg-background/50 rounded-2xl border border-surface/50">
                   <div>
                     <h4 className="text-sm font-bold text-text mb-1">Opt out of leaderboards</h4>
                     <p className="text-xs text-secondary italic">This action is permanent and cannot be reversed.</p>
@@ -214,7 +214,7 @@ export default function AccountSettingsPage() {
                   <button
                     onClick={() => { if (confirm("Are you sure? This cannot be undone.")) apiAction("/api/account/leaderboard-opt-out", "POST"); }}
                     disabled={loading}
-                    className="px-6 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-text text-xs font-bold transition-all border border-gray-800 cursor-pointer"
+                    className="px-6 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-text text-xs font-bold transition-all border border-surface cursor-pointer"
                   >
                     Opt Out
                   </button>
@@ -226,7 +226,7 @@ export default function AccountSettingsPage() {
               title="personal bests"
               description="Reset your records across all modes. This will not affect your test history."
             >
-              <div className="flex items-center justify-between p-4 bg-background/50 rounded-2xl border border-gray-900/50">
+              <div className="flex items-center justify-between p-4 bg-background/50 rounded-2xl border border-surface/50">
                 <div>
                   <h4 className="text-sm font-bold text-text mb-1">Clear all PBs</h4>
                   <p className="text-xs text-secondary">Start fresh with new records.</p>
@@ -234,7 +234,7 @@ export default function AccountSettingsPage() {
                 <button
                   onClick={() => { if (confirm("Reset all personal bests?")) apiAction("/api/users/me/personal-bests", "DELETE"); }}
                   disabled={loading}
-                  className="px-6 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-text text-xs font-bold transition-all border border-gray-800 cursor-pointer"
+                  className="px-6 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-text text-xs font-bold transition-all border border-surface cursor-pointer"
                 >
                   Reset PBs
                 </button>
@@ -255,14 +255,14 @@ export default function AccountSettingsPage() {
                   placeholder="Current password"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-background border border-gray-900 rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                  className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
                 />
                 <input
                   type="password"
                   placeholder="New password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-background border border-gray-900 rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                  className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
                 />
                 <button
                   onClick={() => apiAction("/api/account/password", "PATCH", { oldPassword, newPassword }, () => { setOldPassword(""); setNewPassword(""); })}
@@ -301,7 +301,7 @@ export default function AccountSettingsPage() {
             title="blocked users"
             description="Users you block will not be able to interact with you or send friend requests."
           >
-            <div className="overflow-hidden rounded-2xl border border-gray-900/30 bg-background/50">
+            <div className="overflow-hidden rounded-2xl border border-surface/30 bg-background/50">
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-surface/50 text-[10px] font-bold text-secondary uppercase tracking-widest">
@@ -358,7 +358,7 @@ function SettingsCard({
   return (
     <section className={cn(
       "rounded-3xl border p-6 flex flex-col gap-4 shadow-sm",
-      danger ? "border-error/20 bg-error/[0.02]" : "border-gray-900/50 bg-surface"
+      danger ? "border-error/20 bg-error/[0.02]" : "border-surface/50 bg-surface"
     )}>
       <div className="flex flex-col gap-1">
         <h3 className={cn(

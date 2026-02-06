@@ -123,7 +123,7 @@ export default function LoginPage() {
             value={loginEmail}
             onChange={(e) => setLoginEmail(e.target.value)}
             disabled={otpSent}
-            className="w-full px-4 py-3.5 bg-surface border border-gray-900 rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm disabled:opacity-50"
+            className="w-full px-4 py-3.5 bg-surface border border-surface rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm disabled:opacity-50"
             autoComplete="email"
             required
           />
@@ -140,7 +140,7 @@ export default function LoginPage() {
                 placeholder="123456"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="w-full px-4 py-3.5 bg-surface border border-gray-900 rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-center text-2xl tracking-[0.5em] font-bold"
+                className="w-full px-4 py-3.5 bg-surface border border-surface rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-center text-2xl tracking-[0.5em] font-bold"
                 maxLength={6}
                 required
               />
@@ -166,7 +166,7 @@ export default function LoginPage() {
               placeholder="••••••••"
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
-              className="w-full px-4 py-3.5 bg-surface border border-gray-900 rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm"
+              className="w-full px-4 py-3.5 bg-surface border border-surface rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm"
               autoComplete="current-password"
               required
             />
@@ -180,7 +180,7 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-900 bg-surface text-primary focus:ring-primary focus:ring-offset-background accent-primary"
+                className="w-4 h-4 rounded border-surface bg-surface text-primary focus:ring-primary focus:ring-offset-background accent-primary"
               />
               <span className="group-hover:text-text transition-colors">Remember me</span>
             </label>

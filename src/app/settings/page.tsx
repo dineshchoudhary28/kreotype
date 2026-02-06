@@ -46,7 +46,7 @@ export default function SettingsPage() {
                   className={`group relative flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden ${
                     isActive
                       ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                      : "border-surface bg-surface hover:border-secondary hover:bg-surface/50"
+                      : "border-surface bg-surface hover:border-primary/30 hover:bg-surface/50"
                   }`}
                 >
                   <div className="flex justify-between items-center relative z-10">

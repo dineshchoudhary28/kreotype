@@ -169,7 +169,7 @@ export default function AccountPage() {
   return (
     <div className="w-full max-w-[1500px] mx-auto flex flex-col gap-10 px-6 py-12">
       {/* Profile Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-surface border border-gray-900/50 p-8">
+      <div className="relative overflow-hidden rounded-3xl bg-surface border border-surface p-8">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
         
         <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8">
@@ -194,15 +194,15 @@ export default function AccountPage() {
             </div>
             
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-xs font-bold uppercase tracking-widest text-secondary/60">
-              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-gray-900/50">
+              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-surface">
                 <Calendar size={14} className="text-primary" />
                 <span>Joined {profile?.createdAt ? formatDate(profile.createdAt) : "Recently"}</span>
               </div>
-              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-gray-900/50">
+              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-surface">
                 <Activity size={14} className="text-primary" />
                 <span>{stats?.testsCompleted ?? 0} Tests</span>
               </div>
-              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-gray-900/50">
+              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-surface">
                 <Clock size={14} className="text-primary" />
                 <span>{stats ? formatTime(stats.timeTyping) : "0s"} Typing</span>
               </div>
@@ -212,7 +212,7 @@ export default function AccountPage() {
           <div className="flex flex-col items-center md:items-end gap-2">
              <button 
                 onClick={() => router.push("/account-settings")}
-                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-text text-xs font-bold rounded-xl transition-all border border-gray-800 cursor-pointer"
+                className="px-4 py-2 bg-surface hover:bg-surface-hover text-text text-xs font-bold rounded-xl transition-all border border-surface cursor-pointer"
              >
                 Edit Profile
              </button>
@@ -223,7 +223,7 @@ export default function AccountPage() {
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Speed Stats */}
-        <div className="rounded-2xl bg-surface border border-gray-900/50 p-6 flex flex-col gap-6 shadow-sm">
+        <div className="rounded-2xl bg-surface border border-surface p-6 flex flex-col gap-6 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
               <Zap size={18} />
@@ -240,7 +240,7 @@ export default function AccountPage() {
         </div>
 
         {/* Accuracy Stats */}
-        <div className="rounded-2xl bg-surface border border-gray-900/50 p-6 flex flex-col gap-6 shadow-sm">
+        <div className="rounded-2xl bg-surface border border-surface p-6 flex flex-col gap-6 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
               <Target size={18} />
@@ -257,7 +257,7 @@ export default function AccountPage() {
         </div>
 
         {/* Personal Bests Card */}
-        <div className="rounded-2xl bg-surface border border-gray-900/50 p-6 flex flex-col gap-6 shadow-sm">
+        <div className="rounded-2xl bg-surface border border-surface p-6 flex flex-col gap-6 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
               <Trophy size={18} />
@@ -266,7 +266,7 @@ export default function AccountPage() {
           </div>
           
           <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-center bg-background/50 p-3 rounded-xl border border-gray-900/50">
+            <div className="flex justify-between items-center bg-background/50 p-3 rounded-xl border border-surface">
               <div className="flex flex-col">
                 <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Time 15s</span>
                 <span className="text-xl font-bold text-text">{pbs["time|15"] ? Math.round(pbs["time|15"].wpm) : "-"} <span className="text-[10px] text-secondary font-normal">wpm</span></span>
@@ -277,7 +277,7 @@ export default function AccountPage() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center bg-background/50 p-3 rounded-xl border border-gray-900/50">
+            <div className="flex justify-between items-center bg-background/50 p-3 rounded-xl border border-surface">
               <div className="flex flex-col">
                 <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Time 60s</span>
                 <span className="text-xl font-bold text-text">{pbs["time|60"] ? Math.round(pbs["time|60"].wpm) : "-"} <span className="text-[10px] text-secondary font-normal">wpm</span></span>
@@ -293,7 +293,7 @@ export default function AccountPage() {
 
       {/* PB Detailed Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm">
+        <section className="rounded-2xl bg-surface border border-surface p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest flex items-center gap-2">
               <Clock size={14} className="text-primary" /> Time Personal Bests
@@ -303,7 +303,7 @@ export default function AccountPage() {
             {PB_TIMES.map(({ label, key }) => {
               const pb = pbs[key];
               return (
-                <div key={key} className="flex items-center justify-between group p-2 hover:bg-background/50 rounded-xl transition-all border border-transparent hover:border-gray-900/50">
+                <div key={key} className="flex items-center justify-between group p-2 hover:bg-background/50 rounded-xl transition-all border border-transparent hover:border-surface">
                   <span className="text-sm font-medium text-secondary group-hover:text-text transition-colors">{label}</span>
                   <div className="flex items-center gap-4">
                     <span className="text-sm font-bold text-text">
@@ -319,7 +319,7 @@ export default function AccountPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm">
+        <section className="rounded-2xl bg-surface border border-surface p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest flex items-center gap-2">
               <History size={14} className="text-primary" /> Word Personal Bests
@@ -329,7 +329,7 @@ export default function AccountPage() {
             {PB_WORDS.map(({ label, key }) => {
               const pb = pbs[key];
               return (
-                <div key={key} className="flex items-center justify-between group p-2 hover:bg-background/50 rounded-xl transition-all border border-transparent hover:border-gray-900/50">
+                <div key={key} className="flex items-center justify-between group p-2 hover:bg-background/50 rounded-xl transition-all border border-transparent hover:border-surface">
                   <span className="text-sm font-medium text-secondary group-hover:text-text transition-colors">{label} Words</span>
                   <div className="flex items-center gap-4">
                     <span className="text-sm font-bold text-text">
@@ -347,15 +347,15 @@ export default function AccountPage() {
       </div>
 
       {/* Result history */}
-      <section className="rounded-2xl bg-surface border border-gray-900/50 overflow-hidden shadow-sm">
-        <div className="p-6 border-b border-gray-900/50 flex items-center justify-between bg-surface/50">
+      <section className="rounded-2xl bg-surface border border-surface overflow-hidden shadow-sm">
+        <div className="p-6 border-b border-surface flex items-center justify-between bg-surface/50">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
               <History size={18} />
             </div>
             <h2 className="text-[11px] font-bold text-secondary uppercase tracking-widest">Result History</h2>
           </div>
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-background border border-gray-900 rounded-lg text-[10px] font-bold text-secondary hover:text-text transition-all cursor-pointer">
+          <button className="flex items-center gap-2 px-3 py-1.5 bg-background border border-surface rounded-lg text-[10px] font-bold text-secondary hover:text-text transition-all cursor-pointer">
             <Download size={12} />
             EXPORT CSV
           </button>
