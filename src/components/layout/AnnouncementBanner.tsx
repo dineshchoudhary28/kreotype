@@ -10,7 +10,7 @@ export function AnnouncementBanner() {
   useEffect(() => {
     const isDismissed = localStorage.getItem(STORAGE_KEY);
     if (!isDismissed) {
-      setIsVisible(true);
+      setTimeout(() => setIsVisible(true), 0);
     }
   }, []);
 

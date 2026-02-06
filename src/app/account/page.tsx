@@ -96,7 +96,7 @@ function formatDate(ts: string): string {
 }
 
 export default function AccountPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -365,14 +365,14 @@ export default function AccountPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-background/50 text-[10px] font-bold text-secondary uppercase tracking-widest">
-                <th className="px-6 py-4">WPM</th>
-                <th className="px-6 py-4">Raw</th>
-                <th className="px-6 py-4">Acc</th>
-                <th className="px-6 py-4">Consistency</th>
-                <th className="px-6 py-4">Chars</th>
-                <th className="px-6 py-4">Mode</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4"></th>
+                <th className="px-4 md:px-6 py-4">WPM</th>
+                <th className="hidden sm:table-cell px-6 py-4">Raw</th>
+                <th className="px-4 md:px-6 py-4">Acc</th>
+                <th className="hidden md:table-cell px-6 py-4">Consistency</th>
+                <th className="hidden lg:table-cell px-6 py-4">Chars</th>
+                <th className="px-4 md:px-6 py-4">Mode</th>
+                <th className="hidden sm:table-cell px-6 py-4 text-right">Date</th>
+                <th className="px-4 md:px-6 py-4"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-900/30">
@@ -391,31 +391,31 @@ export default function AccountPage() {
                       r.isPb ? "bg-primary/[0.03]" : ""
                     )}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <div className="flex flex-col">
-                        <span className={cn("text-lg font-bold", r.isPb ? "text-primary" : "text-text")}>
+                        <span className={cn("text-base md:text-lg font-bold", r.isPb ? "text-primary" : "text-text")}>
                           {Math.round(r.wpm)}
                         </span>
-                        {r.isPb && <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">Personal Best</span>}
+                        {r.isPb && <span className="text-[8px] md:text-[9px] font-bold text-primary uppercase tracking-tighter">PB</span>}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-secondary font-medium">{Math.round(r.rawWpm)}</td>
-                    <td className="px-6 py-4 text-sm text-text font-bold">{Math.round(r.accuracy)}%</td>
-                    <td className="px-6 py-4 text-sm text-secondary">{Math.round(r.consistency)}%</td>
-                    <td className="px-6 py-4 text-xs font-mono text-secondary">
+                    <td className="hidden sm:table-cell px-6 py-4 text-sm text-secondary font-medium">{Math.round(r.rawWpm)}</td>
+                    <td className="px-4 md:px-6 py-4 text-sm text-text font-bold">{Math.round(r.accuracy)}%</td>
+                    <td className="hidden md:table-cell px-6 py-4 text-sm text-secondary">{Math.round(r.consistency)}%</td>
+                    <td className="hidden lg:table-cell px-6 py-4 text-xs font-mono text-secondary">
                       <span className="text-text">{r.charStats.correct}</span>/
                       <span className="text-error">{r.charStats.incorrect}</span>/
                       <span className="text-secondary/60">{r.charStats.extra}</span>/
                       <span className="text-secondary/60">{r.charStats.missed}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-text capitalize">{r.mode}</span>
-                        <span className="text-[10px] text-secondary">{r.mode2}</span>
+                        <span className="text-[10px] md:text-xs font-bold text-text capitalize">{r.mode}</span>
+                        <span className="text-[8px] md:text-[10px] text-secondary">{r.mode2}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-xs text-secondary font-medium">{formatDate(r.timestamp)}</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="hidden sm:table-cell px-6 py-4 text-right text-[10px] md:text-xs text-secondary font-medium">{formatDate(r.timestamp)}</td>
+                    <td className="px-4 md:px-6 py-4 text-right">
                        <ChevronRight size={14} className="text-secondary/20 group-hover:text-primary transition-colors inline-block" />
                     </td>
                   </tr>

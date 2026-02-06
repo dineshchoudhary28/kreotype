@@ -50,11 +50,6 @@ export const SocialProfilesSchema = z
             .max(20)
             .regex(/^[0-9a-zA-Z_.-]+$/)
             .optional(),
-        github: z
-            .string()
-            .max(39)
-            .regex(/^[0-9a-zA-Z_.-]+$/)
-            .optional(),
         website: z.string().url().max(200).startsWith("https://").optional(),
     })
     .strict();

@@ -1,6 +1,6 @@
-import { ObjectId } from "mongodb";
+import { ObjectId, Filter } from "mongodb";
 import { getUsersCollection, getResultsCollection } from "../../db";
-import { DBUser, createNewUser, UserSchema } from "../schemas/user";
+import { DBUser, createNewUser } from "../schemas/user";
 import { DBResult, CompletedEvent, buildDbResult, replaceLegacyValues } from "../schemas/result";
 import { PersonalBest } from "../schemas/shared";
 
@@ -60,7 +60,7 @@ export async function getUserByName(name: string): Promise<DBUser | null> {
  */
 export async function isNameAvailable(name: string, excludeUid?: string): Promise<boolean> {
     const users = await getUsersCollection();
-    const query: any = { name: { $regex: new RegExp(`^${name}$`, "i") } };
+    const query: Filter<DBUser> = { name: { $regex: new RegExp(`^${name}$`, "i") } };
 
     if (excludeUid) {
         query.uid = { $ne: excludeUid };
@@ -158,7 +158,7 @@ export async function getResult(uid: string, resultId: string): Promise<DBResult
     const result = await results.findOne({
         _id: new ObjectId(resultId),
         uid,
-    });
+    } as Filter<DBResult>);
 
     return result ? replaceLegacyValues(result) : null;
 }
@@ -169,7 +169,7 @@ export async function getResult(uid: string, resultId: string): Promise<DBResult
 export async function getLastResult(uid: string): Promise<DBResult | null> {
     const results = await getResultsCollection();
     const result = await results.findOne(
-        { uid },
+        { uid } as Filter<DBResult>,
         { sort: { timestamp: -1 } }
     );
 
@@ -190,7 +190,7 @@ export async function getResults(
     const results = await getResultsCollection();
     const { onOrAfterTimestamp, offset, limit } = options || {};
 
-    const query: any = { uid };
+    const query: Filter<DBResult> = { uid };
     if (onOrAfterTimestamp !== undefined && !isNaN(onOrAfterTimestamp)) {
         query.timestamp = { $gte: onOrAfterTimestamp };
     }

@@ -1,3 +1,4 @@
+import { Collection, Document } from "mongodb";
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI!;
@@ -8,8 +9,8 @@ if (!MONGODB_URI) {
 
 declare global {
   var mongoose: {
-    conn: typeof mongoose | null;
-    promise: Promise<typeof mongoose> | null;
+    conn: typeof import("mongoose") | null;
+    promise: Promise<typeof import("mongoose")> | null;
   };
 }
 
@@ -26,12 +27,12 @@ export async function connectDB() {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: true, // Enable buffering but ensure we connect
+      bufferCommands: true,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
       console.log("✅ Connected to MongoDB via Mongoose");
-      return mongoose;
+      return m;
     });
   }
 
@@ -51,8 +52,16 @@ export async function getDb() {
     return mongoose.connection.db;
 }
 
-export async function getCollection(name: string) {
+export async function getCollection<T extends Document>(name: string): Promise<Collection<T>> {
     const db = await getDb();
     if (!db) throw new Error("Database not initialized");
-    return db.collection(name);
+    // Cast to any to bypass version mismatch in types between mongodb package versions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return db.collection<T>(name) as any;
 }
+
+import { DBUser } from "./db/schemas/user";
+import { DBResult } from "./db/schemas/result";
+
+export const getUsersCollection = () => getCollection<DBUser>("users");
+export const getResultsCollection = () => getCollection<DBResult>("results");

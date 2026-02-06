@@ -208,13 +208,13 @@ export default function LeaderboardsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface/30">
-                  <th className="px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider w-16">Rank</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider">User</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider text-right">WPM</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider text-right">Accuracy</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider text-right">Raw</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider text-right">Consistency</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider text-right">Date</th>
+                  <th className="px-4 md:px-6 py-4 text-[10px] md:text-[11px] font-bold text-secondary uppercase tracking-wider w-12 md:w-16">Rank</th>
+                  <th className="px-4 md:px-6 py-4 text-[10px] md:text-[11px] font-bold text-secondary uppercase tracking-wider">User</th>
+                  <th className="px-4 md:px-6 py-4 text-[10px] md:text-[11px] font-bold text-secondary uppercase tracking-wider text-right">WPM</th>
+                  <th className="px-4 md:px-6 py-4 text-[10px] md:text-[11px] font-bold text-secondary uppercase tracking-wider text-right">Acc</th>
+                  <th className="hidden sm:table-cell px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider text-right">Raw</th>
+                  <th className="hidden md:table-cell px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider text-right">Consistency</th>
+                  <th className="hidden lg:table-cell px-6 py-4 text-[11px] font-bold text-secondary uppercase tracking-wider text-right">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface/50">
@@ -222,7 +222,7 @@ export default function LeaderboardsPage() {
                   [...Array(10)].map((_, i) => (
                     <tr key={i} className="animate-pulse">
                       {[...Array(7)].map((_, j) => (
-                        <td key={j} className="px-6 py-4">
+                        <td key={j} className={`px-4 md:px-6 py-4 ${j > 3 ? "hidden sm:table-cell" : ""}`}>
                           <div className="h-4 bg-surface rounded-md w-full" />
                         </td>
                       ))}
@@ -248,8 +248,8 @@ export default function LeaderboardsPage() {
                           isCurrentUser ? "bg-primary/5" : ""
                         }`}
                       >
-                        <td className="px-6 py-4">
-                          <span className={`text-sm font-bold ${
+                        <td className="px-4 md:px-6 py-4">
+                          <span className={`text-xs md:text-sm font-bold ${
                             entry.rank === 1 ? "text-yellow-500" :
                             entry.rank === 2 ? "text-gray-400" :
                             entry.rank === 3 ? "text-amber-700" :
@@ -258,31 +258,30 @@ export default function LeaderboardsPage() {
                             #{entry.rank}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold border ${
+                        <td className="px-4 md:px-6 py-4">
+                          <div className="flex items-center gap-2 md:gap-3">
+                            <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-[9px] md:text-[10px] font-bold border ${
                               isCurrentUser ? "bg-primary border-primary text-background" : "bg-surface border-gray-900 text-secondary"
                             }`}>
                               {entry.username.charAt(0).toUpperCase()}
                             </div>
-                            <span className={`text-sm font-semibold transition-colors ${
+                            <span className={`text-xs md:text-sm font-semibold truncate max-w-[80px] sm:max-w-none transition-colors ${
                               isCurrentUser ? "text-primary" : "text-text/80 group-hover:text-text"
                             }`}>
                               {entry.username}
-                              {isCurrentUser && <span className="ml-2 text-[10px] bg-primary/20 px-1.5 py-0.5 rounded text-primary">YOU</span>}
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="text-sm font-bold text-text font-mono">{Math.round(entry.wpm)}</span>
+                        <td className="px-4 md:px-6 py-4 text-right">
+                          <span className="text-xs md:text-sm font-bold text-text font-mono">{Math.round(entry.wpm)}</span>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="text-sm font-medium text-secondary font-mono">{Math.round(entry.accuracy)}%</span>
+                        <td className="px-4 md:px-6 py-4 text-right">
+                          <span className="text-xs md:text-sm font-medium text-secondary font-mono">{Math.round(entry.accuracy)}%</span>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="hidden sm:table-cell px-6 py-4 text-right">
                           <span className="text-sm font-medium text-secondary/60 font-mono">{Math.round(entry.rawWpm)}</span>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="hidden md:table-cell px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <div className="w-12 h-1.5 bg-surface rounded-full overflow-hidden">
                               <div 
@@ -293,7 +292,7 @@ export default function LeaderboardsPage() {
                             <span className="text-[11px] font-medium text-secondary/60 font-mono w-8">{Math.round(entry.consistency)}%</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="hidden lg:table-cell px-6 py-4 text-right">
                           <span className="text-[11px] font-medium text-secondary/40">{formatDate(entry.timestamp)}</span>
                         </td>
                       </tr>

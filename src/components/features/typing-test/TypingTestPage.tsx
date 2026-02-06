@@ -134,7 +134,7 @@ export function TypingTestPage() {
   }, [mode, value, punctuation, numbers, setWords, setTimeLeft]);
 
   useEffect(() => {
-    initializeTest();
+    setTimeout(() => initializeTest(), 0);
   }, [initializeTest]);
 
   // Auto-focus input on mount
@@ -220,7 +220,7 @@ export function TypingTestPage() {
 
   // Global keydown listener to refocus input when blurred
   useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+    const handleGlobalKeyDown = () => {
       if (!isInputFocused && !isFinished) {
         // Any key press refocuses the input
         inputRef.current?.focus();
@@ -252,11 +252,16 @@ export function TypingTestPage() {
       // Track Tab key press
       if (e.key === "Tab") {
         e.preventDefault();
-        tabPressedRef.current = true;
+        if (isFinished) {
+          initializeTest();
+          resetTest();
+        } else {
+          tabPressedRef.current = true;
+        }
         return;
       }
 
-      // Tab + Enter to restart
+      // Tab + Enter to restart (legacy support or extra shortcut)
       if (e.key === "Enter" && tabPressedRef.current) {
         e.preventDefault();
         tabPressedRef.current = false;
@@ -265,13 +270,14 @@ export function TypingTestPage() {
         return;
       }
 
-      // Escape to reset test
+      // Escape to reset/restart test
       if (e.key === "Escape") {
         e.preventDefault();
         tabPressedRef.current = false;
         if (isFinished) {
-          initializeTest();
+          // Restart same test (or just reset)
           resetTest();
+          inputRef.current?.focus();
         } else {
           resetTest();
         }
@@ -356,26 +362,26 @@ export function TypingTestPage() {
   // Get display info based on mode
   const getTestInfo = () => {
     if (mode === "time") {
-      return <span className="text-4xl font-bold tabular-nums text-primary">{timeLeft}</span>;
+      return <span className="text-2xl md:text-4xl font-bold tabular-nums text-primary">{timeLeft}</span>;
     }
     if (mode === "words") {
       const totalWords = parseInt(value, 10);
       return (
-        <span className="text-4xl font-bold tabular-nums text-primary">
+        <span className="text-2xl md:text-4xl font-bold tabular-nums text-primary">
           {currentWordIndex}/{totalWords}
         </span>
       );
     }
     if (mode === "quote") {
       return (
-        <span className="text-4xl font-bold tabular-nums text-primary">
+        <span className="text-2xl md:text-4xl font-bold tabular-nums text-primary">
           {currentWordIndex}/{words.length}
         </span>
       );
     }
     // Zen mode - just show word count
     return (
-      <span className="text-4xl font-bold tabular-nums text-primary">
+      <span className="text-2xl md:text-4xl font-bold tabular-nums text-primary">
         {currentWordIndex}
       </span>
     );
@@ -384,7 +390,7 @@ export function TypingTestPage() {
   return (
     <div
       ref={containerRef}
-      className="flex-1 flex flex-col justify-center outline-none relative"
+      className="flex-1 flex flex-col justify-center outline-none relative px-4 md:px-0"
     >
       {/* Hidden input for keyboard capture */}
       <input
@@ -405,7 +411,7 @@ export function TypingTestPage() {
       />
 
       {/* Language Indicator (hidden when typing) OR Test Info (when typing) */}
-      <div className="flex items-center justify-center w-full max-w-[1500px] mx-auto px-2 h-12">
+      <div className="flex items-center justify-center w-full max-w-[1500px] mx-auto px-2 h-10 md:h-12">
         {isActive ? (
           // Show timer/word count when active
           <div className="flex items-center gap-6">
@@ -413,7 +419,7 @@ export function TypingTestPage() {
           </div>
         ) : (
           // Show language when not active - centered
-          <div className="flex items-center gap-2 text-secondary text-xs font-medium cursor-pointer hover:text-text transition-colors group">
+          <div className="flex items-center gap-2 text-secondary text-[10px] md:text-xs font-medium cursor-pointer hover:text-text transition-colors group">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="14"
@@ -438,9 +444,9 @@ export function TypingTestPage() {
       {/* Paused Overlay */}
       {isPaused && (
         <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-50">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary mb-4">Test Paused</div>
-            <div className="text-secondary">Click here or press any key to continue</div>
+          <div className="text-center px-6">
+            <div className="text-xl md:text-2xl font-bold text-primary mb-4">Test Paused</div>
+            <div className="text-secondary text-sm md:text-base">Click here or press any key to continue</div>
           </div>
         </div>
       )}
@@ -448,7 +454,7 @@ export function TypingTestPage() {
       {/* Typing Text Display */}
       <div
         ref={wordsContainerRef}
-        className={`mt-8 relative w-full max-w-[1500px] mx-auto ${
+        className={`mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto ${
           lineMode === "single" ? "overflow-hidden whitespace-nowrap" : "overflow-hidden"
         }`}
         style={{ maxHeight: lineMode === "multi" ? "200px" : "auto" }}
@@ -456,16 +462,16 @@ export function TypingTestPage() {
         {/* Blur overlay when input not focused */}
         {!isInputFocused && (
           <div
-            className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex items-center justify-center cursor-pointer rounded-lg"
+            className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex items-center justify-center cursor-pointer rounded-lg px-6"
             onClick={handleBlurOverlayClick}
           >
-            <div className="text-secondary text-lg">Click here or press any key to focus</div>
+            <div className="text-secondary text-base md:text-lg text-center">Click here or press any key to focus</div>
           </div>
         )}
 
         <div
-          className={`text-3xl leading-relaxed font-['Inter'] tracking-wide ${
-            lineMode === "single" ? "flex gap-3" : "flex flex-wrap gap-x-3 gap-y-2"
+          className={`text-2xl md:text-3xl leading-relaxed font-['Inter'] tracking-wide ${
+            lineMode === "single" ? "flex gap-2 md:gap-3" : "flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2"
           }`}
         >
           {words.map((wordData, wordIndex) => (
@@ -482,7 +488,7 @@ export function TypingTestPage() {
       </div>
 
       {/* Restart Button - Always visible */}
-      <div className="mt-20 flex flex-col items-center gap-6 pb-12">
+      <div className="mt-12 md:mt-20 flex flex-col items-center gap-4 md:gap-6 pb-8 md:pb-12">
         <button
           className="text-secondary hover:text-text transition-colors cursor-pointer p-2 rounded-lg hover:bg-surface group"
           title="Restart Test (Tab + Enter)"
@@ -508,15 +514,15 @@ export function TypingTestPage() {
           </svg>
         </button>
 
-        {/* Shortcuts - only show when not typing */}
+        {/* Shortcuts - hidden on touch devices ideally, but here just shown as small text */}
         {!isActive && (
-          <div className="flex gap-8 text-secondary text-[11px] font-medium opacity-50">
-            <div className="flex items-center gap-2">
+          <div className="flex gap-4 sm:gap-8 text-secondary text-[10px] md:text-[11px] font-medium opacity-50">
+            <div className="flex items-center gap-1.5 md:gap-2">
               <kbd className="bg-surface px-1.5 py-0.5 rounded border border-gray-900 text-secondary font-sans">
                 tab
               </kbd>
-              <span>+</span>
-              <kbd className="bg-surface px-1.5 py-0.5 rounded border border-gray-900 text-secondary font-sans">
+              <span className="hidden sm:inline">+</span>
+              <kbd className="bg-surface px-1.5 py-0.5 rounded border border-gray-900 text-secondary font-sans hidden sm:inline">
                 enter
               </kbd>
               <span>restart test</span>

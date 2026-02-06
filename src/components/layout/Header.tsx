@@ -76,7 +76,7 @@ export function Header() {
       return (
         <header className="bg-background py-3.5 px-6 w-full z-50">
           <div className="max-w-[1500px] mx-auto flex justify-between items-center font-['Inter']">
-            <Link href="/" className="text-3xl font-bold text-primary tracking-tighter cursor-pointer">
+            <Link href="/" className="text-2xl md:text-3xl font-bold text-primary tracking-tighter cursor-pointer">
               KREOTYPE
             </Link>
             {/* Empty spacer to maintain layout */}
@@ -88,15 +88,15 @@ export function Header() {
   }
 
   return (
-    <header className="bg-background border-b border-surface py-3.5 px-6 w-full z-50">
+    <header className="bg-background border-b border-surface py-2.5 md:py-3.5 px-4 md:px-6 w-full z-50">
       <div className="max-w-[1500px] mx-auto flex justify-between items-center font-['Inter']">
         {/* Left: Logo */}
-        <Link href="/" className="text-3xl font-bold text-primary tracking-tighter cursor-pointer">
+        <Link href="/" className="text-2xl md:text-3xl font-bold text-primary tracking-tighter cursor-pointer">
           KREOTYPE
         </Link>
 
-        {/* Center: Main Navigation Icons */}
-        <nav className="flex items-center gap-10 text-secondary">
+        {/* Center: Main Navigation Icons - Hidden on very small mobile, shown as tight icons on medium */}
+        <nav className="flex items-center gap-4 sm:gap-6 md:gap-10 text-secondary">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
 
@@ -110,7 +110,7 @@ export function Header() {
                   className="hover:text-text transition-colors cursor-pointer p-1"
                   title={link.label}
                 >
-                  {link.icon}
+                  <span className="scale-90 md:scale-100 block">{link.icon}</span>
                 </a>
               );
             }
@@ -124,39 +124,39 @@ export function Header() {
                 }`}
                 title={link.label}
               >
-                {link.icon}
+                <span className="scale-90 md:scale-100 block">{link.icon}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* Right: Actions and Profile */}
-        <div className="flex items-center gap-6 text-secondary">
-          {/* Theme Toggle */}
-          <button className="hover:text-text transition-colors cursor-pointer" title="Change Theme">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="flex items-center gap-3 sm:gap-6 text-secondary">
+          {/* Theme Toggle - Hidden on small mobile to save space */}
+          <button className="hover:text-text transition-colors cursor-pointer hidden sm:block" title="Change Theme">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
           </button>
 
-          {/* Notifications */}
-          <button className="hover:text-text transition-colors cursor-pointer relative" title="Notifications">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {/* Notifications - Hidden on small mobile */}
+          <button className="hover:text-text transition-colors cursor-pointer relative hidden sm:block" title="Notifications">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
-            <span className="absolute -top-1 -right-1 bg-primary w-2.5 h-2.5 rounded-full border-2 border-background" />
+            <span className="absolute -top-1 -right-1 bg-primary w-2 h-2 rounded-full border-2 border-background" />
           </button>
 
           {/* Profile */}
           {session?.user ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/account"
-                className="w-10 h-10 rounded-full bg-surface border border-gray-900 flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface border border-gray-900 flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
                 title="Account"
               >
-                <span className="text-sm font-medium text-secondary">
+                <span className="text-xs md:text-sm font-medium text-secondary">
                   {(session.user.name || session.user.email || "U").charAt(0).toUpperCase()}
                 </span>
               </Link>
@@ -165,7 +165,7 @@ export function Header() {
                 className="hover:text-text transition-colors cursor-pointer"
                 title="Sign out"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px] md:w-5 md:h-5">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
@@ -175,10 +175,10 @@ export function Header() {
           ) : (
             <Link
               href="/login"
-              className="w-10 h-10 rounded-full bg-surface border border-gray-900 flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface border border-gray-900 flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
               title="Sign in"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary w-5 h-5 md:w-6 md:h-6">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>

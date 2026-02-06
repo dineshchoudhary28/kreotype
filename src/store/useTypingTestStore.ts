@@ -25,6 +25,8 @@ export interface TestStats {
   totalChars: number;
   time: number;
   consistency: number;
+  wpmHistory: number[];
+  rawWpmHistory: number[];
 }
 
 interface TypingTestState {
@@ -146,6 +148,8 @@ function calculateStats(state: TypingTestState): TestStats {
     totalChars: totalTypedChars,
     time: Math.round(elapsedSeconds),
     consistency,
+    wpmHistory: state.wpmHistory,
+    rawWpmHistory: state.rawWpmHistory,
   };
 }
 

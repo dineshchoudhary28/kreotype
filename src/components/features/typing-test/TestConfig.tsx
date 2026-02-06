@@ -96,46 +96,46 @@ export function TestConfig() {
   const currentValues = values[mode];
 
   return (
-    <div className="flex flex-col items-center w-full mt-4">
-      <div className="bg-surface rounded-xl flex flex-col shadow-2xl border border-surface/50 overflow-hidden w-fit">
+    <div className="flex flex-col items-center w-full mt-4 px-4 md:px-0">
+      <div className="bg-surface rounded-xl flex flex-col shadow-2xl border border-surface/50 overflow-hidden w-full max-w-[1000px] md:w-fit">
         {/* Top Row: Basic Config */}
-        <div className="px-6 py-2.5 flex items-center gap-8 text-[13px] font-medium text-secondary border-b border-surface/50">
+        <div className="px-4 md:px-6 py-2.5 flex flex-wrap md:flex-nowrap items-center justify-center md:justify-start gap-4 md:gap-8 text-[12px] md:text-[13px] font-medium text-secondary border-b border-surface/50">
           {/* Toggles */}
-          <div className="flex items-center gap-6 border-r border-surface/50 pr-8">
+          <div className="flex items-center gap-4 md:gap-6 border-b md:border-b-0 md:border-r border-surface/50 pb-2 md:pb-0 md:pr-8 w-full md:w-auto justify-center md:justify-start">
             <button
               onClick={() => setConfig("punctuation", !punctuation)}
-              className={`flex items-center gap-2 hover:text-text transition-colors cursor-pointer ${punctuation ? "text-primary" : ""}`}
+              className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer ${punctuation ? "text-primary" : ""}`}
             >
-              <span className="text-[14px]">@</span>
-              <span className={punctuation ? "text-primary" : "text-secondary"}>punctuation</span>
+              <span className="text-[13px] md:text-[14px]">@</span>
+              <span>punctuation</span>
             </button>
             <button
               onClick={() => setConfig("numbers", !numbers)}
-              className={`flex items-center gap-2 hover:text-text transition-colors cursor-pointer ${numbers ? "text-primary" : ""}`}
+              className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer ${numbers ? "text-primary" : ""}`}
             >
-              <span className="text-[14px]">#</span>
-              <span className={numbers ? "text-primary" : "text-secondary"}>numbers</span>
+              <span className="text-[13px] md:text-[14px]">#</span>
+              <span>numbers</span>
             </button>
           </div>
 
           {/* Modes */}
-          <div className="flex items-center gap-6 border-r border-surface/50 pr-8">
+          <div className="flex items-center flex-wrap justify-center gap-4 md:gap-6 md:border-r border-surface/50 md:pr-8">
             {modes.map((m) => (
               <button
                 key={m}
                 onClick={() => handleModeChange(m)}
-                className={`flex items-center gap-2 hover:text-text transition-colors cursor-pointer capitalize ${
+                className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer capitalize ${
                   mode === m ? "text-primary" : "text-secondary"
                 }`}
               >
                 {modeIcons[m]}
-                <span className={mode === m ? "text-primary" : "text-secondary"}>{m}</span>
+                <span className={`${mode === m ? "text-primary" : "text-secondary"} ${m === "custom" ? "hidden sm:inline" : ""}`}>{m}</span>
               </button>
             ))}
           </div>
 
           {/* Values */}
-          <div className="flex items-center gap-5 min-w-[140px]">
+          <div className="flex items-center justify-center gap-4 md:gap-5 min-w-0 md:min-w-[140px]">
             {currentValues ? (
               currentValues.map((v) => (
                 <button
@@ -155,39 +155,40 @@ export function TestConfig() {
         </div>
 
         {/* Bottom Row: Visual Config */}
-        <div className="px-6 py-2.5 flex items-center gap-8 text-[13px] font-medium text-secondary">
+        <div className="px-4 md:px-6 py-2.5 flex flex-wrap md:flex-nowrap items-center justify-center md:justify-start gap-4 md:gap-8 text-[12px] md:text-[13px] font-medium text-secondary">
           {/* Patterns */}
-          <div className="flex items-center gap-6 border-r border-surface/50 pr-8">
+          <div className="flex items-center gap-4 md:gap-6 md:border-r border-surface/50 md:pr-8">
             {patternItems.map((p) => (
               <button
                 key={p.id}
                 onClick={() => setConfig("pattern", p.id as typeof pattern)}
-                className={`flex items-center gap-2 hover:text-text transition-colors cursor-pointer capitalize ${
+                className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer capitalize ${
                   pattern === p.id ? "text-primary" : "text-secondary"
                 }`}
               >
                 {p.icon}
-                <span className={pattern === p.id ? "text-primary" : "text-secondary"}>{p.name}</span>
+                <span className={`${pattern === p.id ? "text-primary" : "text-secondary"} ${p.id !== "standard" ? "hidden sm:inline" : ""}`}>{p.name}</span>
               </button>
             ))}
           </div>
 
           {/* Line Modes */}
-          <div className="flex items-center gap-6 border-r border-surface/50 pr-8">
+          <div className="flex items-center gap-4 md:gap-6 md:border-r border-surface/50 md:pr-8">
             <button
               onClick={() => setConfig("lineMode", "single")}
-              className={`flex items-center gap-2 hover:text-text transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer ${
                 lineMode === "single" ? "text-primary" : "text-secondary"
               }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              <span className={lineMode === "single" ? "text-primary" : "text-secondary"}>single line</span>
+              <span className={`${lineMode === "single" ? "text-primary" : "text-secondary"} hidden sm:inline`}>single line</span>
+              <span className={`${lineMode === "single" ? "text-primary" : "text-secondary"} sm:hidden`}>1-line</span>
             </button>
             <button
               onClick={() => setConfig("lineMode", "multi")}
-              className={`flex items-center gap-2 hover:text-text transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer ${
                 lineMode === "multi" ? "text-primary" : "text-secondary"
               }`}
             >
@@ -196,12 +197,13 @@ export function TestConfig() {
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <line x1="5" y1="17" x2="19" y2="17" />
               </svg>
-              <span className={lineMode === "multi" ? "text-primary" : "text-secondary"}>multi-line</span>
+              <span className={`${lineMode === "multi" ? "text-primary" : "text-secondary"} hidden sm:inline`}>multi-line</span>
+              <span className={`${lineMode === "multi" ? "text-primary" : "text-secondary"} sm:hidden`}>m-line</span>
             </button>
           </div>
 
-          {/* Spacer for alignment */}
-          <div className="flex items-center gap-5 min-w-[140px] opacity-0 pointer-events-none">
+          {/* Hidden Spacer */}
+          <div className="hidden md:flex items-center gap-5 min-w-[140px] opacity-0 pointer-events-none">
             <button className="px-4">spacer</button>
           </div>
         </div>

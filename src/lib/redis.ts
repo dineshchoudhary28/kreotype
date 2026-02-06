@@ -73,22 +73,25 @@ const memoryFallback = {
 };
 
 export const redis = new Proxy({} as Redis, {
-  get(_target, prop) {
+  get(_target, prop: string) {
     if (!redisAvailable) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (memoryFallback as any)[prop] || (async () => null);
     }
 
     try {
       const client = getRedisClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const value = (client as any)[prop];
       if (typeof value === "function") {
-        return async (...args: any[]) => {
+        return async (...args: unknown[]) => {
           try {
             const result = await value.apply(client, args);
             // If ioredis returns null or throws, we might be disconnected
             return result;
           } catch {
             redisAvailable = false;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (memoryFallback as any)[prop]?.(...args) || null;
           }
         };
@@ -96,6 +99,7 @@ export const redis = new Proxy({} as Redis, {
       return value;
     } catch {
       redisAvailable = false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (memoryFallback as any)[prop] || (async () => null);
     }
   },

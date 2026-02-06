@@ -63,25 +63,23 @@ export default function Home() {
 
   return (
     <div
-      className="flex-1 relative w-full"
+      className="flex-1 relative w-full overflow-x-hidden flex flex-col"
       onMouseMove={handleMouseMove}
     >
-      {/* Sidebar: Hidden when typing (unless mouse moved) or showing results */}
+      {/* Sidebar: Hidden on mobile, hidden when typing (unless mouse moved) or showing results */}
       {shouldShowUI && !isFinished && (
-        <div className="absolute left-0 top-0 bottom-0 z-40">
+        <div className="hidden md:block absolute left-0 top-0 bottom-0 z-40">
           <SideConfigBar />
         </div>
       )}
 
       {/* Main Content Area */}
       <div
-        className="absolute inset-0 transition-all duration-300 ease-in-out overflow-y-auto flex flex-col"
-        style={{
-          paddingLeft: (shouldShowUI && !isFinished && sidebarExpanded) ? "256px" : "0"
-        }}
+        className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto flex flex-col w-full ${
+          (shouldShowUI && !isFinished && sidebarExpanded) ? "md:pl-[256px]" : "md:pl-0"
+        }`}
       >
-        <main className="flex-1 w-full max-w-[1500px] mx-auto px-6 pt-6 flex flex-col">
-          {/* Config panel: Hidden when typing (unless mouse moved) or showing results */}
+        <main className="flex-1 w-full max-w-[1500px] mx-auto px-4 md:px-6 pt-4 md:pt-6 flex flex-col">
           {shouldShowUI && !isFinished && <TestConfig />}
           <TypingTestPage />
         </main>
