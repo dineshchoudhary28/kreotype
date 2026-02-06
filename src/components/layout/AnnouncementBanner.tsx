@@ -65,7 +65,7 @@ export function AnnouncementBanner() {
         </div>
 
         <div className="flex items-center gap-3">
-          <p className="font-black text-[10px] md:text-[11px] tracking-tight uppercase italic leading-none">
+          <p className="font-black text-xs md:text-sm tracking-tight uppercase italic leading-none">
             <span className="text-background/50 not-italic mr-2">Featured:</span>
             Swarm65 Black Purple Elite
           </p>
@@ -74,7 +74,7 @@ export function AnnouncementBanner() {
             href="https://kreo-tech.com" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="bg-background text-primary px-3 py-0.5 md:py-1 rounded-full text-[9px] font-black uppercase tracking-tighter hover:bg-white transition-all hover:scale-105 active:scale-95 shadow-lg whitespace-nowrap"
+            className="bg-background text-primary px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-tighter hover:bg-white transition-all hover:scale-105 active:scale-95 shadow-lg whitespace-nowrap"
           >
             Shop Now
           </a>

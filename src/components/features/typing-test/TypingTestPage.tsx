@@ -27,21 +27,10 @@ function generateWords(
 ): string[] {
   let words: string[] = [];
 
-  if (mode === "quote") {
-    // Filter quotes by group
-    let filteredQuotes = englishQuotes;
-    if (value !== "all") {
-      filteredQuotes = englishQuotes.filter((q) => q.group === value);
-    }
-    if (filteredQuotes.length === 0) {
-      filteredQuotes = englishQuotes;
-    }
-    const quote = filteredQuotes[Math.floor(Math.random() * filteredQuotes.length)];
-    words = quote.text.split(" ");
-  } else if (mode === "zen") {
+  if (mode === "zen") {
     // Zen mode: infinite words, we'll generate a batch
     words = shuffleArray(englishWords).slice(0, 100);
-  } else if (mode === "time" || mode === "words") {
+  } else {
     // Generate enough words for the mode
     const wordCount = mode === "words" ? parseInt(value, 10) : 200;
     words = [];
@@ -49,13 +38,10 @@ function generateWords(
     for (let i = 0; i < wordCount; i++) {
       words.push(shuffled[i % shuffled.length]);
     }
-  } else {
-    // Custom or fallback
-    words = shuffleArray(englishWords).slice(0, 50);
   }
 
   // Apply punctuation
-  if (punctuation && mode !== "quote") {
+  if (punctuation) {
     words = words.map((word, i) => {
       if (Math.random() < 0.15) {
         const mark = punctuationMarks[Math.floor(Math.random() * punctuationMarks.length)];
@@ -70,7 +56,7 @@ function generateWords(
   }
 
   // Apply numbers
-  if (numbers && mode !== "quote") {
+  if (numbers) {
     words = words.map((word) => {
       if (Math.random() < 0.1) {
         return Math.floor(Math.random() * 1000).toString();
@@ -97,7 +83,6 @@ export function TypingTestPage() {
   const punctuation = useConfigStore((s) => s.punctuation);
   const numbers = useConfigStore((s) => s.numbers);
   const language = useConfigStore((s) => s.language);
-  const lineMode = useConfigStore((s) => s.lineMode);
 
   // Typing test store
   const words = useTypingTestStore((s) => s.words);
@@ -201,7 +186,7 @@ export function TypingTestPage() {
 
   // Scroll to current word
   useEffect(() => {
-    if (wordsContainerRef.current && lineMode === "multi") {
+    if (wordsContainerRef.current) {
       const currentWordEl = wordsContainerRef.current.querySelector(
         `[data-word-index="${currentWordIndex}"]`
       );
@@ -216,7 +201,7 @@ export function TypingTestPage() {
         }
       }
     }
-  }, [currentWordIndex, lineMode]);
+  }, [currentWordIndex]);
 
   // Global keydown listener to refocus input when blurred
   useEffect(() => {
@@ -372,13 +357,6 @@ export function TypingTestPage() {
         </span>
       );
     }
-    if (mode === "quote") {
-      return (
-        <span className="text-2xl md:text-4xl font-bold tabular-nums text-primary">
-          {currentWordIndex}/{words.length}
-        </span>
-      );
-    }
     // Zen mode - just show word count
     return (
       <span className="text-2xl md:text-4xl font-bold tabular-nums text-primary">
@@ -454,10 +432,8 @@ export function TypingTestPage() {
       {/* Typing Text Display */}
       <div
         ref={wordsContainerRef}
-        className={`mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto ${
-          lineMode === "single" ? "overflow-hidden whitespace-nowrap" : "overflow-hidden"
-        }`}
-        style={{ maxHeight: lineMode === "multi" ? "200px" : "auto" }}
+        className="mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto overflow-hidden"
+        style={{ maxHeight: "200px" }}
       >
         {/* Blur overlay when input not focused */}
         {!isInputFocused && (
@@ -469,11 +445,7 @@ export function TypingTestPage() {
           </div>
         )}
 
-        <div
-          className={`text-2xl md:text-3xl leading-relaxed font-['Inter'] tracking-wide ${
-            lineMode === "single" ? "flex gap-2 md:gap-3" : "flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2"
-          }`}
-        >
+        <div className="text-2xl md:text-3xl leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2">
           {words.map((wordData, wordIndex) => (
             <Word
               key={wordIndex}

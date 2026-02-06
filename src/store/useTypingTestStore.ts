@@ -35,6 +35,7 @@ interface TypingTestState {
   currentWordIndex: number;
   currentCharIndex: number;
   input: string;
+  lastWordTimestamp: number | null;
 
   // Timer state
   isActive: boolean;
@@ -158,6 +159,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
   currentWordIndex: 0,
   currentCharIndex: 0,
   input: "",
+  lastWordTimestamp: null,
   isActive: false,
   isFinished: false,
   startTime: null,
@@ -179,6 +181,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       currentWordIndex: 0,
       currentCharIndex: 0,
       input: "",
+      lastWordTimestamp: null,
       isActive: false,
       isFinished: false,
       startTime: null,
@@ -199,6 +202,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       set({
         isActive: true,
         startTime: Date.now(),
+        lastWordTimestamp: Date.now(),
       });
     }
   },
@@ -209,33 +213,38 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
 
     // Start test on first input
     if (!state.isActive) {
-      set({ isActive: true, startTime: Date.now() });
+      const now = Date.now();
+      set({ isActive: true, startTime: now, lastWordTimestamp: now });
     }
 
     const words = [...state.words];
-    const currentWord = words[state.currentWordIndex];
+    const currentWord = { ...words[state.currentWordIndex] };
     if (!currentWord) return;
 
     const charIndex = state.currentCharIndex;
+    const newChars = [...currentWord.chars];
 
     if (charIndex < currentWord.word.length) {
       // Typing within word bounds
-      const expectedChar = currentWord.chars[charIndex].char;
+      const expectedChar = newChars[charIndex].char;
       const isCorrect = char === expectedChar;
 
-      currentWord.chars[charIndex] = {
-        ...currentWord.chars[charIndex],
+      newChars[charIndex] = {
+        ...newChars[charIndex],
         state: isCorrect ? "correct" : "incorrect",
         typed: char,
       };
     } else {
       // Extra character beyond word length
-      currentWord.chars.push({
+      newChars.push({
         char: "",
         state: "extra",
         typed: char,
       });
     }
+
+    currentWord.chars = newChars;
+    words[state.currentWordIndex] = currentWord;
 
     set({
       words,
@@ -249,23 +258,27 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
     if (state.isFinished || state.input.length === 0) return;
 
     const words = [...state.words];
-    const currentWord = words[state.currentWordIndex];
+    const currentWord = { ...words[state.currentWordIndex] };
     if (!currentWord) return;
 
     const charIndex = state.currentCharIndex - 1;
+    const newChars = [...currentWord.chars];
 
     if (charIndex >= 0) {
       if (charIndex >= currentWord.word.length) {
         // Remove extra character
-        currentWord.chars.pop();
+        newChars.pop();
       } else {
         // Reset character state
-        currentWord.chars[charIndex] = {
-          ...currentWord.chars[charIndex],
+        newChars[charIndex] = {
+          ...newChars[charIndex],
           state: "pending",
           typed: null,
         };
       }
+
+      currentWord.chars = newChars;
+      words[state.currentWordIndex] = currentWord;
 
       set({
         words,
@@ -295,9 +308,11 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
     };
 
     const nextWordIndex = state.currentWordIndex + 1;
+    const now = Date.now();
 
     // Check if test is complete (words mode)
     if (nextWordIndex >= words.length) {
+      set({ lastWordTimestamp: now });
       get().finishTest();
       return;
     }
@@ -307,6 +322,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       currentWordIndex: nextWordIndex,
       currentCharIndex: 0,
       input: "",
+      lastWordTimestamp: now,
     });
   },
 
@@ -332,6 +348,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       currentWordIndex: 0,
       currentCharIndex: 0,
       input: "",
+      lastWordTimestamp: null,
       isActive: false,
       isFinished: false,
       startTime: null,

@@ -26,7 +26,7 @@ export const completedEventSchema = z.object({
   accuracy: z.number().min(0).max(100),
   consistency: z.number().min(0).max(100),
   keyConsistency: z.number().min(0).max(100),
-  mode: z.enum(["time", "words", "quote", "zen"]),
+  mode: z.enum(["time", "words", "zen"]),
   mode2: z.union([z.number(), z.string()]),
   timestamp: z.number(),
   testDuration: z.number().positive(),

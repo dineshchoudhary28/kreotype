@@ -25,20 +25,15 @@ export const DifficultySchema = z.enum(["normal", "expert", "master"]);
 export type Difficulty = z.infer<typeof DifficultySchema>;
 
 // Test modes
-export const ModeSchema = z.enum(["time", "words", "quote", "zen", "custom"]);
+export const ModeSchema = z.enum(["time", "words", "zen"]);
 export type Mode = z.infer<typeof ModeSchema>;
 
 // Mode2 values (mode-specific configuration)
 export const Mode2Schema = z.union([
     StringNumberSchema,
     z.literal("zen"),
-    z.literal("custom"),
 ]);
 export type Mode2 = z.infer<typeof Mode2Schema>;
-
-// Quote length options
-export const QuoteLengthSchema = z.enum(["short", "medium", "long", "thicc"]);
-export type QuoteLength = z.infer<typeof QuoteLengthSchema>;
 
 // Language code (simplified - can be extended)
 export const LanguageSchema = z.string().min(2).max(20);
@@ -69,9 +64,7 @@ export type PersonalBest = z.infer<typeof PersonalBestSchema>;
 export const PersonalBestsSchema = z.object({
     time: z.record(z.string(), z.array(PersonalBestSchema)),
     words: z.record(z.string(), z.array(PersonalBestSchema)),
-    quote: z.record(z.string(), z.array(PersonalBestSchema)),
     zen: z.record(z.string(), z.array(PersonalBestSchema)),
-    custom: z.record(z.string(), z.array(PersonalBestSchema)),
 });
 export type PersonalBests = z.infer<typeof PersonalBestsSchema>;
 
@@ -135,9 +128,7 @@ export function createEmptyPersonalBests(): PersonalBests {
     return {
         time: {},
         words: {},
-        quote: {},
         zen: {},
-        custom: {},
     };
 }
 

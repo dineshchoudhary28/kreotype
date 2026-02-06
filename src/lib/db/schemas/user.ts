@@ -120,7 +120,6 @@ export const ResultFilterPresetSchema = z.object({
     mode: z.record(z.string(), z.boolean()),
     words: z.record(z.string(), z.boolean()),
     time: z.record(z.string(), z.boolean()),
-    quoteLength: z.record(z.string(), z.boolean()),
     punctuation: z.object({
         on: z.boolean(),
         off: z.boolean(),
@@ -140,28 +139,6 @@ export const ResultFilterPresetSchema = z.object({
     language: z.record(z.string(), z.boolean()),
 });
 export type ResultFilterPreset = z.infer<typeof ResultFilterPresetSchema>;
-
-/**
- * Quote Ratings Schema
- * Record<language, Record<quoteId, rating>>
- */
-
-export const UserQuoteRatingsSchema = z.record(
-    LanguageSchema,
-    z.record(StringNumberSchema, z.number().nonnegative())
-);
-export type UserQuoteRatings = z.infer<typeof UserQuoteRatingsSchema>;
-
-/**
- * Favorite Quotes Schema
- * Record<language, quoteId[]>
- */
-
-export const FavoriteQuotesSchema = z.record(
-    LanguageSchema,
-    z.array(StringNumberSchema)
-);
-export type FavoriteQuotes = z.infer<typeof FavoriteQuotesSchema>;
 
 /**
  * Premium Info Schema
@@ -219,10 +196,6 @@ export const UserSchema = z.object({
     // Test activity
     testActivity: CountByYearAndDaySchema.optional(),
 
-    // Quote interactions
-    quoteRatings: UserQuoteRatingsSchema.optional(),
-    favoriteQuotes: FavoriteQuotesSchema.optional(),
-
     // Discord integration
     discordId: z.string().optional(),
     discordAvatar: z.string().optional(),
@@ -276,9 +249,7 @@ export function createNewUser(
         personalBests: {
             time: {},
             words: {},
-            quote: {},
             zen: {},
-            custom: {},
         },
         testActivity: {},
     };

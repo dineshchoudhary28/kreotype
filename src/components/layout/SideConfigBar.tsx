@@ -7,38 +7,6 @@ import { useFocusModeStore } from "@/store/useFocusModeStore";
 
 const STORAGE_KEY = "kreotype_sidebar_expanded";
 
-const patterns = [
-  {
-    id: "standard" as const,
-    name: "standard",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="5" y1="12" x2="19" y2="12" />
-      </svg>
-    ),
-  },
-  {
-    id: "wave" as const,
-    name: "wave",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
-        <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
-        <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
-      </svg>
-    ),
-  },
-  {
-    id: "mountains" as const,
-    name: "mountains",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
-      </svg>
-    ),
-  },
-];
-
 function SidebarItem({
   icon,
   label,
@@ -80,8 +48,6 @@ function SidebarItem({
 export function SideConfigBar() {
   const pathname = usePathname();
   const isFocused = useFocusModeStore((s) => s.isFocused);
-  const pattern = useConfigStore((s) => s.pattern);
-  const lineMode = useConfigStore((s) => s.lineMode);
   const punctuation = useConfigStore((s) => s.punctuation);
   const numbers = useConfigStore((s) => s.numbers);
   const sidebarExpanded = useConfigStore((s) => s.sidebarExpanded);
@@ -140,58 +106,6 @@ export function SideConfigBar() {
             isExpanded ? "opacity-100" : "opacity-0 pointer-events-none translate-x-[-20px]"
           }`}
         >
-          {/* Patterns Section */}
-          <div className="space-y-4">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold px-2 opacity-40">
-              Patterns
-            </div>
-            <div className="space-y-1">
-              {patterns.map((p) => (
-                <SidebarItem
-                  key={p.id}
-                  icon={p.icon}
-                  label={p.name}
-                  isExpanded={isExpanded}
-                  isActive={pattern === p.id}
-                  onClick={() => setConfig("pattern", p.id)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Layout Section */}
-          <div className="space-y-4">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold px-2 opacity-40">
-              Layout
-            </div>
-            <div className="space-y-1">
-              <SidebarItem
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                }
-                label="Single Line"
-                isExpanded={isExpanded}
-                isActive={lineMode === "single"}
-                onClick={() => setConfig("lineMode", "single")}
-              />
-              <SidebarItem
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="7" x2="19" y2="7" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <line x1="5" y1="17" x2="19" y2="17" />
-                  </svg>
-                }
-                label="Multi-line"
-                isExpanded={isExpanded}
-                isActive={lineMode === "multi"}
-                onClick={() => setConfig("lineMode", "multi")}
-              />
-            </div>
-          </div>
-
           {/* Toggles Section */}
           <div className="space-y-4">
             <div className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold px-2 opacity-40">

@@ -11,9 +11,10 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import { RefreshCw, ChevronRight, Share2, Info, ExternalLink, AlertTriangle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { RefreshCw, ChevronRight, Share2, Info, ExternalLink, AlertTriangle, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { toPng } from "html-to-image";
 
 const swarm65Images = [
   "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Frame1000006038.png?v=1764739426&width=1080",
@@ -46,6 +47,42 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
   
   const [swarm65Index, setSwarm65Index] = useState(0);
   const [swarmWhiteIndex, setSwarmWhiteIndex] = useState(0);
+  const [isSharing, setIsSharing] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
+
+  const handleShare = async () => {
+    if (!shareRef.current) return;
+    
+    setIsSharing(true);
+    // Give a tiny bit of time for any hover states to settle
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    try {
+      // Find the action buttons row to hide it temporarily
+      const buttonsRow = shareRef.current.querySelector('.action-buttons-row') as HTMLElement;
+      if (buttonsRow) buttonsRow.style.display = 'none';
+
+      const dataUrl = await toPng(shareRef.current, {
+        cacheBust: true,
+        backgroundColor: '#000000', // Capture with a solid background
+        style: {
+          padding: '40px',
+          borderRadius: '32px',
+        }
+      });
+
+      if (buttonsRow) buttonsRow.style.display = '';
+
+      const link = document.createElement('a');
+      link.download = `kreotype-${stats.wpm}wpm-${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to share results:", err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -72,7 +109,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
   return (
     <div className="flex-1 flex flex-col lg:flex-row w-full max-w-[1500px] mx-auto py-8 md:py-12 px-4 md:px-6 gap-8 md:gap-12 animate-in fade-in zoom-in-95 duration-700">
       {/* Left Content Area (Stats & Graph) */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div ref={shareRef} className="flex-1 flex flex-col min-w-0">
         {/* Main Header Stats */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mb-8 md:mb-10">
           <div className="md:col-span-3 flex flex-row md:flex-col justify-around md:justify-start md:gap-10">
@@ -199,7 +236,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         </div>
 
         {/* Action Buttons Row - Centered */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
+        <div className="action-buttons-row flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
           <div className="flex gap-2 order-2 sm:order-1">
             <button 
               onClick={onRestart}
@@ -210,10 +247,16 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
               <span className="text-[9px] font-black uppercase tracking-widest">Restart</span>
             </button>
             <button 
-              className="p-2.5 bg-surface hover:bg-surface-hover text-text rounded-lg transition-colors cursor-pointer border border-surface active:scale-95"
+              onClick={handleShare}
+              disabled={isSharing}
+              className="p-2.5 bg-surface hover:bg-surface-hover text-text rounded-lg transition-colors cursor-pointer border border-surface active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Share Results"
             >
-              <Share2 className="w-3.5 h-3.5" />
+              {isSharing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Share2 className="w-3.5 h-3.5" />
+              )}
             </button>
           </div>
 

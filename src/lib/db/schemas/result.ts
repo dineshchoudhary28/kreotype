@@ -34,7 +34,6 @@ export const ResultSchema = z.object({
     numbers: z.boolean().optional(),
     lazyMode: z.boolean().optional(),
     blindMode: z.boolean().optional(),
-    quoteLength: z.number().int().min(0).max(3).optional(),
 
     // Performance metrics
     wpm: WpmSchema,
@@ -95,7 +94,6 @@ export const CompletedEventSchema = z.object({
     numbers: z.boolean(),
     lazyMode: z.boolean(),
     blindMode: z.boolean(),
-    quoteLength: z.number().int().min(0).max(3).optional(),
 
     // Performance metrics
     wpm: WpmSchema,
@@ -191,7 +189,6 @@ export function buildDbResult(
     }
 
     // Compress object by omitting default values
-    if (!ce.quoteLength) delete result.quoteLength;
     if (!ce.bailedOut) delete result.bailedOut;
     if (!ce.blindMode) delete result.blindMode;
     if (!ce.lazyMode) delete result.lazyMode;
@@ -200,7 +197,6 @@ export function buildDbResult(
     if (ce.language === "english") delete result.language;
     if (!ce.numbers) delete result.numbers;
     if (!ce.punctuation) delete result.punctuation;
-    if (ce.mode !== "quote") delete result.quoteLength;
     if (ce.restartCount === 0) delete result.restartCount;
     if (ce.incompleteTestSeconds === 0) delete result.incompleteTestSeconds;
     if (ce.afkDuration === 0) delete result.afkDuration;
