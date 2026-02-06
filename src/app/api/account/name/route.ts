@@ -20,28 +20,39 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
+  const { username, name } = parsed.data;
+
   await connectDB();
   const user = await User.findById(session.user!.id);
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  if (user.lastNameChange && Date.now() - user.lastNameChange.getTime() < THIRTY_DAYS_MS) {
-    const nextAllowed = new Date(user.lastNameChange.getTime() + THIRTY_DAYS_MS);
-    return NextResponse.json(
-      { error: `Name change available after ${nextAllowed.toISOString()}` },
-      { status: 429 }
-    );
+  // Handle name update (display name)
+  if (name !== undefined) {
+    user.name = name;
   }
 
-  const existing = await User.findOne({ username: parsed.data.username });
-  if (existing && existing._id.toString() !== session.user!.id) {
-    return NextResponse.json({ error: "Username already taken" }, { status: 409 });
+  // Handle username update (handle, unique)
+  if (username !== undefined && username !== user.username) {
+    if (user.lastNameChange && Date.now() - user.lastNameChange.getTime() < THIRTY_DAYS_MS) {
+      const nextAllowed = new Date(user.lastNameChange.getTime() + THIRTY_DAYS_MS);
+      return NextResponse.json(
+        { error: `Username change available after ${nextAllowed.toISOString()}` },
+        { status: 429 }
+      );
+    }
+
+    const existing = await User.findOne({ username });
+    if (existing && existing._id.toString() !== session.user!.id) {
+      return NextResponse.json({ error: "Username already taken" }, { status: 409 });
+    }
+
+    user.username = username;
+    user.lastNameChange = new Date();
   }
 
-  user.username = parsed.data.username;
-  user.lastNameChange = new Date();
   await user.save();
 
-  return NextResponse.json({ message: "Username updated" });
+  return NextResponse.json({ message: "Account details updated" });
 }

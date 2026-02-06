@@ -1,11 +1,91 @@
 "use client";
 
+import { useEffect, useRef, useCallback } from "react";
 import { TypingTestPage } from "@/components/features/typing-test/TypingTestPage";
+import { TestConfig } from "@/components/features/typing-test/TestConfig";
+import { SideConfigBar } from "@/components/layout/SideConfigBar";
+import { useConfigStore } from "@/store/useConfigStore";
+import { useTypingTestStore } from "@/store/useTypingTestStore";
+import { useFocusModeStore } from "@/store/useFocusModeStore";
+
+const MOUSE_IDLE_TIMEOUT = 2000; // Hide UI after 2 seconds of no mouse movement
 
 export default function Home() {
+  const sidebarExpanded = useConfigStore((s) => s.sidebarExpanded);
+  const isFinished = useTypingTestStore((s) => s.isFinished);
+  const isActive = useTypingTestStore((s) => s.isActive);
+  const showUITemporarily = useFocusModeStore((s) => s.showUITemporarily);
+  const setShowUITemporarily = useFocusModeStore((s) => s.setShowUITemporarily);
+
+  const mouseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Determine if UI should be shown
+  // Show UI when: not typing, showing results, or mouse moved recently during typing
+  const shouldShowUI = !isActive || isFinished || showUITemporarily;
+
+  // Handle mouse movement
+  const handleMouseMove = useCallback(() => {
+    if (isActive && !isFinished) {
+      // Show UI temporarily
+      setShowUITemporarily(true);
+
+      // Clear existing timeout
+      if (mouseTimeoutRef.current) {
+        clearTimeout(mouseTimeoutRef.current);
+      }
+
+      // Set timeout to hide UI after idle period
+      mouseTimeoutRef.current = setTimeout(() => {
+        setShowUITemporarily(false);
+      }, MOUSE_IDLE_TIMEOUT);
+    }
+  }, [isActive, isFinished, setShowUITemporarily]);
+
+  // Reset showUITemporarily when test ends or starts
+  useEffect(() => {
+    if (!isActive) {
+      setShowUITemporarily(false);
+      if (mouseTimeoutRef.current) {
+        clearTimeout(mouseTimeoutRef.current);
+        mouseTimeoutRef.current = null;
+      }
+    }
+  }, [isActive, setShowUITemporarily]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (mouseTimeoutRef.current) {
+        clearTimeout(mouseTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <div className="w-full flex flex-col items-center justify-center py-12 flex-1">
-      <TypingTestPage />
+    <div
+      className="flex-1 relative w-full"
+      onMouseMove={handleMouseMove}
+    >
+      {/* Sidebar: Hidden when typing (unless mouse moved) or showing results */}
+      {shouldShowUI && !isFinished && (
+        <div className="absolute left-0 top-0 bottom-0 z-40">
+          <SideConfigBar />
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div
+        className="absolute inset-0 transition-all duration-300 ease-in-out overflow-y-auto flex flex-col"
+        style={{
+          paddingLeft: (shouldShowUI && !isFinished && sidebarExpanded) ? "256px" : "0"
+        }}
+      >
+        <main className="flex-1 w-full max-w-[1500px] mx-auto px-6 pt-6 flex flex-col">
+          {/* Config panel: Hidden when typing (unless mouse moved) or showing results */}
+          {shouldShowUI && !isFinished && <TestConfig />}
+          <TypingTestPage />
+        </main>
+      </div>
     </div>
   );
 }

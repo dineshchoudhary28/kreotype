@@ -4,13 +4,16 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/server/models/User";
 import { registerSchema } from "@/server/validators/auth";
 import { rateLimit } from "@/server/middleware/rateLimit";
+import { verifyOTP } from "@/lib/otp";
 
 export async function POST(request: NextRequest) {
   const limited = await rateLimit(request, "register");
   if (limited) return limited;
 
   const body = await request.json();
-  const parsed = registerSchema.safeParse(body);
+  const { otp, ...rest } = body;
+  
+  const parsed = registerSchema.safeParse(rest);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Validation failed", details: parsed.error.issues },
@@ -18,7 +21,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (!otp) {
+    return NextResponse.json({ error: "OTP is required" }, { status: 400 });
+  }
+
   const { username, email, password } = parsed.data;
+
+  // Verify OTP
+  const isOtpValid = await verifyOTP(email, otp);
+  if (!isOtpValid) {
+    return NextResponse.json({ error: "Invalid or expired OTP" }, { status: 400 });
+  }
 
   await connectDB();
 

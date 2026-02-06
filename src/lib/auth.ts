@@ -5,6 +5,7 @@ import GitHub from "next-auth/providers/github";
 import bcrypt from "bcrypt";
 import { connectDB } from "@/lib/db";
 import { User } from "@/server/models/User";
+import { verifyOTP } from "@/lib/otp";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
@@ -27,28 +28,48 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        otp: { label: "OTP", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email) return null;
 
         await connectDB();
         const user = await User.findOne({
           email: (credentials.email as string).toLowerCase(),
         });
-        if (!user || !user.passwordHash) return null;
 
-        const valid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        );
-        if (!valid) return null;
+        // OTP Login
+        if (credentials.otp) {
+          if (!user) return null;
+          const isValid = await verifyOTP(credentials.email as string, credentials.otp as string);
+          if (!isValid) return null;
 
-        return {
-          id: user._id.toString(),
-          name: user.username,
-          email: user.email,
-          image: user.image,
-        };
+          return {
+            id: user._id.toString(),
+            name: user.username,
+            email: user.email,
+            image: user.image,
+          };
+        }
+
+        // Password Login
+        if (credentials.password) {
+          if (!user || !user.passwordHash) return null;
+          const valid = await bcrypt.compare(
+            credentials.password as string,
+            user.passwordHash
+          );
+          if (!valid) return null;
+
+          return {
+            id: user._id.toString(),
+            name: user.username,
+            email: user.email,
+            image: user.image,
+          };
+        }
+
+        return null;
       },
     }),
   ],
@@ -109,7 +130,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token, user }) {
       if (user) {
-        // Initial sign-in
         if (user.id) {
           token.userId = user.id;
         } else if (user.email) {

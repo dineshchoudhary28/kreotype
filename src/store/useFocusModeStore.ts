@@ -8,6 +8,9 @@ interface FocusModeStore {
   /** Hide cursor during focused typing */
   hideCursor: boolean;
   setHideCursor: (hide: boolean) => void;
+  /** Temporarily show UI (mouse moved during typing) */
+  showUITemporarily: boolean;
+  setShowUITemporarily: (show: boolean) => void;
 }
 
 export const useFocusModeStore = create<FocusModeStore>((set) => ({
@@ -15,4 +18,6 @@ export const useFocusModeStore = create<FocusModeStore>((set) => ({
   setFocused: (focused) => set({ isFocused: focused }),
   hideCursor: false,
   setHideCursor: (hide) => set({ hideCursor: hide }),
+  showUITemporarily: false,
+  setShowUITemporarily: (show) => set({ showUITemporarily: show }),
 }));

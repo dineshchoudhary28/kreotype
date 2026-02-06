@@ -6,7 +6,9 @@ export const updateNameSchema = z.object({
     .string()
     .min(3, "Username must be at least 3 characters")
     .max(16, "Username must be at most 16 characters")
-    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+    .optional(),
+  name: z.string().min(1).max(32).optional(),
 });
 
 export const updatePasswordSchema = z.object({

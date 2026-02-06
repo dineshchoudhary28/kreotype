@@ -3,11 +3,29 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
+import { 
+  User, 
+  Mail, 
+  Calendar, 
+  Trophy, 
+  TrendingUp, 
+  Target, 
+  Clock, 
+  Zap, 
+  Download, 
+  History,
+  Activity,
+  Award,
+  ChevronRight
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface UserProfile {
   username: string;
+  name: string | null;
   email: string;
   image?: string;
+  createdAt?: string;
 }
 
 interface Stats {
@@ -50,17 +68,17 @@ interface ResultEntry {
 }
 
 const PB_TIMES = [
-  { label: "15 seconds", key: "time|15" },
-  { label: "30 seconds", key: "time|30" },
-  { label: "60 seconds", key: "time|60" },
-  { label: "120 seconds", key: "time|120" },
+  { label: "15s", key: "time|15" },
+  { label: "30s", key: "time|30" },
+  { label: "60s", key: "time|60" },
+  { label: "120s", key: "time|120" },
 ];
 
 const PB_WORDS = [
-  { label: "10 words", key: "words|10" },
-  { label: "25 words", key: "words|25" },
-  { label: "50 words", key: "words|50" },
-  { label: "100 words", key: "words|100" },
+  { label: "10", key: "words|10" },
+  { label: "25", key: "words|25" },
+  { label: "50", key: "words|50" },
+  { label: "100", key: "words|100" },
 ];
 
 function formatTime(seconds: number): string {
@@ -98,7 +116,13 @@ export default function AccountPage() {
 
       if (userRes.ok) {
         const { user } = await userRes.json();
-        setProfile({ username: user.username, email: user.email, image: user.image });
+        setProfile({ 
+          username: user.username, 
+          name: user.name,
+          email: user.email, 
+          image: user.image,
+          createdAt: user.createdAt 
+        });
       }
       if (statsRes.ok) setStats(await statsRes.json());
       if (pbsRes.ok) {
@@ -128,117 +152,193 @@ export default function AccountPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="w-full max-w-4xl mx-auto px-4 py-8">
-        <div className="flex flex-col gap-6">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 rounded bg-secondary bg-opacity-10 animate-pulse" />
-          ))}
+      <div className="w-full max-w-5xl mx-auto px-6 py-12">
+        <div className="flex flex-col gap-8">
+          <div className="h-32 rounded-2xl bg-surface animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="h-48 rounded-2xl bg-surface animate-pulse" />
+            <div className="h-48 rounded-2xl bg-surface animate-pulse" />
+            <div className="h-48 rounded-2xl bg-surface animate-pulse" />
+          </div>
+          <div className="h-64 rounded-2xl bg-surface animate-pulse" />
         </div>
       </div>
     );
   }
 
-  const statFields = stats
-    ? [
-        { title: "tests started", value: stats.testsStarted },
-        { title: "tests completed", value: stats.testsCompleted },
-        { title: "time typing", value: formatTime(stats.timeTyping) },
-        { title: "highest wpm", value: stats.highestWpm },
-        { title: "average wpm", value: stats.avgWpm },
-        { title: "average wpm (last 10)", value: stats.avgWpmLast10 },
-        { title: "highest raw wpm", value: stats.highestRawWpm },
-        { title: "average raw wpm", value: stats.avgRawWpm },
-        { title: "average raw wpm (last 10)", value: stats.avgRawWpmLast10 },
-        { title: "highest accuracy", value: `${stats.highestAccuracy}%` },
-        { title: "avg accuracy", value: `${stats.avgAccuracy}%` },
-        { title: "avg accuracy (last 10)", value: `${stats.avgAccuracyLast10}%` },
-        { title: "highest consistency", value: `${stats.highestConsistency}%` },
-        { title: "avg consistency", value: `${stats.avgConsistency}%` },
-        { title: "avg consistency (last 10)", value: `${stats.avgConsistencyLast10}%` },
-      ]
-    : [];
-
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 px-4 py-8">
-      {/* Profile Details */}
-      <div className="flex items-start gap-6">
-        <div className="w-16 h-16 rounded-full bg-secondary bg-opacity-20 flex items-center justify-center text-secondary overflow-hidden">
-          {profile?.image ? (
-            <img src={profile.image} alt="" className="w-full h-full object-cover" />
-          ) : (
-            "?"
-          )}
+    <div className="w-full max-w-[1500px] mx-auto flex flex-col gap-10 px-6 py-12">
+      {/* Profile Header */}
+      <div className="relative overflow-hidden rounded-3xl bg-surface border border-gray-900/50 p-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+        
+        <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8">
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 overflow-hidden shadow-2xl shadow-primary/10">
+              {profile?.image ? (
+                <img src={profile.image} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <User size={40} />
+              )}
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-4 flex-1 text-center md:text-left">
+            <div>
+              <h1 className="text-3xl font-bold text-text tracking-tight mb-1">{profile?.name || "Anonymous"}</h1>
+              <p className="text-primary text-sm font-bold tracking-tight mb-2">@{profile?.username ?? "username"}</p>
+              <p className="text-secondary text-[11px] font-medium flex items-center justify-center md:justify-start gap-2 uppercase tracking-widest opacity-70">
+                <Mail size={12} />
+                {profile?.email ?? "no email"}
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-xs font-bold uppercase tracking-widest text-secondary/60">
+              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-gray-900/50">
+                <Calendar size={14} className="text-primary" />
+                <span>Joined {profile?.createdAt ? formatDate(profile.createdAt) : "Recently"}</span>
+              </div>
+              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-gray-900/50">
+                <Activity size={14} className="text-primary" />
+                <span>{stats?.testsCompleted ?? 0} Tests</span>
+              </div>
+              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-gray-900/50">
+                <Clock size={14} className="text-primary" />
+                <span>{stats ? formatTime(stats.timeTyping) : "0s"} Typing</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center md:items-end gap-2">
+             <button 
+                onClick={() => router.push("/account-settings")}
+                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-text text-xs font-bold rounded-xl transition-all border border-gray-800 cursor-pointer"
+             >
+                Edit Profile
+             </button>
+          </div>
         </div>
-        <div className="flex flex-col gap-1 flex-1">
-          <div className="text-lg text-text">{profile?.username ?? "-"}</div>
-          <div className="text-xs text-secondary">{profile?.email ?? "-"}</div>
-          <div className="flex gap-6 mt-2 text-xs text-secondary">
-            <div>
-              <div>tests started</div>
-              <div className="text-text">{stats?.testsStarted ?? "-"}</div>
+      </div>
+
+      {/* Main Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Speed Stats */}
+        <div className="rounded-2xl bg-surface border border-gray-900/50 p-6 flex flex-col gap-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <Zap size={18} />
             </div>
-            <div>
-              <div>tests completed</div>
-              <div className="text-text">{stats?.testsCompleted ?? "-"}</div>
+            <h2 className="text-[11px] font-bold text-secondary uppercase tracking-widest">Speed Performance</h2>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <StatItem label="Highest WPM" value={stats?.highestWpm} icon={<Trophy size={14} />} primary />
+            <StatItem label="Average WPM" value={stats?.avgWpm} icon={<TrendingUp size={14} />} />
+            <StatItem label="Highest Raw" value={stats?.highestRawWpm} />
+            <StatItem label="Avg Raw" value={stats?.avgRawWpm} />
+          </div>
+        </div>
+
+        {/* Accuracy Stats */}
+        <div className="rounded-2xl bg-surface border border-gray-900/50 p-6 flex flex-col gap-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <Target size={18} />
             </div>
-            <div>
-              <div>time typing</div>
-              <div className="text-text">{stats ? formatTime(stats.timeTyping) : "-"}</div>
+            <h2 className="text-[11px] font-bold text-secondary uppercase tracking-widest">Accuracy & Quality</h2>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <StatItem label="Highest Acc" value={`${stats?.highestAccuracy}%`} icon={<Award size={14} />} primary />
+            <StatItem label="Average Acc" value={`${stats?.avgAccuracy}%`} />
+            <StatItem label="Consistency" value={`${stats?.avgConsistency}%`} />
+            <StatItem label="Last 10 Avg" value={`${stats?.avgAccuracyLast10}%`} />
+          </div>
+        </div>
+
+        {/* Personal Bests Card */}
+        <div className="rounded-2xl bg-surface border border-gray-900/50 p-6 flex flex-col gap-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <Trophy size={18} />
+            </div>
+            <h2 className="text-[11px] font-bold text-secondary uppercase tracking-widest">All-Time Bests</h2>
+          </div>
+          
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between items-center bg-background/50 p-3 rounded-xl border border-gray-900/50">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Time 15s</span>
+                <span className="text-xl font-bold text-text">{pbs["time|15"] ? Math.round(pbs["time|15"].wpm) : "-"} <span className="text-[10px] text-secondary font-normal">wpm</span></span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Acc</span>
+                <div className="text-sm font-bold text-primary">{pbs["time|15"] ? `${Math.round(pbs["time|15"].accuracy)}%` : "-"}</div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center bg-background/50 p-3 rounded-xl border border-gray-900/50">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Time 60s</span>
+                <span className="text-xl font-bold text-text">{pbs["time|60"] ? Math.round(pbs["time|60"].wpm) : "-"} <span className="text-[10px] text-secondary font-normal">wpm</span></span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Acc</span>
+                <div className="text-sm font-bold text-primary">{pbs["time|60"] ? `${Math.round(pbs["time|60"].accuracy)}%` : "-"}</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Leaderboard positions */}
-      <section>
-        <h3 className="text-sm text-primary mb-3">
-          All-Time English Leaderboards
-        </h3>
-        <div className="flex gap-6 text-xs">
-          <div>
-            <div className="text-secondary">15 seconds</div>
-            <div className="text-text">
-              {pbs["time|15"] ? `${pbs["time|15"].wpm} wpm` : "-"}
-            </div>
+      {/* PB Detailed Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest flex items-center gap-2">
+              <Clock size={14} className="text-primary" /> Time Personal Bests
+            </h3>
           </div>
-          <div>
-            <div className="text-secondary">60 seconds</div>
-            <div className="text-text">
-              {pbs["time|60"] ? `${pbs["time|60"].wpm} wpm` : "-"}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Personal Bests */}
-      <div className="grid grid-cols-2 gap-6">
-        <section>
-          <h3 className="text-sm text-secondary mb-2">time PBs</h3>
-          <div className="flex flex-col gap-2">
+          <div className="space-y-3">
             {PB_TIMES.map(({ label, key }) => {
               const pb = pbs[key];
               return (
-                <div key={key} className="flex justify-between text-xs">
-                  <span className="text-secondary">{label}</span>
-                  <span className="text-text">
-                    {pb ? `${Math.round(pb.wpm)} wpm / ${Math.round(pb.accuracy)}% acc` : "- wpm / - acc"}
-                  </span>
+                <div key={key} className="flex items-center justify-between group p-2 hover:bg-background/50 rounded-xl transition-all border border-transparent hover:border-gray-900/50">
+                  <span className="text-sm font-medium text-secondary group-hover:text-text transition-colors">{label}</span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-bold text-text">
+                      {pb ? `${Math.round(pb.wpm)} wpm` : "-"}
+                    </span>
+                    <span className="text-xs text-secondary/60">
+                      {pb ? `${Math.round(pb.accuracy)}%` : "-"}
+                    </span>
+                  </div>
                 </div>
               );
             })}
           </div>
         </section>
-        <section>
-          <h3 className="text-sm text-secondary mb-2">words PBs</h3>
-          <div className="flex flex-col gap-2">
+
+        <section className="rounded-2xl bg-surface border border-gray-900/50 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest flex items-center gap-2">
+              <History size={14} className="text-primary" /> Word Personal Bests
+            </h3>
+          </div>
+          <div className="space-y-3">
             {PB_WORDS.map(({ label, key }) => {
               const pb = pbs[key];
               return (
-                <div key={key} className="flex justify-between text-xs">
-                  <span className="text-secondary">{label}</span>
-                  <span className="text-text">
-                    {pb ? `${Math.round(pb.wpm)} wpm / ${Math.round(pb.accuracy)}% acc` : "- wpm / - acc"}
-                  </span>
+                <div key={key} className="flex items-center justify-between group p-2 hover:bg-background/50 rounded-xl transition-all border border-transparent hover:border-gray-900/50">
+                  <span className="text-sm font-medium text-secondary group-hover:text-text transition-colors">{label} Words</span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-bold text-text">
+                      {pb ? `${Math.round(pb.wpm)} wpm` : "-"}
+                    </span>
+                    <span className="text-xs text-secondary/60">
+                      {pb ? `${Math.round(pb.accuracy)}%` : "-"}
+                    </span>
+                  </div>
                 </div>
               );
             })}
@@ -246,84 +346,103 @@ export default function AccountPage() {
         </section>
       </div>
 
-      {/* Test Activity */}
-      <section>
-        <h3 className="text-sm text-secondary mb-2">test activity</h3>
-        <div className="h-24 rounded bg-secondary bg-opacity-5 flex items-center justify-center text-xs text-secondary">
-          {results.length === 0 ? "No data found." : `${results.length} recent tests`}
-        </div>
-      </section>
-
-      {/* Charts placeholder */}
-      <section>
-        <h3 className="text-sm text-secondary mb-2">account history</h3>
-        <div className="h-48 rounded bg-secondary bg-opacity-5 flex items-center justify-center text-xs text-secondary">
-          Chart will appear here when you have test results.
-        </div>
-      </section>
-
-      {/* Stats grid */}
-      <section>
-        <div className="grid grid-cols-3 gap-4">
-          {statFields.map((stat) => (
-            <div key={stat.title} className="text-xs">
-              <div className="text-secondary">{stat.title}</div>
-              <div className="text-lg text-text">{stat.value}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Result history */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm text-secondary">result history</h3>
-          <button className="text-xs text-secondary hover:text-text transition-colors opacity-50 cursor-not-allowed" disabled>
-            Export CSV
+      <section className="rounded-2xl bg-surface border border-gray-900/50 overflow-hidden shadow-sm">
+        <div className="p-6 border-b border-gray-900/50 flex items-center justify-between bg-surface/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <History size={18} />
+            </div>
+            <h2 className="text-[11px] font-bold text-secondary uppercase tracking-widest">Result History</h2>
+          </div>
+          <button className="flex items-center gap-2 px-3 py-1.5 bg-background border border-gray-900 rounded-lg text-[10px] font-bold text-secondary hover:text-text transition-all cursor-pointer">
+            <Download size={12} />
+            EXPORT CSV
           </button>
         </div>
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="text-secondary border-b border-secondary border-opacity-20">
-              <td className="py-2">wpm</td>
-              <td className="py-2">raw</td>
-              <td className="py-2">accuracy</td>
-              <td className="py-2">consistency</td>
-              <td className="py-2">chars</td>
-              <td className="py-2">mode</td>
-              <td className="py-2">info</td>
-              <td className="py-2">date</td>
-            </tr>
-          </thead>
-          <tbody>
-            {results.length === 0 ? (
-              <tr className="text-secondary text-center">
-                <td colSpan={8} className="py-8">
-                  No results yet. Complete a test to see your history.
-                </td>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-background/50 text-[10px] font-bold text-secondary uppercase tracking-widest">
+                <th className="px-6 py-4">WPM</th>
+                <th className="px-6 py-4">Raw</th>
+                <th className="px-6 py-4">Acc</th>
+                <th className="px-6 py-4">Consistency</th>
+                <th className="px-6 py-4">Chars</th>
+                <th className="px-6 py-4">Mode</th>
+                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4"></th>
               </tr>
-            ) : (
-              results.map((r) => (
-                <tr
-                  key={r._id}
-                  className={`border-b border-secondary border-opacity-10 ${r.isPb ? "text-primary" : "text-text"}`}
-                >
-                  <td className="py-2">{Math.round(r.wpm)}</td>
-                  <td className="py-2">{Math.round(r.rawWpm)}</td>
-                  <td className="py-2">{Math.round(r.accuracy)}%</td>
-                  <td className="py-2">{Math.round(r.consistency)}%</td>
-                  <td className="py-2">
-                    {r.charStats.correct}/{r.charStats.incorrect}/{r.charStats.extra}/{r.charStats.missed}
+            </thead>
+            <tbody className="divide-y divide-gray-900/30">
+              {results.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center text-secondary text-sm italic">
+                    No results yet. Complete a test to see your history.
                   </td>
-                  <td className="py-2">{r.mode}</td>
-                  <td className="py-2">{r.mode2}</td>
-                  <td className="py-2">{formatDate(r.timestamp)}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                results.map((r) => (
+                  <tr
+                    key={r._id}
+                    className={cn(
+                      "hover:bg-primary/[0.02] transition-colors group cursor-default",
+                      r.isPb ? "bg-primary/[0.03]" : ""
+                    )}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className={cn("text-lg font-bold", r.isPb ? "text-primary" : "text-text")}>
+                          {Math.round(r.wpm)}
+                        </span>
+                        {r.isPb && <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">Personal Best</span>}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-secondary font-medium">{Math.round(r.rawWpm)}</td>
+                    <td className="px-6 py-4 text-sm text-text font-bold">{Math.round(r.accuracy)}%</td>
+                    <td className="px-6 py-4 text-sm text-secondary">{Math.round(r.consistency)}%</td>
+                    <td className="px-6 py-4 text-xs font-mono text-secondary">
+                      <span className="text-text">{r.charStats.correct}</span>/
+                      <span className="text-error">{r.charStats.incorrect}</span>/
+                      <span className="text-secondary/60">{r.charStats.extra}</span>/
+                      <span className="text-secondary/60">{r.charStats.missed}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-text capitalize">{r.mode}</span>
+                        <span className="text-[10px] text-secondary">{r.mode2}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-secondary font-medium">{formatDate(r.timestamp)}</td>
+                    <td className="px-6 py-4 text-right">
+                       <ChevronRight size={14} className="text-secondary/20 group-hover:text-primary transition-colors inline-block" />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );
 }
+
+function StatItem({ label, value, icon, primary }: { label: string; value: string | number | undefined; icon?: React.ReactNode; primary?: boolean }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="text-[10px] font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
+        {icon}
+        {label}
+      </div>
+      <div className={cn(
+        "text-2xl font-bold tracking-tight",
+        primary ? "text-primary" : "text-text"
+      )}>
+        {value ?? "-"}
+      </div>
+    </div>
+  );
+}
+

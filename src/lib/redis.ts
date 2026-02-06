@@ -2,37 +2,35 @@ import Redis from "ioredis";
 
 declare global {
   var _redisClient: Redis | undefined;
+  var _redisMemoryStorage: Map<string, { value: string; expires: number }> | undefined;
 }
 
 let redisAvailable = true;
+if (!global._redisMemoryStorage) {
+  global._redisMemoryStorage = new Map();
+}
 
 function getRedisClient(): Redis {
   if (global._redisClient) {
     return global._redisClient;
   }
 
-  const url = process.env.REDIS_URL;
-  if (!url) {
-    throw new Error("REDIS_URL environment variable is not defined");
-  }
+  const url = process.env.REDIS_URL || "redis://localhost:6379";
 
   global._redisClient = new Redis(url, {
     maxRetriesPerRequest: 1,
     lazyConnect: true,
+    connectTimeout: 1000,
     retryStrategy(times) {
-      if (times > 3) {
+      if (times > 1) {
         redisAvailable = false;
-        return null; // stop retrying
+        return null;
       }
-      return Math.min(times * 500, 2000);
-    },
-    reconnectOnError() {
-      return false;
+      return 500;
     },
   });
 
   global._redisClient.on("error", () => {
-    // Silently mark as unavailable — prevents unhandled error crashes
     redisAvailable = false;
   });
 
@@ -43,35 +41,62 @@ function getRedisClient(): Redis {
   return global._redisClient;
 }
 
-// Proxy that silently no-ops when Redis is unavailable
+// Memory Fallback Implementation
+const memoryFallback = {
+  get: async (key: string) => {
+    const entry = global._redisMemoryStorage?.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expires) {
+      global._redisMemoryStorage?.delete(key);
+      return null;
+    }
+    return entry.value;
+  },
+  setex: async (key: string, seconds: number, value: string) => {
+    global._redisMemoryStorage?.set(key, {
+      value,
+      expires: Date.now() + seconds * 1000,
+    });
+    return "OK";
+  },
+  del: async (key: string) => {
+    global._redisMemoryStorage?.delete(key);
+    return 1;
+  },
+  pipeline: () => ({
+    zremrangebyscore: () => {},
+    zadd: () => {},
+    zcard: () => {},
+    expire: () => {},
+    exec: async () => [[null, 0], [null, 0], [null, 0]],
+  }),
+};
+
 export const redis = new Proxy({} as Redis, {
   get(_target, prop) {
-    const client = getRedisClient();
-
     if (!redisAvailable) {
-      if (typeof prop === "string") {
-        // Return a no-op pipeline that mirrors the chainable API
-        if (prop === "pipeline") {
-          const noopChain = new Proxy({} as Record<string, unknown>, {
-            get(_, method) {
-              if (method === "exec") return async () => [];
-              return () => noopChain; // chainable no-ops (zadd, zcard, etc.)
-            },
-          });
-          return () => noopChain;
-        }
-        // Return no-op functions for common operations when Redis is down
-        if (["get", "set", "setex", "del", "expire", "zremrangebyscore", "zadd", "zcard"].includes(prop)) {
-          return async () => null;
-        }
-      }
+      return (memoryFallback as any)[prop] || (async () => null);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const value = (client as any)[prop];
-    if (typeof value === "function") {
-      return value.bind(client);
+    try {
+      const client = getRedisClient();
+      const value = (client as any)[prop];
+      if (typeof value === "function") {
+        return async (...args: any[]) => {
+          try {
+            const result = await value.apply(client, args);
+            // If ioredis returns null or throws, we might be disconnected
+            return result;
+          } catch {
+            redisAvailable = false;
+            return (memoryFallback as any)[prop]?.(...args) || null;
+          }
+        };
+      }
+      return value;
+    } catch {
+      redisAvailable = false;
+      return (memoryFallback as any)[prop] || (async () => null);
     }
-    return value;
   },
 });

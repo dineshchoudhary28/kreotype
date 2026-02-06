@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
 import { FocusModeWrapper } from "@/components/layout/FocusModeWrapper";
 
-const geist = Geist({
+const inter = Inter({
   variable: "--font-primary",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
-const geistMono = Geist_Mono({
+const jetbrainsMono = JetBrains_Mono({
   variable: "--font-secondary",
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
@@ -50,14 +50,14 @@ export default function RootLayout({
     <html lang="en">
       <body
         suppressHydrationWarning
-        className={`${geist.variable} ${geistMono.variable} antialiased font-sans flex flex-col min-h-screen`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased font-sans flex flex-col min-h-screen`}
       >
         <AuthProvider>
           <ThemeProvider>
             <FocusModeWrapper>
               <AnnouncementBanner />
               <Header />
-              <main className="flex-1 flex flex-col items-center w-full">
+              <main className="flex-1 flex flex-col w-full">
                 {children}
               </main>
               <Footer />

@@ -1,22 +1,23 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { 
+  User, 
+  Shield, 
+  Users, 
+  Check, 
+  AlertTriangle, 
+  Github,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type Tab = "account" | "authentication" | "blockedUsers" | "apeKeys" | "dangerZone";
+type Tab = "account" | "authentication" | "blockedUsers";
 
 interface BlockedUser {
   _id: string;
   username: string;
-}
-
-interface ApeKey {
-  _id: string;
-  name: string;
-  active: boolean;
-  createdAt: string;
-  lastUsedOn?: string;
 }
 
 export default function AccountSettingsPage() {
@@ -28,7 +29,21 @@ export default function AccountSettingsPage() {
   const [error, setError] = useState("");
 
   // Account tab
-  const [newName, setNewName] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/users/me")
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            setDisplayName(data.user.name || "");
+            setUsername(data.user.username || "");
+          }
+        });
+    }
+  }, [status]);
 
   // Auth tab
   const [oldPassword, setOldPassword] = useState("");
@@ -36,15 +51,6 @@ export default function AccountSettingsPage() {
 
   // Blocked users tab
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
-
-  // Ape keys tab
-  const [apeKeys, setApeKeys] = useState<ApeKey[]>([]);
-  const [newKeyName, setNewKeyName] = useState("");
-  const [generatedKey, setGeneratedKey] = useState("");
-
-  // Danger zone
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [resetConfirm, setResetConfirm] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -60,19 +66,10 @@ export default function AccountSettingsPage() {
     }
   }, []);
 
-  const fetchApeKeys = useCallback(async () => {
-    const res = await fetch("/api/ape-keys");
-    if (res.ok) {
-      const data = await res.json();
-      setApeKeys(data.keys);
-    }
-  }, []);
-
   useEffect(() => {
     if (status !== "authenticated") return;
     if (activeTab === "blockedUsers") fetchBlockedUsers();
-    if (activeTab === "apeKeys") fetchApeKeys();
-  }, [activeTab, status, fetchBlockedUsers, fetchApeKeys]);
+  }, [activeTab, status, fetchBlockedUsers]);
 
   const apiAction = async (
     url: string,
@@ -101,360 +98,288 @@ export default function AccountSettingsPage() {
     }
   };
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "account", label: "account" },
-    { id: "authentication", label: "authentication" },
-    { id: "blockedUsers", label: "blocked users" },
-    { id: "apeKeys", label: "ape keys" },
-    { id: "dangerZone", label: "danger zone" },
+  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: "account", label: "account", icon: <User size={14} /> },
+    { id: "authentication", label: "authentication", icon: <Shield size={14} /> },
+    { id: "blockedUsers", label: "blocked users", icon: <Users size={14} /> },
   ];
 
   if (status === "loading") {
     return (
-      <div className="w-full max-w-4xl mx-auto px-4 py-8">
-        <div className="h-64 rounded bg-secondary bg-opacity-10 animate-pulse" />
+      <div className="w-full max-w-5xl mx-auto px-6 py-12">
+        <div className="h-64 rounded-3xl bg-surface animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-6 px-4 py-8">
-      {/* Tabs */}
-      <div className="flex flex-row md:flex-col gap-1 shrink-0 md:w-48">
+    <div className="w-full max-w-[1500px] mx-auto flex flex-col md:flex-row gap-8 px-6 py-12">
+      {/* Sidebar Tabs */}
+      <div className="flex flex-row md:flex-col gap-1 shrink-0 md:w-56 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => { setActiveTab(tab.id); clearMessages(); }}
-            className={`px-3 py-2 rounded text-xs text-left transition-all duration-150 ${
+            className={cn(
+              "flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest text-left transition-all duration-200 whitespace-nowrap",
               activeTab === tab.id
-                ? "bg-primary text-background"
-                : "text-secondary hover:text-text"
-            }`}
+                ? "bg-primary text-background shadow-lg shadow-primary/20"
+                : "text-secondary hover:text-text hover:bg-surface/50"
+            )}
           >
+            {tab.icon}
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col gap-6">
-        {message && <p className="text-xs text-primary">{message}</p>}
-        {error && <p className="text-xs text-error">{error}</p>}
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col gap-8">
+        <div className="flex flex-col gap-2 mb-2">
+           <h1 className="text-2xl font-bold text-text tracking-tight capitalize">
+             {tabs.find(t => t.id === activeTab)?.label} Settings
+           </h1>
+           <p className="text-secondary text-sm">Manage your profile and security preferences.</p>
+        </div>
+
+        {message && (
+          <div className="p-4 bg-primary/10 border border-primary/20 rounded-2xl flex items-center gap-3 text-primary text-xs font-bold animate-in fade-in slide-in-from-top-2">
+            <Check size={16} />
+            {message}
+          </div>
+        )}
+        
+        {error && (
+          <div className="p-4 bg-error/10 border border-error/20 rounded-2xl flex items-center gap-3 text-error text-xs font-bold animate-in fade-in slide-in-from-top-2">
+            <AlertTriangle size={16} />
+            {error}
+          </div>
+        )}
 
         {activeTab === "account" && (
-          <>
-            {/* Update name */}
-            <section className="flex flex-col gap-2 pb-4 border-b border-secondary border-opacity-10">
-              <h3 className="text-sm text-text">update account name</h3>
-              <p className="text-xs text-secondary">Change the name of your account. You can only do this once every 30 days.</p>
-              <div className="flex gap-2 items-center">
+          <div className="space-y-6">
+            <SettingsCard
+              title="display name"
+              description="This is your name shown on your profile and leaderboards. It doesn't have to be unique."
+            >
+              <div className="flex gap-3 items-center mt-2">
                 <input
                   type="text"
-                  placeholder="new username"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="px-3 py-1.5 bg-background border border-secondary rounded text-text text-xs outline-none focus:border-primary w-48"
+                  placeholder="Display Name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="flex-1 max-w-xs px-4 py-2.5 bg-background border border-gray-900 rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
                 />
                 <button
-                  onClick={() => apiAction("/api/account/name", "PATCH", { username: newName }, () => setNewName(""))}
-                  disabled={loading || !newName.trim()}
-                  className="px-4 py-1.5 rounded text-xs bg-primary text-background disabled:opacity-50"
+                  onClick={() => apiAction("/api/account/name", "PATCH", { name: displayName })}
+                  disabled={loading || !displayName.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-primary text-background text-xs font-bold disabled:opacity-50 hover:opacity-90 transition-all cursor-pointer"
                 >
-                  update name
+                  Update Name
                 </button>
               </div>
-            </section>
+            </SettingsCard>
 
-            {/* Opt out of leaderboards */}
-            <section className="flex flex-col gap-2 pb-4 border-b border-secondary border-opacity-10">
-              <h3 className="text-sm text-text">opt out of leaderboards</h3>
-              <p className="text-xs text-secondary">{"Use this if you frequently trigger the anticheat to opt out of leaderboards. You can't undo this action!"}</p>
-              <div>
+            <SettingsCard
+              title="username"
+              description="Your unique handle. You can only change this once every 30 days."
+            >
+              <div className="flex gap-3 items-center mt-2">
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="flex-1 max-w-xs px-4 py-2.5 bg-background border border-gray-900 rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                />
                 <button
-                  onClick={() => { if (confirm("Are you sure? This cannot be undone.")) apiAction("/api/account/leaderboard-opt-out", "POST"); }}
-                  disabled={loading}
-                  className="px-4 py-1.5 rounded text-xs bg-primary text-background disabled:opacity-50"
+                  onClick={() => apiAction("/api/account/name", "PATCH", { username })}
+                  disabled={loading || !username.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-primary text-background text-xs font-bold disabled:opacity-50 hover:opacity-90 transition-all cursor-pointer"
                 >
-                  opt out
+                  Update Handle
                 </button>
               </div>
-            </section>
+            </SettingsCard>
 
-            {/* Reset PBs */}
-            <section className="flex flex-col gap-2 pb-4 border-b border-secondary border-opacity-10">
-              <h3 className="text-sm text-text">reset personal bests</h3>
-              <p className="text-xs text-secondary">{"Resets all your personal bests (but doesn't delete any tests from your history). You can't undo this!"}</p>
-              <div>
+            <SettingsCard
+              title="privacy"
+              description="Manage how your account appears to others on leaderboards."
+            >
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between p-4 bg-background/50 rounded-2xl border border-gray-900/50">
+                  <div>
+                    <h4 className="text-sm font-bold text-text mb-1">Opt out of leaderboards</h4>
+                    <p className="text-xs text-secondary italic">This action is permanent and cannot be reversed.</p>
+                  </div>
+                  <button
+                    onClick={() => { if (confirm("Are you sure? This cannot be undone.")) apiAction("/api/account/leaderboard-opt-out", "POST"); }}
+                    disabled={loading}
+                    className="px-6 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-text text-xs font-bold transition-all border border-gray-800 cursor-pointer"
+                  >
+                    Opt Out
+                  </button>
+                </div>
+              </div>
+            </SettingsCard>
+
+            <SettingsCard
+              title="personal bests"
+              description="Reset your records across all modes. This will not affect your test history."
+            >
+              <div className="flex items-center justify-between p-4 bg-background/50 rounded-2xl border border-gray-900/50">
+                <div>
+                  <h4 className="text-sm font-bold text-text mb-1">Clear all PBs</h4>
+                  <p className="text-xs text-secondary">Start fresh with new records.</p>
+                </div>
                 <button
                   onClick={() => { if (confirm("Reset all personal bests?")) apiAction("/api/users/me/personal-bests", "DELETE"); }}
                   disabled={loading}
-                  className="px-4 py-1.5 rounded text-xs bg-primary text-background disabled:opacity-50"
+                  className="px-6 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-text text-xs font-bold transition-all border border-gray-800 cursor-pointer"
                 >
-                  reset personal bests
+                  Reset PBs
                 </button>
               </div>
-            </section>
-          </>
+            </SettingsCard>
+          </div>
         )}
 
         {activeTab === "authentication" && (
-          <>
-            {/* Update password */}
-            <section className="flex flex-col gap-2 pb-4 border-b border-secondary border-opacity-10">
-              <h3 className="text-sm text-text">password authentication settings</h3>
-              <p className="text-xs text-secondary">Update your password.</p>
-              <div className="flex flex-col gap-2 max-w-xs">
+          <div className="space-y-6">
+            <SettingsCard
+              title="change password"
+              description="Ensure your account is secure by using a strong password."
+            >
+              <div className="flex flex-col gap-3 max-w-sm mt-2">
                 <input
                   type="password"
-                  placeholder="current password"
+                  placeholder="Current password"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
-                  className="px-3 py-1.5 bg-background border border-secondary rounded text-text text-xs outline-none focus:border-primary"
+                  className="w-full px-4 py-2.5 bg-background border border-gray-900 rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
                 />
                 <input
                   type="password"
-                  placeholder="new password"
+                  placeholder="New password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="px-3 py-1.5 bg-background border border-secondary rounded text-text text-xs outline-none focus:border-primary"
+                  className="w-full px-4 py-2.5 bg-background border border-gray-900 rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
                 />
                 <button
                   onClick={() => apiAction("/api/account/password", "PATCH", { oldPassword, newPassword }, () => { setOldPassword(""); setNewPassword(""); })}
                   disabled={loading || !oldPassword || !newPassword}
-                  className="px-4 py-1.5 rounded text-xs bg-primary text-background disabled:opacity-50 w-fit"
+                  className="w-fit px-8 py-2.5 mt-2 rounded-xl bg-primary text-background text-xs font-bold disabled:opacity-50 hover:opacity-90 transition-all cursor-pointer shadow-lg shadow-primary/10"
                 >
-                  update password
+                  Update Password
                 </button>
               </div>
-            </section>
+            </SettingsCard>
 
-            {/* Google auth */}
-            <section className="flex flex-col gap-2 pb-4 border-b border-secondary border-opacity-10">
-              <h3 className="text-sm text-text">google authentication settings</h3>
-              <p className="text-xs text-secondary">Add or remove Google authentication.</p>
-              <div>
+            <SettingsCard
+              title="third-party accounts"
+              description="Link social accounts for faster sign-in."
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={() => signIn("google")}
-                  className="px-4 py-1.5 rounded text-xs bg-primary text-background"
+                  className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-white text-black font-bold hover:bg-gray-200 transition-all text-sm cursor-pointer"
                 >
-                  add google auth
+                  <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1 .67-2.28 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.67-.35-1.39-.35-2.09s.13-1.42.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  Google
                 </button>
-              </div>
-            </section>
-
-            {/* GitHub auth */}
-            <section className="flex flex-col gap-2 pb-4 border-b border-secondary border-opacity-10">
-              <h3 className="text-sm text-text">github authentication settings</h3>
-              <p className="text-xs text-secondary">Add or remove GitHub authentication.</p>
-              <div>
                 <button
                   onClick={() => signIn("github")}
-                  className="px-4 py-1.5 rounded text-xs bg-primary text-background"
+                  className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-[#24292F] text-white font-bold hover:bg-[#24292F]/80 transition-all text-sm cursor-pointer"
                 >
-                  add github auth
+                  <Github size={20} />
+                  GitHub
                 </button>
               </div>
-            </section>
-          </>
+            </SettingsCard>
+          </div>
         )}
 
         {activeTab === "blockedUsers" && (
-          <section>
-            <h3 className="text-sm text-text mb-2">blocked users</h3>
-            <p className="text-xs text-secondary mb-4">Blocked users cannot send you friend requests.</p>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-secondary border-b border-secondary border-opacity-20">
-                  <td className="py-2">name</td>
-                  <td className="py-2"></td>
-                </tr>
-              </thead>
-              <tbody>
-                {blockedUsers.length === 0 ? (
-                  <tr className="text-secondary text-center">
-                    <td colSpan={2} className="py-6">No blocked users.</td>
+          <SettingsCard
+            title="blocked users"
+            description="Users you block will not be able to interact with you or send friend requests."
+          >
+            <div className="overflow-hidden rounded-2xl border border-gray-900/30 bg-background/50">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-surface/50 text-[10px] font-bold text-secondary uppercase tracking-widest">
+                    <th className="px-6 py-4">User</th>
+                    <th className="px-6 py-4 text-right">Action</th>
                   </tr>
-                ) : (
-                  blockedUsers.map((u) => (
-                    <tr key={u._id} className="text-text border-b border-secondary border-opacity-10">
-                      <td className="py-2">{u.username}</td>
-                      <td className="py-2 text-right">
-                        <button
-                          onClick={() => apiAction(`/api/blocked-users?userId=${u._id}`, "DELETE", undefined, () => {
-                            setBlockedUsers((prev) => prev.filter((b) => b._id !== u._id));
-                          })}
-                          disabled={loading}
-                          className="text-secondary hover:text-text transition-colors disabled:opacity-50"
-                        >
-                          unblock
-                        </button>
+                </thead>
+                <tbody className="divide-y divide-gray-900/30">
+                  {blockedUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={2} className="px-6 py-8 text-center text-secondary text-xs italic">
+                        No blocked users.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </section>
-        )}
-
-        {activeTab === "apeKeys" && (
-          <section>
-            <h3 className="text-sm text-text mb-2">ape keys</h3>
-            <p className="text-xs text-secondary mb-4">Generate Ape Keys to access certain API endpoints.</p>
-
-            {generatedKey && (
-              <div className="mb-4 p-3 rounded border border-primary bg-primary bg-opacity-5">
-                <p className="text-xs text-primary mb-1">Key generated — copy it now, it won{"'"}t be shown again:</p>
-                <code className="text-xs text-text break-all select-all">{generatedKey}</code>
-              </div>
-            )}
-
-            <div className="flex gap-2 items-center mb-4">
-              <input
-                type="text"
-                placeholder="key name"
-                value={newKeyName}
-                onChange={(e) => setNewKeyName(e.target.value)}
-                className="px-3 py-1.5 bg-background border border-secondary rounded text-text text-xs outline-none focus:border-primary w-48"
-              />
-              <button
-                onClick={() => apiAction("/api/ape-keys", "POST", { name: newKeyName }, (data) => {
-                  const key = data.key as { rawKey: string };
-                  setGeneratedKey(key.rawKey);
-                  setNewKeyName("");
-                  fetchApeKeys();
-                })}
-                disabled={loading || !newKeyName.trim()}
-                className="px-4 py-1.5 rounded text-xs bg-primary text-background disabled:opacity-50"
-              >
-                generate new key
-              </button>
+                  ) : (
+                    blockedUsers.map((u) => (
+                      <tr key={u._id} className="hover:bg-surface/20 transition-colors">
+                        <td className="px-6 py-4 text-sm font-bold text-text">{u.username}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => apiAction(`/api/blocked-users?userId=${u._id}`, "DELETE", undefined, () => {
+                              setBlockedUsers((prev) => prev.filter((b) => b._id !== u._id));
+                            })}
+                            disabled={loading}
+                            className="text-[10px] font-bold uppercase tracking-widest text-secondary hover:text-text transition-all disabled:opacity-50"
+                          >
+                            Unblock
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-secondary border-b border-secondary border-opacity-20">
-                  <td className="py-2">active</td>
-                  <td className="py-2">name</td>
-                  <td className="py-2">created on</td>
-                  <td className="py-2"></td>
-                </tr>
-              </thead>
-              <tbody>
-                {apeKeys.length === 0 ? (
-                  <tr className="text-secondary text-center">
-                    <td colSpan={4} className="py-6">No API keys.</td>
-                  </tr>
-                ) : (
-                  apeKeys.map((k) => (
-                    <tr key={k._id} className="text-text border-b border-secondary border-opacity-10">
-                      <td className="py-2">
-                        <button
-                          onClick={() => apiAction(`/api/ape-keys/${k._id}`, "PATCH", { active: !k.active }, () => {
-                            setApeKeys((prev) => prev.map((key) =>
-                              key._id === k._id ? { ...key, active: !key.active } : key
-                            ));
-                          })}
-                          disabled={loading}
-                          className={`w-3 h-3 rounded-full ${k.active ? "bg-primary" : "bg-secondary bg-opacity-30"}`}
-                          title={k.active ? "Active — click to deactivate" : "Inactive — click to activate"}
-                        />
-                      </td>
-                      <td className="py-2">{k.name}</td>
-                      <td className="py-2 text-secondary">
-                        {new Date(k.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-2 text-right">
-                        <button
-                          onClick={() => { if (confirm("Delete this key?")) apiAction(`/api/ape-keys/${k._id}`, "DELETE", undefined, () => {
-                            setApeKeys((prev) => prev.filter((key) => key._id !== k._id));
-                          }); }}
-                          disabled={loading}
-                          className="text-secondary hover:text-error transition-colors disabled:opacity-50"
-                        >
-                          delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </section>
-        )}
-
-        {activeTab === "dangerZone" && (
-          <>
-            {/* Reset account */}
-            <section className="flex flex-col gap-2 pb-4 border-b border-secondary border-opacity-10">
-              <h3 className="text-sm text-text">reset account</h3>
-              <p className="text-xs text-secondary">{"Completely resets your account to a blank state. You can't undo this action!"}</p>
-              <div>
-                {resetConfirm ? (
-                  <div className="flex gap-2 items-center">
-                    <span className="text-xs text-error">Are you sure?</span>
-                    <button
-                      onClick={() => apiAction("/api/account/reset", "POST", undefined, () => setResetConfirm(false))}
-                      disabled={loading}
-                      className="px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background disabled:opacity-50"
-                    >
-                      yes, reset
-                    </button>
-                    <button
-                      onClick={() => setResetConfirm(false)}
-                      className="px-4 py-1.5 rounded text-xs text-secondary"
-                    >
-                      cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setResetConfirm(true)}
-                    className="px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background"
-                  >
-                    reset account
-                  </button>
-                )}
-              </div>
-            </section>
-
-            {/* Delete account */}
-            <section className="flex flex-col gap-2 pb-4 border-b border-secondary border-opacity-10">
-              <h3 className="text-sm text-text">delete account</h3>
-              <p className="text-xs text-secondary">{"Deletes your account and all data connected to it. You can't undo this action!"}</p>
-              <div>
-                {deleteConfirm ? (
-                  <div className="flex gap-2 items-center">
-                    <span className="text-xs text-error">This is permanent!</span>
-                    <button
-                      onClick={() => apiAction("/api/account/delete", "POST", undefined, () => {
-                        signOut({ callbackUrl: "/" });
-                      })}
-                      disabled={loading}
-                      className="px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background disabled:opacity-50"
-                    >
-                      yes, delete
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(false)}
-                      className="px-4 py-1.5 rounded text-xs text-secondary"
-                    >
-                      cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setDeleteConfirm(true)}
-                    className="px-4 py-1.5 rounded text-xs bg-[var(--error)] text-background"
-                  >
-                    delete account
-                  </button>
-                )}
-              </div>
-            </section>
-          </>
+          </SettingsCard>
         )}
       </div>
     </div>
+  );
+}
+
+function SettingsCard({ 
+  title, 
+  description, 
+  children, 
+  danger 
+}: { 
+  title: string; 
+  description: string; 
+  children: React.ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <section className={cn(
+      "rounded-3xl border p-6 flex flex-col gap-4 shadow-sm",
+      danger ? "border-error/20 bg-error/[0.02]" : "border-gray-900/50 bg-surface"
+    )}>
+      <div className="flex flex-col gap-1">
+        <h3 className={cn(
+          "text-[11px] font-bold uppercase tracking-widest",
+          danger ? "text-error" : "text-secondary"
+        )}>
+          {title}
+        </h3>
+        <p className="text-secondary text-xs">{description}</p>
+      </div>
+      <div className="mt-1">
+        {children}
+      </div>
+    </section>
   );
 }

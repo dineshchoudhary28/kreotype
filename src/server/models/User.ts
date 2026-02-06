@@ -33,6 +33,7 @@ export interface IEarnedBadge {
 export interface IUser extends Document {
   _id: Types.ObjectId;
   username: string;
+  name: string | null;
   email: string;
   passwordHash: string | null;
   image: string | null;
@@ -90,6 +91,11 @@ const userSchema = new Schema<IUser>(
       minlength: 3,
       maxlength: 16,
       match: /^[a-zA-Z0-9_]+$/,
+    },
+    name: {
+      type: String,
+      default: null,
+      maxlength: 32,
     },
     email: {
       type: String,

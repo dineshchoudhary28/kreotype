@@ -1,39 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
-import { useFocusModeStore } from "@/store/useFocusModeStore";
+import { useState, useEffect } from "react";
+
+const STORAGE_KEY = "kreotype_announcement_dismissed";
 
 export function AnnouncementBanner() {
-  const [isVisible, setIsVisible] = useState(true);
-  const pathname = usePathname();
-  const isFocused = useFocusModeStore((s) => s.isFocused);
+  const [isVisible, setIsVisible] = useState(false);
 
-  // Hide during focus mode on homepage
-  if (pathname === "/" && isFocused) return null;
+  useEffect(() => {
+    const isDismissed = localStorage.getItem(STORAGE_KEY);
+    if (!isDismissed) {
+      setIsVisible(true);
+    }
+  }, []);
 
   if (!isVisible) return null;
 
+  const handleDismiss = () => {
+    setIsVisible(false);
+    localStorage.setItem(STORAGE_KEY, "true");
+  };
+
   return (
-    <div className="w-full bg-surface text-secondary text-xs py-3 px-4 relative border-b border-secondary/10">
-      <div className="max-w-7xl mx-auto flex items-center justify-center text-center">
-        <p className="tracking-tight">
-          <span className="font-bold text-primary mr-2">Level Up:</span>
-          Precision meets performance. Experience the ultimate tactile feel with 
-          <a href="https://kreo-tech.com" target="_blank" rel="noopener noreferrer" className="mx-1 text-text hover:text-primary underline decoration-primary/30 underline-offset-2 transition-colors">
-            Kreo Mechanical Keyboards
-          </a>
-          — designed for elites.
-        </p>
+    <div className="bg-primary text-background py-1.5 px-4 flex justify-between items-center relative z-50">
+      <div className="flex-1 text-center font-bold text-[13px] tracking-wide uppercase">
+        Welcome to Kreotype! The ultimate typing experience is here.
       </div>
-      
-      <button 
-        onClick={() => setIsVisible(false)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors p-1"
+      <button
+        onClick={handleDismiss}
+        className="ml-4 hover:bg-black/10 rounded-full p-1 transition-colors"
         aria-label="Dismiss announcement"
       >
-        <X size={14} />
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
       </button>
     </div>
   );

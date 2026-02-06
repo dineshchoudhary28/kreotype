@@ -1,89 +1,76 @@
-import type { IEarnedBadge } from "@/server/models/User";
-
-interface BadgeContext {
+export interface BadgeEvaluationData {
   wpm: number;
   accuracy: number;
   consistency: number;
   timestamp: Date;
   testsCompleted: number;
   earnedBadgeIds: Set<string>;
-  recentTestDates?: string[];
+  recentTestDates: string[]; // ['2026-02-05', ...]
 }
 
-type BadgeRule = {
-  id: string;
-  check: (ctx: BadgeContext) => boolean;
-};
+export function buildEarnedBadgeIds(badges: { badgeId: string }[]): Set<string> {
+  return new Set(badges.map((b) => b.badgeId));
+}
 
-const rules: BadgeRule[] = [
-  {
-    id: "speed-demon",
-    check: (ctx) => ctx.wpm >= 150,
-  },
-  {
-    id: "centurion",
-    check: (ctx) => ctx.wpm >= 100,
-  },
-  {
-    id: "perfectionist",
-    check: (ctx) => ctx.accuracy === 100,
-  },
-  {
-    id: "marathoner",
-    check: (ctx) => ctx.testsCompleted >= 100,
-  },
-  {
-    id: "veteran",
-    check: (ctx) => ctx.testsCompleted >= 1000,
-  },
-  {
-    id: "consistent",
-    check: (ctx) => ctx.consistency >= 95,
-  },
-  {
-    id: "night-owl",
-    check: (ctx) => {
-      const hour = ctx.timestamp.getHours();
-      return hour >= 0 && hour < 5;
-    },
-  },
-  {
-    id: "streak-7",
-    check: (ctx) => {
-      if (!ctx.recentTestDates || ctx.recentTestDates.length < 7) return false;
-      const unique = [...new Set(ctx.recentTestDates)].sort().reverse();
-      if (unique.length < 7) return false;
-
-      let streak = 1;
-      for (let i = 1; i < unique.length && streak < 7; i++) {
-        const prev = new Date(unique[i - 1]);
-        const curr = new Date(unique[i]);
-        const diffMs = prev.getTime() - curr.getTime();
-        const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-        if (diffDays === 1) {
-          streak++;
-        } else {
-          break;
-        }
-      }
-      return streak >= 7;
-    },
-  },
-];
-
-export function evaluateBadges(ctx: BadgeContext): string[] {
+export function evaluateBadges(data: BadgeEvaluationData): string[] {
   const newBadges: string[] = [];
 
-  for (const rule of rules) {
-    if (ctx.earnedBadgeIds.has(rule.id)) continue;
-    if (rule.check(ctx)) {
-      newBadges.push(rule.id);
+  const check = (id: string, condition: boolean) => {
+    if (condition && !data.earnedBadgeIds.has(id)) {
+      newBadges.push(id);
+    }
+  };
+
+  // Speed Demon (150+ WPM)
+  check("speed-demon", data.wpm >= 150);
+
+  // Centurion (100+ WPM)
+  check("centurion", data.wpm >= 100);
+
+  // Perfectionist (100% Accuracy)
+  check("perfectionist", data.accuracy >= 100);
+
+  // Marathoner (100+ tests)
+  check("marathoner", data.testsCompleted >= 100);
+
+  // Veteran (1000+ tests)
+  check("veteran", data.testsCompleted >= 1000);
+
+  // Consistency King (95%+ consistency)
+  check("consistent", data.consistency >= 95);
+
+  // Night Owl (12am - 5am)
+  const hour = data.timestamp.getHours();
+  check("night-owl", hour >= 0 && hour < 5);
+
+  // Weekly Warrior (7-day streak)
+  if (!data.earnedBadgeIds.has("streak-7")) {
+    const streak = calculateStreak(data.recentTestDates);
+    if (streak >= 7) {
+      newBadges.push("streak-7");
     }
   }
 
   return newBadges;
 }
 
-export function buildEarnedBadgeIds(badges: IEarnedBadge[]): Set<string> {
-  return new Set(badges.map((b) => b.badgeId));
+function calculateStreak(dates: string[]): number {
+  if (dates.length === 0) return 0;
+  
+  const uniqueDates = Array.from(new Set(dates)).sort().reverse();
+  let streak = 1;
+  
+  for (let i = 0; i < uniqueDates.length - 1; i++) {
+    const curr = new Date(uniqueDates[i]);
+    const prev = new Date(uniqueDates[i+1]);
+    const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (diff === 1) {
+      streak++;
+    } else if (diff > 1) {
+      break;
+    }
+  }
+  
+  return streak;
 }

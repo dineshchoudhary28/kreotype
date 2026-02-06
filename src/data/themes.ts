@@ -17,6 +17,34 @@ export interface Theme {
 
 export const themes: Theme[] = [
   {
+    name: "kreotype_dark",
+    label: "Kreotype Dark",
+    colors: {
+      background: "#000000",
+      surface: "#0a0a0a",
+      primary: "#685ACA",
+      secondary: "#6b7280",
+      accent: "#685ACA",
+      text: "#ffffff",
+      error: "#ca4754",
+      errorExtra: "#7e2a33",
+    },
+  },
+  {
+    name: "kreotype_light",
+    label: "Kreotype Light",
+    colors: {
+      background: "#ffffff",
+      surface: "#f3f4f6",
+      primary: "#685ACA",
+      secondary: "#9ca3af",
+      accent: "#685ACA",
+      text: "#111827",
+      error: "#ca4754",
+      errorExtra: "#7e2a33",
+    },
+  },
+  {
     name: "serika_dark",
     label: "Serika Dark",
     colors: {
