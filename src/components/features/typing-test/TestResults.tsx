@@ -370,16 +370,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
             </div>
           </div>
 
-          <div className="relative p-6 rounded-[2rem] bg-surface border border-surface overflow-hidden group">
-            <div className="relative z-10 flex flex-col gap-4 text-center">
-              <span className="text-primary text-[9px] font-black uppercase tracking-[0.3em]">Join the Crew</span>
-              <h5 className="text-lg font-black text-text uppercase italic tracking-tighter leading-none">Get 10% OFF Your First Order</h5>
-              <button className="bg-primary text-background py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">
-                Claim Offer
-              </button>
-            </div>
-            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-primary/20 blur-3xl rounded-full group-hover:bg-primary/30 transition-colors" />
-          </div>
+
         </div>
       </aside>
     </div>
