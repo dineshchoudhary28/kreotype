@@ -48,20 +48,14 @@ export async function connectDB() {
 
 // For compatibility with legacy code if any
 export async function getDb() {
-    await connectDB();
-    return mongoose.connection.db;
+  await connectDB();
+  return mongoose.connection.db;
 }
 
 export async function getCollection<T extends Document>(name: string): Promise<Collection<T>> {
-    const db = await getDb();
-    if (!db) throw new Error("Database not initialized");
-    // Cast to any to bypass version mismatch in types between mongodb package versions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return db.collection<T>(name) as any;
+  const db = await getDb();
+  if (!db) throw new Error("Database not initialized");
+  // Cast to any to bypass version mismatch in types between mongodb package versions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return db.collection<T>(name) as any;
 }
-
-import { DBUser } from "./db/schemas/user";
-import { DBResult } from "./db/schemas/result";
-
-export const getUsersCollection = () => getCollection<DBUser>("users");
-export const getResultsCollection = () => getCollection<DBResult>("results");

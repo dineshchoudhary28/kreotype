@@ -124,12 +124,16 @@ const resultSchema = new Schema<IResult>({
   timestamp: { type: Date, default: Date.now },
 });
 
-resultSchema.index({ userId: 1, testId: 1 }, { unique: true }); // <-- Add this
+resultSchema.index({ userId: 1, testId: 1 }, { unique: true });
 resultSchema.index({ userId: 1, timestamp: -1 });
 resultSchema.index({ mode: 1, mode2: 1, wpm: -1, isValid: 1 });
 resultSchema.index({ mode: 1, mode2: 1, timestamp: -1, wpm: -1 });
 resultSchema.index({ userId: 1, mode: 1, mode2: 1, wpm: -1 });
 resultSchema.index({ tags: 1 });
+// Leaderboard optimization - compound index for global rankings
+resultSchema.index({ mode: 1, mode2: 1, isValid: 1, wpm: -1 });
+// User stats aggregation
+resultSchema.index({ userId: 1, isValid: 1, timestamp: -1 });
 
 export const Result =
   (mongoose.models.Result as mongoose.Model<IResult>) ||

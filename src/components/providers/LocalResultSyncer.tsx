@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { CompletedEvent } from "@/lib/db/schemas/result";
+import { type CompletedEventInput } from "@/server/validators/result";
 import { useTypingTestStore } from "@/store/useTypingTestStore";
 
 export function LocalResultSyncer() {
@@ -11,7 +11,7 @@ export function LocalResultSyncer() {
   const hasCheckedRef = useRef(false);
   const setIsSyncing = useTypingTestStore((s) => s.setIsSyncing);
 
-  const syncResults = useCallback(async (results: CompletedEvent[]) => {
+  const syncResults = useCallback(async (results: (CompletedEventInput & { testId: string })[]) => {
     setIsSyncing(true);
     toast.promise(
       (async () => {
@@ -28,7 +28,7 @@ export function LocalResultSyncer() {
             console.error("Failed to sync a result:", err);
           }
         }
-        
+
         if (successCount > 0) {
           localStorage.removeItem("kreotype_local_results");
           return { count: successCount };

@@ -123,7 +123,13 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-// Indexes are already created by `unique: true` on the schema fields
+// Performance indexes for common queries
+userSchema.index({ testsCompleted: -1 }); // Leaderboard sorting
+userSchema.index({ timeTyping: -1 }); // Time-based leaderboards
+userSchema.index({ "badges.badgeId": 1 }); // Badge lookups
+userSchema.index({ friends: 1 }); // Friend queries
+userSchema.index({ blockedUsers: 1 }); // Block list checks
+userSchema.index({ createdAt: -1 }); // Recent users
 
 export const User =
   (mongoose.models.User as mongoose.Model<IUser>) ||

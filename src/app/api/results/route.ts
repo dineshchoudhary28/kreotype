@@ -3,11 +3,13 @@ import { connectDB } from "@/lib/db";
 import { Result } from "@/server/models/Result";
 import { User, type IPersonalBest } from "@/server/models/User";
 import { completedEventSchema } from "@/server/validators/result";
+import { resultsQuerySchema } from "@/server/validators/query";
 import { requireAuth } from "@/server/middleware/auth";
 import { rateLimit } from "@/server/middleware/rateLimit";
 import { evaluateBadges, buildEarnedBadgeIds } from "@/core/badge-engine";
 import { corsHeaders, handleCorsOptions } from "@/server/middleware/cors";
 import { redis } from "@/lib/redis";
+import { logError } from "@/lib/logger";
 import mongoose from "mongoose";
 
 export async function OPTIONS(request: NextRequest) {
@@ -36,131 +38,156 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
 
-  // Deduplication check
-  const existingResult = await Result.findOne({ userId, testId: data.testId });
-  if (existingResult) {
-    return NextResponse.json(
-      {
-        message: "Result already exists",
-        resultId: existingResult._id,
-        isPb: existingResult.isPb,
-        newBadges: [],
-      },
-      { headers: corsHeaders(request) }
-    );
-  }
+  // Start a transaction session for atomic operations
+  const dbSession = await mongoose.startSession();
+  dbSession.startTransaction();
 
-  // Check for PB
-  const pbKey = `${data.mode}|${data.mode2}`;
-  const user = await User.findById(userId);
-  if (!user) {
-    return NextResponse.json(
-      { error: "User not found" },
-      { status: 404, headers: corsHeaders(request) }
-    );
-  }
+  try {
+    // Deduplication check
+    const existingResult = await Result.findOne({ userId, testId: data.testId }).session(dbSession);
+    if (existingResult) {
+      await dbSession.abortTransaction();
+      dbSession.endSession();
+      return NextResponse.json(
+        {
+          message: "Result already exists",
+          resultId: existingResult._id,
+          isPb: existingResult.isPb,
+          newBadges: [],
+        },
+        { headers: corsHeaders(request) }
+      );
+    }
 
-  const currentPb = user.personalBests.get(pbKey);
-  const isPb = data.validation.isValid && (!currentPb || data.wpm > currentPb.wpm);
+    // Check for PB
+    const pbKey = `${data.mode}|${data.mode2}`;
+    const user = await User.findById(userId).session(dbSession);
+    if (!user) {
+      await dbSession.abortTransaction();
+      dbSession.endSession();
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404, headers: corsHeaders(request) }
+      );
+    }
 
-  const result = await Result.create({
-    userId,
-    testId: data.testId,
-    wpm: data.wpm,
-    rawWpm: data.rawWpm,
-    accuracy: data.accuracy,
-    consistency: data.consistency,
-    keyConsistency: data.keyConsistency,
-    mode: data.mode,
-    mode2: data.mode2,
-    testDuration: data.testDuration,
-    afkDuration: data.afkDuration,
-    language: data.language,
-    difficulty: data.difficulty,
-    punctuation: data.punctuation,
-    numbers: data.numbers,
-    blindMode: data.blindMode,
-    charStats: data.charStats,
-    wpmHistory: data.wpmHistory,
-    rawHistory: data.rawHistory,
-    burstHistory: data.burstHistory,
-    errorHistory: data.errorHistory,
-    keypressTimings: data.keypressTimings,
-    isValid: data.validation.isValid,
-    invalidReasons: data.validation.invalidReasons,
-    tags: data.tags ?? [],
-    isPb,
-    timestamp: new Date(data.timestamp),
-  });
+    const currentPb = user.personalBests.get(pbKey);
+    const isPb = data.validation.isValid && (!currentPb || data.wpm > currentPb.wpm);
 
-  // Update user stats (only PBs and badges — testsCompleted/timeTyping are computed from Results)
-  const updates: Record<string, unknown> = {};
-
-  if (isPb) {
-    const pb: IPersonalBest = {
+    const result = await Result.create([{
+      userId,
+      testId: data.testId,
       wpm: data.wpm,
       rawWpm: data.rawWpm,
       accuracy: data.accuracy,
       consistency: data.consistency,
-      timestamp: new Date(data.timestamp),
-    };
-    updates.$set = { [`personalBests.${pbKey}`]: pb };
-  }
-
-  // Evaluate badges — compute testsCompleted from Results (source of truth)
-  const [recentResults, totalResults] = await Promise.all([
-    Result.find({ userId })
-      .sort({ timestamp: -1 })
-      .limit(30)
-      .select("timestamp")
-      .lean(),
-    Result.countDocuments({ userId }),
-  ]);
-
-  const recentTestDates = recentResults.map((r) =>
-    r.timestamp.toISOString().slice(0, 10)
-  );
-
-  const newBadgeIds = evaluateBadges({
-    wpm: data.wpm,
-    accuracy: data.accuracy,
-    consistency: data.consistency,
-    timestamp: new Date(data.timestamp),
-    testsCompleted: totalResults,
-    earnedBadgeIds: buildEarnedBadgeIds(user.badges ?? []),
-    recentTestDates,
-  });
-
-  if (newBadgeIds.length > 0) {
-    const now = new Date();
-    const badgeEntries = newBadgeIds.map((badgeId) => ({
-      badgeId,
-      earnedAt: now,
-    }));
-    updates.$push = { badges: { $each: badgeEntries } };
-  }
-
-  // Only update if there's something to write (PBs or badges)
-  if (Object.keys(updates).length > 0) {
-    await User.findByIdAndUpdate(userId, updates);
-  }
-
-  // Invalidate stats cache
-  try {
-    await redis.del(`stats:${userId}`);
-  } catch {
-    // Continue even if cache invalidation fails
-  }
-
-  return NextResponse.json(
-    {
-      message: "Result saved",
-      resultId: result._id,
+      keyConsistency: data.keyConsistency,
+      mode: data.mode,
+      mode2: data.mode2,
+      testDuration: data.testDuration,
+      afkDuration: data.afkDuration,
+      language: data.language,
+      difficulty: data.difficulty,
+      punctuation: data.punctuation,
+      numbers: data.numbers,
+      blindMode: data.blindMode,
+      charStats: data.charStats,
+      wpmHistory: data.wpmHistory,
+      rawHistory: data.rawHistory,
+      burstHistory: data.burstHistory,
+      errorHistory: data.errorHistory,
+      keypressTimings: data.keypressTimings,
+      isValid: data.validation.isValid,
+      invalidReasons: data.validation.invalidReasons,
+      tags: data.tags ?? [],
       isPb,
-      newBadges: newBadgeIds,
-    },
-    { headers: corsHeaders(request) }
-  );
+      timestamp: new Date(data.timestamp),
+    }], { session: dbSession });
+
+    // Update user stats (only PBs and badges)
+    const updates: Record<string, unknown> = {};
+
+    if (isPb) {
+      const pb: IPersonalBest = {
+        wpm: data.wpm,
+        rawWpm: data.rawWpm,
+        accuracy: data.accuracy,
+        consistency: data.consistency,
+        timestamp: new Date(data.timestamp),
+      };
+      updates.$set = { [`personalBests.${pbKey}`]: pb };
+    }
+
+    // Evaluate badges
+    const [recentResults, totalResults] = await Promise.all([
+      Result.find({ userId })
+        .sort({ timestamp: -1 })
+        .limit(30)
+        .select("timestamp")
+        .session(dbSession)
+        .lean(),
+      Result.countDocuments({ userId }).session(dbSession),
+    ]);
+
+    const recentTestDates = recentResults.map((r) =>
+      r.timestamp.toISOString().slice(0, 10)
+    );
+
+    const newBadgeIds = evaluateBadges({
+      wpm: data.wpm,
+      accuracy: data.accuracy,
+      consistency: data.consistency,
+      timestamp: new Date(data.timestamp),
+      testsCompleted: totalResults,
+      earnedBadgeIds: buildEarnedBadgeIds(user.badges ?? []),
+      recentTestDates,
+    });
+
+    if (newBadgeIds.length > 0) {
+      const now = new Date();
+      const badgeEntries = newBadgeIds.map((badgeId) => ({
+        badgeId,
+        earnedAt: now,
+      }));
+      updates.$push = { badges: { $each: badgeEntries } };
+    }
+
+    // Only update if there's something to write
+    if (Object.keys(updates).length > 0) {
+      await User.findByIdAndUpdate(userId, updates, { session: dbSession });
+    }
+
+    // Commit transaction
+    await dbSession.commitTransaction();
+    dbSession.endSession();
+
+    // Invalidate cache (outside transaction)
+    try {
+      await redis.del(`stats:${userId}`);
+    } catch (err) {
+      logError(err, { userId, action: "cache_invalidation" });
+    }
+
+    return NextResponse.json(
+      {
+        message: "Result saved",
+        resultId: result[0]._id,
+        isPb,
+        newBadges: newBadgeIds,
+      },
+      { headers: corsHeaders(request) }
+    );
+  } catch (error) {
+    await dbSession.abortTransaction();
+    dbSession.endSession();
+
+    logError(error, { userId, endpoint: "/api/results", action: "POST" });
+
+    return NextResponse.json(
+      { error: "Failed to save result" },
+      { status: 500, headers: corsHeaders(request) }
+    );
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -168,10 +195,27 @@ export async function GET(request: NextRequest) {
   if ("error" in authResult) return authResult.error;
   const { session } = authResult;
 
+  // Rate limiting for GET requests
+  const limited = await rateLimit(request, "resultsGet", session.user!.id);
+  if (limited) return limited;
+
   const { searchParams } = new URL(request.url);
-  const cursor = searchParams.get("cursor");
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "25")));
-  const mode = searchParams.get("mode");
+
+  // Validate query parameters
+  const queryValidation = resultsQuerySchema.safeParse({
+    cursor: searchParams.get("cursor"),
+    limit: searchParams.get("limit"),
+    mode: searchParams.get("mode"),
+  });
+
+  if (!queryValidation.success) {
+    return NextResponse.json(
+      { error: "Invalid query parameters", details: queryValidation.error.issues },
+      { status: 400, headers: corsHeaders(request) }
+    );
+  }
+
+  const { cursor, limit, mode } = queryValidation.data;
 
   await connectDB();
 
@@ -207,11 +251,11 @@ export async function GET(request: NextRequest) {
   const nextCursor =
     hasMore && data.length > 0
       ? Buffer.from(
-          JSON.stringify({
-            timestamp: data[data.length - 1].timestamp.toISOString(),
-            _id: data[data.length - 1]._id.toString(),
-          })
-        ).toString("base64")
+        JSON.stringify({
+          timestamp: data[data.length - 1].timestamp.toISOString(),
+          _id: data[data.length - 1]._id.toString(),
+        })
+      ).toString("base64")
       : null;
 
   return NextResponse.json(
