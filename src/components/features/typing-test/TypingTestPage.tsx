@@ -322,10 +322,11 @@ export function TypingTestPage() {
 
   // Restart handlers
   const handleRestart = useCallback(() => {
+    initializeTest();
     resetTest();
     inputRef.current?.focus();
     setIsInputFocused(true);
-  }, [resetTest]);
+  }, [initializeTest, resetTest]);
 
   const handleNext = useCallback(() => {
     initializeTest();
