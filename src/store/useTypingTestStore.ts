@@ -25,6 +25,7 @@ export interface TestStats {
   totalChars: number;
   time: number;
   consistency: number;
+  keyConsistency: number;
   wpmHistory: number[];
   rawWpmHistory: number[];
   errorHistory: number[];
@@ -47,7 +48,7 @@ interface TypingTestState {
   // Timer state
   isActive: boolean;
   isFinished: boolean;
-  isSaved: boolean; 
+  isSaved: boolean;
   isSyncing: boolean; // Add this
   startTime: number | null;
   endTime: number | null;
@@ -90,7 +91,7 @@ interface TypingTestState {
   resetTest: () => void;
   tick: () => void;
   setTimeLeft: (time: number) => void;
-  setSaved: (isSaved: boolean) => void; 
+  setSaved: (isSaved: boolean) => void;
   setIsSyncing: (isSyncing: boolean) => void; // Add this
   // Cheating detection
   incrementAfk: () => void;
@@ -204,7 +205,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
   lastWordTimestamp: null,
   isActive: false,
   isFinished: false,
-  isSaved: false, 
+  isSaved: false,
   isSyncing: false, // Add this
   startTime: null,
   endTime: null,
@@ -227,7 +228,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
   isPaused: false,
   stats: null,
 
-  setSaved: (isSaved) => set({ isSaved }), 
+  setSaved: (isSaved) => set({ isSaved }),
   setIsSyncing: (isSyncing) => set({ isSyncing }), // Add this
 
   setWords: (wordStrings) => {
@@ -241,7 +242,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       lastWordTimestamp: null,
       isActive: false,
       isFinished: false,
-      isSaved: false, 
+      isSaved: false,
       isSyncing: false, // And reset here
       startTime: null,
       endTime: null,
@@ -285,7 +286,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
 
       const spacingArray = [...state.keypressTimings.spacing];
       const durationArray = [...state.keypressTimings.duration];
-      
+
       const index = durationArray.length;
       durationArray.push(0);
       newKeyDownData[code] = { timestamp: now, index };
@@ -377,7 +378,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
 
       currentWord.chars = newChars;
       words[state.currentWordIndex] = currentWord;
-      
+
       const updatedState = {
         ...state,
         words,
@@ -389,7 +390,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       };
 
       const stats = calculateStats(updatedState);
-      
+
       return { ...updatedState, stats };
     });
   },
@@ -484,7 +485,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
 
     // Calculate final stats
     const finalStats = calculateStats({ ...state, isFinished: true, endTime, elapsedTime });
-    
+
     set({
       isActive: false,
       isFinished: true,
@@ -503,7 +504,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       lastWordTimestamp: null,
       isActive: false,
       isFinished: false,
-      isSaved: false, 
+      isSaved: false,
       isSyncing: false, // And here
       startTime: null,
       endTime: null,
@@ -550,8 +551,8 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
     let errorsInLastSecond = 0;
     const currentWord = state.words[state.currentWordIndex];
     if (currentWord) {
-        errorsInLastSecond = currentWord.chars.filter(c => c.state === "incorrect" || c.state === "extra").length;
-        // This is a simple approximation, Monkeytype tracks error history more precisely
+      errorsInLastSecond = currentWord.chars.filter(c => c.state === "incorrect" || c.state === "extra").length;
+      // This is a simple approximation, Monkeytype tracks error history more precisely
     }
 
     // Only calculate stats for history, don't set the main stats object

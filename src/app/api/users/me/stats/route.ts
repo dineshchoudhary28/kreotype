@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
 
   // Cache the result
   try {
-    await redis.set(cacheKey, JSON.stringify(stats), { ex: 3600 }); // Cache for 1 hour
+    await redis.setex(cacheKey, 3600, JSON.stringify(stats)); // Cache for 1 hour
   } catch {
     // Fail silently if cache write fails
   }
