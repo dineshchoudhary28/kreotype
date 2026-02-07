@@ -27,10 +27,17 @@ export interface TestStats {
   consistency: number;
   wpmHistory: number[];
   rawWpmHistory: number[];
+  errorHistory: number[];
+  burstHistory: number[];
+  keypressTimings: {
+    spacing: number[];
+    duration: number[];
+  };
 }
 
 interface TypingTestState {
   // Test state
+  testId: string;
   words: WordData[];
   currentWordIndex: number;
   currentCharIndex: number;
@@ -40,6 +47,8 @@ interface TypingTestState {
   // Timer state
   isActive: boolean;
   isFinished: boolean;
+  isSaved: boolean; 
+  isSyncing: boolean; // Add this
   startTime: number | null;
   endTime: number | null;
   timeLeft: number;
@@ -48,6 +57,17 @@ interface TypingTestState {
   // WPM tracking for consistency
   wpmHistory: number[];
   rawWpmHistory: number[];
+  errorHistory: number[];
+  burstHistory: number[];
+
+  // Keypress tracking
+  keypressTimings: {
+    spacing: number[];
+    duration: number[];
+    last: number;
+    first: number;
+  };
+  keyDownData: Record<string, { timestamp: number; index: number }>;
 
   // Cheating detection
   afkCount: number;
@@ -64,10 +84,14 @@ interface TypingTestState {
   handleInput: (char: string) => void;
   handleBackspace: () => void;
   handleSpace: () => void;
+  recordKeydown: (code: string) => void;
+  recordKeyup: (code: string) => void;
   finishTest: () => void;
   resetTest: () => void;
   tick: () => void;
   setTimeLeft: (time: number) => void;
+  setSaved: (isSaved: boolean) => void; 
+  setIsSyncing: (isSyncing: boolean) => void; // Add this
   // Cheating detection
   incrementAfk: () => void;
   incrementTab: () => void;
@@ -138,6 +162,16 @@ function calculateStats(state: TypingTestState): TestStats {
     consistency = Math.max(0, Math.round(100 - cv));
   }
 
+  // Key consistency from spacing
+  let keyConsistency = 100;
+  if (state.keypressTimings.spacing.length > 1) {
+    const mean = state.keypressTimings.spacing.reduce((a, b) => a + b, 0) / state.keypressTimings.spacing.length;
+    const variance = state.keypressTimings.spacing.reduce((sum, s) => sum + Math.pow(s - mean, 2), 0) / state.keypressTimings.spacing.length;
+    const stdDev = Math.sqrt(variance);
+    const cv = mean > 0 ? (stdDev / mean) * 100 : 0;
+    keyConsistency = Math.max(0, Math.round(100 - cv));
+  }
+
   return {
     wpm,
     rawWpm,
@@ -149,12 +183,20 @@ function calculateStats(state: TypingTestState): TestStats {
     totalChars: totalTypedChars,
     time: Math.round(elapsedSeconds),
     consistency,
+    keyConsistency,
     wpmHistory: state.wpmHistory,
     rawWpmHistory: state.rawWpmHistory,
+    errorHistory: state.errorHistory,
+    burstHistory: state.burstHistory,
+    keypressTimings: {
+      spacing: state.keypressTimings.spacing,
+      duration: state.keypressTimings.duration,
+    },
   };
 }
 
 export const useTypingTestStore = create<TypingTestState>((set, get) => ({
+  testId: crypto.randomUUID(),
   words: [],
   currentWordIndex: 0,
   currentCharIndex: 0,
@@ -162,21 +204,36 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
   lastWordTimestamp: null,
   isActive: false,
   isFinished: false,
+  isSaved: false, 
+  isSyncing: false, // Add this
   startTime: null,
   endTime: null,
   timeLeft: 30,
   elapsedTime: 0,
   wpmHistory: [],
   rawWpmHistory: [],
+  errorHistory: [],
+  burstHistory: [],
+  keypressTimings: {
+    spacing: [],
+    duration: [],
+    last: -1,
+    first: -1,
+  },
+  keyDownData: {},
   afkCount: 0,
   tabCount: 0,
   blurCount: 0,
   isPaused: false,
   stats: null,
 
+  setSaved: (isSaved) => set({ isSaved }), 
+  setIsSyncing: (isSyncing) => set({ isSyncing }), // Add this
+
   setWords: (wordStrings) => {
     const words = wordStrings.map(createWordData);
     set({
+      testId: crypto.randomUUID(), // <-- Generate new ID for new test
       words,
       currentWordIndex: 0,
       currentCharIndex: 0,
@@ -184,10 +241,21 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       lastWordTimestamp: null,
       isActive: false,
       isFinished: false,
+      isSaved: false, 
+      isSyncing: false, // And reset here
       startTime: null,
       endTime: null,
       wpmHistory: [],
       rawWpmHistory: [],
+      errorHistory: [],
+      burstHistory: [],
+      keypressTimings: {
+        spacing: [],
+        duration: [],
+        last: -1,
+        first: -1,
+      },
+      keyDownData: {},
       afkCount: 0,
       tabCount: 0,
       blurCount: 0,
@@ -205,6 +273,71 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
         lastWordTimestamp: Date.now(),
       });
     }
+  },
+
+  recordKeydown: (code) => {
+    const now = Date.now();
+    set((state) => {
+      if (state.isFinished || state.isPaused) return state;
+
+      const newKeyDownData = { ...state.keyDownData };
+      if (newKeyDownData[code]) return state; // Key already down
+
+      const spacingArray = [...state.keypressTimings.spacing];
+      const durationArray = [...state.keypressTimings.duration];
+      
+      const index = durationArray.length;
+      durationArray.push(0);
+      newKeyDownData[code] = { timestamp: now, index };
+
+      let first = state.keypressTimings.first;
+      let last = state.keypressTimings.last;
+
+      if (last !== -1) {
+        spacingArray.push(now - last);
+      }
+      last = now;
+      if (first === -1) {
+        first = now;
+      }
+
+      return {
+        ...state,
+        keyDownData: newKeyDownData,
+        keypressTimings: {
+          ...state.keypressTimings,
+          spacing: spacingArray,
+          duration: durationArray,
+          first,
+          last,
+        },
+      };
+    });
+  },
+
+  recordKeyup: (code) => {
+    const now = Date.now();
+    set((state) => {
+      if (state.isFinished) return state;
+
+      const keyDownDataForKey = state.keyDownData[code];
+      if (!keyDownDataForKey) return state;
+
+      const durationArray = [...state.keypressTimings.duration];
+      durationArray[keyDownDataForKey.index] = now - keyDownDataForKey.timestamp;
+
+      const newKeyDownData = { ...state.keyDownData };
+      delete newKeyDownData[code];
+
+      return {
+        ...state,
+        keyDownData: newKeyDownData,
+        keypressTimings: {
+          ...state.keypressTimings,
+          duration: durationArray,
+        },
+      };
+    });
   },
 
   handleInput: (char) => {
@@ -228,14 +361,17 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       const charIndex = state.currentCharIndex;
       const newChars = [...currentWord.chars];
 
+      let isError = false;
       if (charIndex < currentWord.word.length) {
         const expectedChar = newChars[charIndex].char;
+        isError = char !== expectedChar;
         newChars[charIndex] = {
           ...newChars[charIndex],
-          state: char === expectedChar ? "correct" : "incorrect",
+          state: isError ? "incorrect" : "correct",
           typed: char,
         };
       } else {
+        isError = true;
         newChars.push({ char: "", state: "extra", typed: char });
       }
 
@@ -253,9 +389,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       };
 
       const stats = calculateStats(updatedState);
-      stats.wpmHistory = state.wpmHistory;
-      stats.rawWpmHistory = state.rawWpmHistory;
-
+      
       return { ...updatedState, stats };
     });
   },
@@ -295,8 +429,6 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
         };
 
         const stats = calculateStats(updatedState);
-        stats.wpmHistory = state.wpmHistory;
-        stats.rawWpmHistory = state.rawWpmHistory;
 
         return { ...updatedState, stats };
       }
@@ -335,8 +467,6 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       };
 
       const stats = calculateStats(updatedState);
-      stats.wpmHistory = state.wpmHistory;
-      stats.rawWpmHistory = state.rawWpmHistory;
 
       return { ...updatedState, stats };
     });
@@ -352,31 +482,43 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
     const endTime = Date.now();
     const elapsedTime = endTime - (state.startTime || endTime);
 
+    // Calculate final stats
+    const finalStats = calculateStats({ ...state, isFinished: true, endTime, elapsedTime });
+    
     set({
       isActive: false,
       isFinished: true,
       endTime,
       elapsedTime,
+      stats: finalStats,
     });
-
-    // Calculate final stats
-    const stats = calculateStats({ ...get() });
-    set({ stats });
   },
 
   resetTest: () => {
     set({
+      testId: crypto.randomUUID(), // <-- Generate new ID for new test
       currentWordIndex: 0,
       currentCharIndex: 0,
       input: "",
       lastWordTimestamp: null,
       isActive: false,
       isFinished: false,
+      isSaved: false, 
+      isSyncing: false, // And here
       startTime: null,
       endTime: null,
       elapsedTime: 0,
       wpmHistory: [],
       rawWpmHistory: [],
+      errorHistory: [],
+      burstHistory: [],
+      keypressTimings: {
+        spacing: [],
+        duration: [],
+        last: -1,
+        first: -1,
+      },
+      keyDownData: {},
       afkCount: 0,
       tabCount: 0,
       blurCount: 0,
@@ -404,6 +546,14 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
     const now = Date.now();
     const elapsed = now - (state.startTime || now);
 
+    // Track errors in the last second
+    let errorsInLastSecond = 0;
+    const currentWord = state.words[state.currentWordIndex];
+    if (currentWord) {
+        errorsInLastSecond = currentWord.chars.filter(c => c.state === "incorrect" || c.state === "extra").length;
+        // This is a simple approximation, Monkeytype tracks error history more precisely
+    }
+
     // Only calculate stats for history, don't set the main stats object
     const currentStats = calculateStats({ ...state, elapsedTime: elapsed });
 
@@ -412,6 +562,8 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
       timeLeft: Math.max(0, state.timeLeft - 1),
       wpmHistory: [...state.wpmHistory, currentStats.wpm],
       rawWpmHistory: [...state.rawWpmHistory, currentStats.rawWpm],
+      errorHistory: [...state.errorHistory, errorsInLastSecond],
+      burstHistory: [...state.burstHistory, currentStats.rawWpm],
     });
 
     // Check if time is up (time mode)

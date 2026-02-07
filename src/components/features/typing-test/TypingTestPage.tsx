@@ -6,7 +6,6 @@ import { useTypingTestStore, WordData } from "@/store/useTypingTestStore";
 import { useFocusModeStore } from "@/store/useFocusModeStore";
 import { TestResults } from "./TestResults";
 import englishWords from "@/data/languages/english.json";
-import englishQuotes from "@/data/quotes/english.json";
 import clsx from "clsx";
 
 const punctuationMarks = [".", ",", "!", "?", ";", ":"];
@@ -104,6 +103,8 @@ export function TypingTestPage() {
   const incrementBlur = useTypingTestStore((s) => s.incrementBlur);
   const incrementTab = useTypingTestStore((s) => s.incrementTab);
   const setPaused = useTypingTestStore((s) => s.setPaused);
+  const recordKeydown = useTypingTestStore((s) => s.recordKeydown);
+  const recordKeyup = useTypingTestStore((s) => s.recordKeyup);
 
   // Focus mode store
   const setFocused = useFocusModeStore((s) => s.setFocused);
@@ -226,6 +227,9 @@ export function TypingTestPage() {
   // Handle keyboard events - sync (no async handlers for input)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // Record timing
+      recordKeydown(e.code);
+
       // Block Alt key combinations (cheating prevention)
       if (e.altKey) {
         e.preventDefault();
@@ -292,15 +296,16 @@ export function TypingTestPage() {
         handleInput(e.key);
       }
     },
-    [isFinished, isPaused, isActive, handleInput, handleBackspace, handleSpace, initializeTest, resetTest, incrementTab]
+    [isFinished, isPaused, isActive, handleInput, handleBackspace, handleSpace, initializeTest, resetTest, incrementTab, recordKeydown]
   );
 
   // Reset tab state on key up
   const handleKeyUp = useCallback((e: React.KeyboardEvent) => {
+    recordKeyup(e.code);
     if (e.key === "Tab") {
       tabPressedRef.current = false;
     }
-  }, []);
+  }, [recordKeyup]);
 
   // Block copy/paste (cheating prevention)
   const handlePaste = useCallback((e: React.ClipboardEvent) => {

@@ -383,7 +383,7 @@ export default function AccountPage() {
                   </td>
                 </tr>
               ) : (
-                results.map((r) => (
+                results?.map((r) => (
                   <tr
                     key={r._id}
                     className={cn(

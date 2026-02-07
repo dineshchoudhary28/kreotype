@@ -21,6 +21,7 @@ const validationSchema = z.object({
 });
 
 export const completedEventSchema = z.object({
+  testId: z.string().uuid(),
   wpm: z.number().min(0),
   rawWpm: z.number().min(0),
   accuracy: z.number().min(0).max(100),

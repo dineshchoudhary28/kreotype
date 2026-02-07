@@ -8,6 +8,7 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
 import { FocusModeWrapper } from "@/components/layout/FocusModeWrapper";
 import { Toaster } from "sonner";
+import { LocalResultSyncer } from "@/components/providers/LocalResultSyncer";
 
 const inter = Inter({
   variable: "--font-primary",
@@ -56,6 +57,7 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider>
             <Toaster theme="light" />
+            <LocalResultSyncer />
             <FocusModeWrapper>
               <AnnouncementBanner />
               <Header />

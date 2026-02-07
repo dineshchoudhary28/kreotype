@@ -3,6 +3,7 @@ import mongoose, { Schema, type Document, type Types } from "mongoose";
 export interface IResult extends Document {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
+  testId: string; // <-- Add this
   name: string; // username snapshot at time of result (Monkeytype compat)
 
   // Core metrics
@@ -69,6 +70,7 @@ export interface IResult extends Document {
 
 const resultSchema = new Schema<IResult>({
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  testId: { type: String, required: true },
   name: { type: String, default: "" },
 
   wpm: { type: Number, required: true },
@@ -122,6 +124,7 @@ const resultSchema = new Schema<IResult>({
   timestamp: { type: Date, default: Date.now },
 });
 
+resultSchema.index({ userId: 1, testId: 1 }, { unique: true }); // <-- Add this
 resultSchema.index({ userId: 1, timestamp: -1 });
 resultSchema.index({ mode: 1, mode2: 1, wpm: -1, isValid: 1 });
 resultSchema.index({ mode: 1, mode2: 1, timestamp: -1, wpm: -1 });

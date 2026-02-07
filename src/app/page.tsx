@@ -3,15 +3,12 @@
 import { useEffect, useRef, useCallback } from "react";
 import { TypingTestPage } from "@/components/features/typing-test/TypingTestPage";
 import { TestConfig } from "@/components/features/typing-test/TestConfig";
-import { SideConfigBar } from "@/components/layout/SideConfigBar";
-import { useConfigStore } from "@/store/useConfigStore";
 import { useTypingTestStore } from "@/store/useTypingTestStore";
 import { useFocusModeStore } from "@/store/useFocusModeStore";
 
 const MOUSE_IDLE_TIMEOUT = 2000; // Hide UI after 2 seconds of no mouse movement
 
 export default function Home() {
-  const sidebarExpanded = false; // useConfigStore((s) => s.sidebarExpanded);
   const isFinished = useTypingTestStore((s) => s.isFinished);
   const isActive = useTypingTestStore((s) => s.isActive);
   const showUITemporarily = useFocusModeStore((s) => s.showUITemporarily);

@@ -2,6 +2,7 @@
 
 import { TestStats, useTypingTestStore } from "@/store/useTypingTestStore";
 import { useConfigStore } from "@/store/useConfigStore";
+import { useSession } from "next-auth/react";
 import {
   XAxis,
   YAxis,
@@ -11,11 +12,12 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import { RefreshCw, ChevronRight, Share2, Info, ExternalLink, AlertTriangle, Loader2 } from "lucide-react";
+import { RefreshCw, ChevronRight, Share2, Info, ExternalLink, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
+import { CompletedEventInput } from "@/server/validators/result";
 
 
 const swarm65Images = [
@@ -44,13 +46,113 @@ interface TestResultsProps {
 }
 
 export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
+  const { status } = useSession();
   const mode = useConfigStore((s) => s.mode);
   const value = useConfigStore((s) => s.value);
+  const punctuation = useConfigStore((s) => s.punctuation);
+  const numbers = useConfigStore((s) => s.numbers);
+  const language = useConfigStore((s) => s.language);
+  const testId = useTypingTestStore((s) => s.testId);
+  const isSaved = useTypingTestStore((s) => s.isSaved);
+  const setSaved = useTypingTestStore((s) => s.setSaved);
+  const isSyncing = useTypingTestStore((s) => s.isSyncing);
   
   const [swarm65Index, setSwarm65Index] = useState(0);
   const [swarmWhiteIndex, setSwarmWhiteIndex] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
   const shareRef = useRef<HTMLDivElement>(null);
+
+  const saveToLocalStorage = (data: CompletedEventInput & { testId: string }) => {
+    try {
+      const localResults = JSON.parse(localStorage.getItem("kreotype_local_results") || "[]");
+      localResults.push(data);
+      // Keep only last 50 local results
+      if (localResults.length > 50) localResults.shift();
+      localStorage.setItem("kreotype_local_results", JSON.stringify(localResults));
+    } catch (err) {
+      console.error("Failed to save to localStorage:", err);
+    }
+  };
+
+  useEffect(() => {
+    const performSave = async () => {
+      if (isSaved || isSyncing || status === "loading") return;
+      setSaved(true);
+
+      // Add testId to the type
+      const resultData: CompletedEventInput & { testId: string } = {
+        testId, // Add the testId to the payload
+        wpm: stats.wpm,
+        rawWpm: stats.rawWpm,
+        accuracy: stats.accuracy,
+        consistency: stats.consistency,
+        keyConsistency: stats.keyConsistency,
+        mode: mode as "time" | "words" | "zen",
+        mode2: mode === "time" || mode === "words" ? (parseInt(value) || value) : value,
+        timestamp: Date.now(),
+        testDuration: stats.time,
+        afkDuration: 0,
+        charStats: {
+          correct: stats.correctChars,
+          incorrect: stats.incorrectChars,
+          extra: stats.extraChars,
+          missed: stats.missedChars,
+        },
+        keypressTimings: {
+          spacing: stats.keypressTimings.spacing,
+          duration: stats.keypressTimings.duration,
+          keyOverlap: 0,
+          startToFirstKey: 0,
+          lastKeyToEnd: 0,
+        },
+        wpmHistory: stats.wpmHistory,
+        rawHistory: stats.rawWpmHistory,
+        burstHistory: stats.burstHistory,
+        errorHistory: stats.errorHistory,
+        language: language,
+        difficulty: "normal",
+        punctuation: punctuation,
+        numbers: numbers,
+        blindMode: false,
+        validation: {
+          isValid: true,
+          invalidReasons: [],
+        },
+      };
+
+      if (status === "authenticated") {
+        try {
+          const res = await fetch("/api/results", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resultData),
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            if (data.isPb) {
+              toast.success("New Personal Best!", {
+                description: `You set a new PB of ${stats.wpm} WPM!`,
+              });
+            }
+          } else {
+            saveToLocalStorage(resultData);
+            toast.error("Failed to sync with server, saved locally");
+          }
+        } catch {
+          saveToLocalStorage(resultData);
+          toast.error("Network error, saved locally");
+        }
+      } else if (status === "unauthenticated") {
+        saveToLocalStorage(resultData);
+        toast.info("Result saved locally", {
+          description: "Log in to sync your results to your profile.",
+        });
+      }
+    };
+
+    performSave();
+  }, [status, stats, mode, value, punctuation, numbers, language, isSaved, setSaved, isSyncing, testId]);
 
   const handleShare = async () => {
     if (!shareRef.current) return;

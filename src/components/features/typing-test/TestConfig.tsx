@@ -4,8 +4,9 @@ import { useConfigStore } from "@/store/useConfigStore";
 import { ReactNode } from "react";
 
 const modes = ["time", "words", "zen"] as const;
+type Mode = (typeof modes)[number];
 
-const modeIcons: Record<string, ReactNode> = {
+const modeIcons: Record<Mode, ReactNode> = {
   time: (
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
@@ -41,9 +42,9 @@ export function TestConfig() {
   const setConfig = useConfigStore((s) => s.setConfig);
   const updateConfig = useConfigStore((s) => s.updateConfig);
 
-  const handleModeChange = (m: string) => {
+  const handleModeChange = (m: Mode) => {
     const newValue = values[m] ? values[m][1] || values[m][0] : value;
-    updateConfig({ mode: m as any, value: newValue });
+    updateConfig({ mode: m, value: newValue });
   };
 
   const currentValues = values[mode];

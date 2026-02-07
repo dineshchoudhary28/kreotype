@@ -87,26 +87,42 @@ export async function GET(request: NextRequest) {
   const all = allTimeStats[0] || {};
   const recent = last10Stats[0] || {};
 
+  const stats = {
+    testsStarted: user?.testsStarted ?? 0,
+    testsCompleted: counts.testsCompleted,
+    timeTyping: counts.timeTyping,
+    highestWpm: all.highestWpm ?? 0,
+    avgWpm: Math.round((all.avgWpm ?? 0) * 100) / 100,
+    avgWpmLast10: Math.round((recent.avgWpmLast10 ?? 0) * 100) / 100,
+    highestRawWpm: all.highestRawWpm ?? 0,
+    avgRawWpm: Math.round((all.avgRawWpm ?? 0) * 100) / 100,
+    avgRawWpmLast10: Math.round((recent.avgRawWpmLast10 ?? 0) * 100) / 100,
+    highestAccuracy: all.highestAccuracy ?? 0,
+    avgAccuracy: Math.round((all.avgAccuracy ?? 0) * 100) / 100,
+    avgAccuracyLast10: Math.round((recent.avgAccuracyLast10 ?? 0) * 100) / 100,
+    highestConsistency: all.highestConsistency ?? 0,
+    avgConsistency: Math.round((all.avgConsistency ?? 0) * 100) / 100,
+    avgConsistencyLast10: Math.round((recent.avgConsistencyLast10 ?? 0) * 100) / 100,
+  };
+
+  // Cache the result
+  try {
+    await redis.set(cacheKey, JSON.stringify(stats), { ex: 3600 }); // Cache for 1 hour
+  } catch {
+    // Fail silently if cache write fails
+  }
+
+  console.log({
+    userId,
+    counts,
+    all,
+    recent,
+  });
+
   return NextResponse.json(
+    stats,
     {
-      testsStarted: user?.testsStarted ?? 0,
-      testsCompleted: counts.testsCompleted,
-      timeTyping: counts.timeTyping,
-      highestWpm: all.highestWpm ?? 0,
-      avgWpm: Math.round((all.avgWpm ?? 0) * 100) / 100,
-      avgWpmLast10: Math.round((recent.avgWpmLast10 ?? 0) * 100) / 100,
-      highestRawWpm: all.highestRawWpm ?? 0,
-      avgRawWpm: Math.round((all.avgRawWpm ?? 0) * 100) / 100,
-      avgRawWpmLast10: Math.round((recent.avgRawWpmLast10 ?? 0) * 100) / 100,
-      highestAccuracy: all.highestAccuracy ?? 0,
-      avgAccuracy: Math.round((all.avgAccuracy ?? 0) * 100) / 100,
-      avgAccuracyLast10: Math.round((recent.avgAccuracyLast10 ?? 0) * 100) / 100,
-      highestConsistency: all.highestConsistency ?? 0,
-      avgConsistency: Math.round((all.avgConsistency ?? 0) * 100) / 100,
-      avgConsistencyLast10: Math.round((recent.avgConsistencyLast10 ?? 0) * 100) / 100,
-    },
-    {
-      headers: { ...corsHeaders(request), "Cache-Control": "private, max-age=60" },
+      headers: { ...corsHeaders(request), "Cache-control": "private, max-age=60" },
     }
   );
 }

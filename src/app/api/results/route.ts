@@ -36,6 +36,20 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
 
+  // Deduplication check
+  const existingResult = await Result.findOne({ userId, testId: data.testId });
+  if (existingResult) {
+    return NextResponse.json(
+      {
+        message: "Result already exists",
+        resultId: existingResult._id,
+        isPb: existingResult.isPb,
+        newBadges: [],
+      },
+      { headers: corsHeaders(request) }
+    );
+  }
+
   // Check for PB
   const pbKey = `${data.mode}|${data.mode2}`;
   const user = await User.findById(userId);
@@ -51,6 +65,7 @@ export async function POST(request: NextRequest) {
 
   const result = await Result.create({
     userId,
+    testId: data.testId,
     wpm: data.wpm,
     rawWpm: data.rawWpm,
     accuracy: data.accuracy,
