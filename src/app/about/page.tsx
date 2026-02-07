@@ -1,133 +1,327 @@
 "use client";
 
+import { Zap, Target, TrendingUp, Palette, Keyboard, BarChart3, Users, Github, Mail, Twitter } from "lucide-react";
+
 export default function AboutPage() {
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col gap-10 px-4 py-8">
-      {/* Stats */}
-      <div className="flex flex-wrap gap-8 justify-center">
-        <div className="text-center">
-          <div className="text-xs text-secondary">total tests started</div>
-          <div className="text-2xl text-primary">-</div>
-        </div>
-        <div className="text-center">
-          <div className="text-xs text-secondary">total typing time</div>
-          <div className="text-2xl text-primary">-</div>
-        </div>
-        <div className="text-center">
-          <div className="text-xs text-secondary">total tests completed</div>
-          <div className="text-2xl text-primary">-</div>
-        </div>
+    <div className="w-full max-w-[1200px] mx-auto px-8 py-10 flex flex-col gap-8">
+      {/* Header Section */}
+      <div className="border-b border-surface pb-8">
+        <h1 className="text-3xl font-bold text-text mb-2 flex items-center gap-3">
+          <Keyboard className="text-primary" size={32} strokeWidth={2.5} />
+          About Kreotype
+        </h1>
+        <p className="text-secondary text-sm font-medium tracking-wide uppercase">
+          The modern typing experience
+        </p>
       </div>
 
-      {/* About */}
-      <section>
-        <h2 className="text-lg text-primary mb-3 flex items-center gap-2">
-          about
-        </h2>
-        <p className="text-sm text-text leading-relaxed">
-          Kreotype is a minimalistic and customizable typing test. It features
-          many test modes, user-configurable settings such as themes, a smooth
-          caret, and more. Kreotype attempts to emulate the experience of
-          natural keyboard typing during a typing test, by unobtrusively
-          presenting the text prompts and displaying typed characters in-place,
-          providing straightforward, real-time feedback on typos, speed, and
-          accuracy.
-        </p>
-        <p className="text-sm text-text leading-relaxed mt-2">
-          Test yourself in various modes, track your progress and improve your
-          speed.
-        </p>
-      </section>
-
-      {/* Word Set */}
-      <section>
-        <h3 className="text-base text-primary mb-2">word set</h3>
-        <p className="text-sm text-secondary leading-relaxed">
-          By default, this website uses the most common 200 words in the English
-          language to generate its tests. You can change to an expanded set
-          (1000 most common words) in the options, or change the language
-          entirely.
-        </p>
-      </section>
-
-      {/* Keybinds */}
-      <section>
-        <h3 className="text-base text-primary mb-2">keybinds</h3>
-        <p className="text-sm text-secondary leading-relaxed">
-          You can use{" "}
-          <kbd className="px-1.5 py-0.5 rounded bg-secondary bg-opacity-10 text-text">tab</kbd>{" "}
-          or{" "}
-          <kbd className="px-1.5 py-0.5 rounded bg-secondary bg-opacity-10 text-text">esc</kbd>{" "}
-          to restart the typing test. Open the command line by pressing{" "}
-          <kbd className="px-1.5 py-0.5 rounded bg-secondary bg-opacity-10 text-text">ctrl/cmd</kbd>
-          +
-          <kbd className="px-1.5 py-0.5 rounded bg-secondary bg-opacity-10 text-text">shift</kbd>
-          +
-          <kbd className="px-1.5 py-0.5 rounded bg-secondary bg-opacity-10 text-text">p</kbd>
-          {" "} — there you can access all the functionality you need without
-          touching your mouse.
-        </p>
-      </section>
-
-      {/* Stats */}
-      <section>
-        <h3 className="text-base text-primary mb-2">stats</h3>
-        <div className="flex flex-col gap-2 text-sm text-secondary">
-          <p>
-            <strong className="text-text">wpm</strong> — total number
-            of characters in the correctly typed words (including spaces),
-            divided by 5 and normalised to 60 seconds.
+      <div className="flex flex-col gap-8">
+        {/* Hero Section */}
+        <section className="p-8 rounded-2xl border border-surface bg-gradient-to-br from-primary/5 to-transparent">
+          <h2 className="text-2xl font-bold text-text mb-4">
+            Master Your Typing Skills
+          </h2>
+          <p className="text-base text-secondary leading-relaxed mb-4">
+            Kreotype is a minimalistic, customizable typing test platform designed to help you improve
+            your typing speed and accuracy. Built with modern web technologies, Kreotype offers a smooth,
+            distraction-free experience that emulates natural keyboard typing.
           </p>
-          <p>
-            <strong className="text-text">raw wpm</strong> — calculated
-            just like wpm, but also includes incorrect words.
+          <p className="text-base text-secondary leading-relaxed">
+            Whether you're a developer looking to code faster, a writer aiming for efficiency, or simply
+            someone who wants to type better, Kreotype provides the tools and insights you need to track
+            your progress and achieve your goals.
           </p>
-          <p>
-            <strong className="text-text">acc</strong> — percentage of
-            correctly pressed keys.
-          </p>
-          <p>
-            <strong className="text-text">consistency</strong> — based
-            on the variance of your raw wpm. Closer to 100% is better.
-          </p>
-        </div>
-      </section>
+        </section>
 
-      {/* Results Screen */}
-      <section>
-        <h3 className="text-base text-primary mb-2">results screen</h3>
-        <p className="text-sm text-secondary leading-relaxed">
-          After completing a test you will be able to see your wpm, raw wpm,
-          accuracy, character stats, and test length. You can also see a graph
-          of your wpm and raw over the duration of the test.
-        </p>
-      </section>
+        {/* Features Grid */}
+        <section>
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-text mb-1">Why Choose Kreotype?</h2>
+            <p className="text-xs text-secondary">Features that make us stand out</p>
+          </div>
 
-      {/* Bug Report */}
-      <section>
-        <h3 className="text-base text-primary mb-2">
-          bug report or feature request
-        </h3>
-        <p className="text-sm text-secondary leading-relaxed">
-          If you encounter a bug, or have a feature request — create an issue on
-          GitHub.
-        </p>
-      </section>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Feature 1 */}
+            <div className="p-6 rounded-2xl border border-surface bg-surface/20 hover:bg-surface/40 transition-all group">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
+                <Zap className="text-primary" size={24} />
+              </div>
+              <h3 className="text-base font-bold text-text mb-2">Lightning Fast</h3>
+              <p className="text-sm text-secondary leading-relaxed">
+                Instant feedback with smooth animations and zero lag. Every keystroke is registered
+                immediately for the most accurate typing experience.
+              </p>
+            </div>
 
-      {/* Contact */}
-      <section>
-        <h3 className="text-base text-primary mb-2">contact</h3>
-        <div className="flex gap-3">
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="px-4 py-2 rounded bg-secondary bg-opacity-10 text-secondary hover:text-text transition-colors text-sm"
-          >
-            github
-          </a>
-        </div>
-      </section>
+            {/* Feature 2 */}
+            <div className="p-6 rounded-2xl border border-surface bg-surface/20 hover:bg-surface/40 transition-all group">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
+                <Palette className="text-primary" size={24} />
+              </div>
+              <h3 className="text-base font-bold text-text mb-2">Fully Customizable</h3>
+              <p className="text-sm text-secondary leading-relaxed">
+                Choose from dozens of beautiful themes, customize test settings, and personalize your
+                typing experience to match your style.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="p-6 rounded-2xl border border-surface bg-surface/20 hover:bg-surface/40 transition-all group">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
+                <Target className="text-primary" size={24} />
+              </div>
+              <h3 className="text-base font-bold text-text mb-2">Precision Metrics</h3>
+              <p className="text-sm text-secondary leading-relaxed">
+                Track WPM, accuracy, consistency, and more. Detailed statistics help you understand
+                your performance and identify areas for improvement.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="p-6 rounded-2xl border border-surface bg-surface/20 hover:bg-surface/40 transition-all group">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
+                <TrendingUp className="text-primary" size={24} />
+              </div>
+              <h3 className="text-base font-bold text-text mb-2">Track Progress</h3>
+              <p className="text-sm text-secondary leading-relaxed">
+                Save your results, view historical data, and watch your typing speed improve over time
+                with detailed charts and analytics.
+              </p>
+            </div>
+
+            {/* Feature 5 */}
+            <div className="p-6 rounded-2xl border border-surface bg-surface/20 hover:bg-surface/40 transition-all group">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
+                <BarChart3 className="text-primary" size={24} />
+              </div>
+              <h3 className="text-base font-bold text-text mb-2">Multiple Modes</h3>
+              <p className="text-sm text-secondary leading-relaxed">
+                Test yourself with time-based, word-count, or zen mode. Add punctuation, numbers, or
+                choose from different languages.
+              </p>
+            </div>
+
+            {/* Feature 6 */}
+            <div className="p-6 rounded-2xl border border-surface bg-surface/20 hover:bg-surface/40 transition-all group">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
+                <Users className="text-primary" size={24} />
+              </div>
+              <h3 className="text-base font-bold text-text mb-2">Compete & Compare</h3>
+              <p className="text-sm text-secondary leading-relaxed">
+                View global leaderboards, compare your scores with friends, and see how you rank
+                against typists worldwide.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section>
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-text mb-1">How It Works</h2>
+            <p className="text-xs text-secondary">Get started in seconds</p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="p-5 rounded-xl border border-surface bg-surface/20 text-center">
+              <div className="w-10 h-10 rounded-full bg-primary text-background font-black text-lg flex items-center justify-center mx-auto mb-3">
+                1
+              </div>
+              <h3 className="text-sm font-bold text-text mb-2">Choose Settings</h3>
+              <p className="text-xs text-secondary leading-relaxed">
+                Select test mode, duration, and language
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-surface bg-surface/20 text-center">
+              <div className="w-10 h-10 rounded-full bg-primary text-background font-black text-lg flex items-center justify-center mx-auto mb-3">
+                2
+              </div>
+              <h3 className="text-sm font-bold text-text mb-2">Start Typing</h3>
+              <p className="text-xs text-secondary leading-relaxed">
+                Click the text area and begin typing the words shown
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-surface bg-surface/20 text-center">
+              <div className="w-10 h-10 rounded-full bg-primary text-background font-black text-lg flex items-center justify-center mx-auto mb-3">
+                3
+              </div>
+              <h3 className="text-sm font-bold text-text mb-2">View Results</h3>
+              <p className="text-xs text-secondary leading-relaxed">
+                See your WPM, accuracy, and detailed statistics
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-surface bg-surface/20 text-center">
+              <div className="w-10 h-10 rounded-full bg-primary text-background font-black text-lg flex items-center justify-center mx-auto mb-3">
+                4
+              </div>
+              <h3 className="text-sm font-bold text-text mb-2">Track Progress</h3>
+              <p className="text-xs text-secondary leading-relaxed">
+                Save results and monitor improvement over time
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Keyboard Shortcuts */}
+        <section>
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-text mb-1">Keyboard Shortcuts</h2>
+            <p className="text-xs text-secondary">Navigate without touching your mouse</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-xl border border-surface bg-surface/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-text">Restart Test</span>
+                <div className="flex gap-2">
+                  <kbd className="px-2 py-1 rounded bg-surface border border-surface text-xs text-text font-bold">Tab</kbd>
+                  <span className="text-secondary">or</span>
+                  <kbd className="px-2 py-1 rounded bg-surface border border-surface text-xs text-text font-bold">Esc</kbd>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-xl border border-surface bg-surface/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-text">Command Palette</span>
+                <div className="flex gap-1">
+                  <kbd className="px-2 py-1 rounded bg-surface border border-surface text-xs text-text font-bold">Ctrl</kbd>
+                  <span className="text-secondary">+</span>
+                  <kbd className="px-2 py-1 rounded bg-surface border border-surface text-xs text-text font-bold">Shift</kbd>
+                  <span className="text-secondary">+</span>
+                  <kbd className="px-2 py-1 rounded bg-surface border border-surface text-xs text-text font-bold">P</kbd>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Statistics Explained */}
+        <section>
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-text mb-1">Understanding Your Stats</h2>
+            <p className="text-xs text-secondary">What the numbers mean</p>
+          </div>
+
+          <div className="grid gap-3">
+            <div className="p-4 rounded-xl border border-surface bg-surface/20">
+              <h3 className="text-sm font-bold text-text mb-1">WPM (Words Per Minute)</h3>
+              <p className="text-xs text-secondary leading-relaxed">
+                Total number of correctly typed characters (including spaces) divided by 5, normalized to 60 seconds.
+                This is the standard metric for typing speed.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl border border-surface bg-surface/20">
+              <h3 className="text-sm font-bold text-text mb-1">Raw WPM</h3>
+              <p className="text-xs text-secondary leading-relaxed">
+                Calculated like WPM but includes all typed characters, even incorrect ones. Shows your actual
+                typing speed without accuracy penalties.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl border border-surface bg-surface/20">
+              <h3 className="text-sm font-bold text-text mb-1">Accuracy</h3>
+              <p className="text-xs text-secondary leading-relaxed">
+                Percentage of correctly pressed keys. Higher accuracy means fewer mistakes and better typing precision.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl border border-surface bg-surface/20">
+              <h3 className="text-sm font-bold text-text mb-1">Consistency</h3>
+              <p className="text-xs text-secondary leading-relaxed">
+                Based on the variance of your raw WPM throughout the test. Values closer to 100% indicate more
+                consistent typing speed.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Community & Support */}
+        <section>
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-text mb-1">Community & Support</h2>
+            <p className="text-xs text-secondary">Connect with us</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-6 rounded-2xl border border-surface bg-surface/20">
+              <h3 className="text-base font-bold text-text mb-3">Get in Touch</h3>
+              <div className="space-y-3">
+                <a
+                  href="mailto:contact@kreotype.com"
+                  className="flex items-center gap-3 text-sm text-secondary hover:text-primary transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
+                    <Mail size={16} className="text-primary" />
+                  </div>
+                  <span>contact@kreotype.com</span>
+                </a>
+                <a
+                  href="https://github.com/kreotype"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-sm text-secondary hover:text-primary transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
+                    <Github size={16} className="text-primary" />
+                  </div>
+                  <span>GitHub</span>
+                </a>
+                <a
+                  href="https://twitter.com/kreotype"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-sm text-secondary hover:text-primary transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
+                    <Twitter size={16} className="text-primary" />
+                  </div>
+                  <span>@kreotype</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-2xl border border-surface bg-surface/20">
+              <h3 className="text-base font-bold text-text mb-3">Report Issues</h3>
+              <p className="text-sm text-secondary leading-relaxed mb-4">
+                Found a bug or have a feature request? We'd love to hear from you! Create an issue on our
+                GitHub repository or send us an email.
+              </p>
+              <a
+                href="https://github.com/kreotype/kreotype/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-background text-sm font-bold hover:opacity-90 transition-opacity"
+              >
+                <Github size={16} />
+                Open an Issue
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Open Source */}
+        <section className="p-6 rounded-2xl border border-surface bg-primary/5 border-primary/20">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+              <Github className="text-primary" size={24} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-text mb-2">Open Source</h3>
+              <p className="text-sm text-secondary leading-relaxed">
+                Kreotype is built with modern web technologies including Next.js, React, TypeScript, and
+                Tailwind CSS. We believe in transparency and community-driven development. Check out our
+                code, contribute, or fork the project to create your own version!
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
