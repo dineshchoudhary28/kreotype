@@ -9,6 +9,7 @@ import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
 import { FocusModeWrapper } from "@/components/layout/FocusModeWrapper";
 import { Toaster } from "sonner";
 import { LocalResultSyncer } from "@/components/providers/LocalResultSyncer";
+import { DynamicFavicon } from "@/components/layout/DynamicFavicon";
 
 const inter = Inter({
   variable: "--font-primary",
@@ -25,10 +26,6 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Kreotype — Minimalist Typing Test",
   description: "A minimalist, open-source typing test. Track your speed, accuracy, and consistency.",
-  icons: {
-    icon: "/logo.svg",
-    apple: "/logo.svg",
-  },
   openGraph: {
     title: "Kreotype — Minimalist Typing Test",
     description: "A minimalist, open-source typing test. Track your speed, accuracy, and consistency.",
@@ -56,6 +53,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider>
+            <DynamicFavicon />
             <Toaster theme="light" />
             <LocalResultSyncer />
             <FocusModeWrapper>
