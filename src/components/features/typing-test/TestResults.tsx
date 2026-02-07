@@ -386,6 +386,9 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
               <p className="text-secondary text-[11px] md:text-sm font-medium max-w-sm opacity-80 group-hover:opacity-100 transition-opacity">
                 Wireless Mechanical Gaming Keyboard with premium switches and elite purple accents.
               </p>
+              <p className="text-primary/50 text-[10px] md:text-xs font-bold tracking-widest uppercase mt-2">
+                kreo-tech.com
+              </p>
             </div>
             
             <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 w-full md:w-auto">
@@ -446,6 +449,9 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
               </div>
               <p className="text-secondary text-xs font-medium opacity-80 leading-relaxed">
                 Clean aesthetic meets mechanical precision. Tri-mode connectivity for seamless gaming.
+              </p>
+              <p className="text-primary/50 text-[10px] font-bold tracking-widest uppercase mt-1">
+                kreo-tech.com
               </p>
               
               <div className="flex items-center justify-end mt-2">
