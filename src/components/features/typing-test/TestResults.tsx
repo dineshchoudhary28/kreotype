@@ -79,6 +79,16 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
       if (isSaved || isSyncing || status === "loading") return;
       setSaved(true);
 
+      // Cheating detection
+      const afkCount = useTypingTestStore.getState().afkCount;
+      const tabCount = useTypingTestStore.getState().tabCount;
+      const blurCount = useTypingTestStore.getState().blurCount;
+      const invalidReasons: string[] = [];
+      if (afkCount > 0) invalidReasons.push(`afk:${afkCount}`);
+      if (tabCount > 0) invalidReasons.push(`tab:${tabCount}`);
+      if (blurCount > 0) invalidReasons.push(`blur:${blurCount}`);
+      const isValid = invalidReasons.length === 0;
+
       // Add testId to the type
       const resultData: CompletedEventInput & { testId: string } = {
         testId, // Add the testId to the payload
@@ -91,7 +101,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         mode2: mode === "time" || mode === "words" ? (parseInt(value) || value) : value,
         timestamp: Date.now(),
         testDuration: stats.time,
-        afkDuration: 0,
+        afkDuration: 0, // Note: This is separate from afkCount, might need implementation
         charStats: {
           correct: stats.correctChars,
           incorrect: stats.incorrectChars,
@@ -115,8 +125,8 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         numbers: numbers,
         blindMode: false,
         validation: {
-          isValid: true,
-          invalidReasons: [],
+          isValid,
+          invalidReasons,
         },
       };
 
@@ -130,7 +140,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
           
           if (res.ok) {
             const data = await res.json();
-            if (data.isPb) {
+            if (data.isPb && isValid) { // Only show PB toast if valid
               toast.success("New Personal Best!", {
                 description: `You set a new PB of ${stats.wpm} WPM!`,
               });
