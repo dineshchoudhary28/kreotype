@@ -56,7 +56,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
   const isSaved = useTypingTestStore((s) => s.isSaved);
   const setSaved = useTypingTestStore((s) => s.setSaved);
   const isSyncing = useTypingTestStore((s) => s.isSyncing);
-  
+
   const [swarm65Index, setSwarm65Index] = useState(0);
   const [swarmWhiteIndex, setSwarmWhiteIndex] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
@@ -137,7 +137,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(resultData),
           });
-          
+
           if (res.ok) {
             const data = await res.json();
             if (data.isPb && isValid) { // Only show PB toast if valid
@@ -166,11 +166,11 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
 
   const handleShare = async () => {
     if (!shareRef.current) return;
-    
+
     setIsSharing(true);
     // Give a tiny bit of time for any hover states to settle
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     try {
       // Find the action buttons row to hide it temporarily
       const buttonsRow = shareRef.current.querySelector('.action-buttons-row') as HTMLElement;
@@ -226,12 +226,12 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
   }, [afkCount, tabCount, blurCount]);
 
   // Prepare data for the chart - ensure we have at least some data
-  const chartData = stats.wpmHistory.length > 0 
+  const chartData = stats.wpmHistory.length > 0
     ? stats.wpmHistory.map((wpm, index) => ({
-        time: index + 1,
-        wpm: wpm,
-        raw: stats.rawWpmHistory[index] || wpm,
-      }))
+      time: index + 1,
+      wpm: wpm,
+      raw: stats.rawWpmHistory[index] || wpm,
+    }))
     : [{ time: 1, wpm: stats.wpm, raw: stats.rawWpm }];
 
   return (
@@ -254,7 +254,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
               </span>
             </div>
           </div>
-          
+
           {/* Graph Section */}
           <div className="md:col-span-9 h-[250px] md:h-[400px] w-full bg-surface/40 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 relative group overflow-hidden border border-surface shadow-2xl">
             <div className="absolute top-4 md:top-6 left-4 md:left-8 flex items-center gap-4 md:gap-6 z-10">
@@ -267,7 +267,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                 <span className="text-[9px] md:text-[10px] text-secondary font-black uppercase tracking-widest opacity-40 group-hover/legend:opacity-100 transition-opacity">raw</span>
               </div>
             </div>
-            
+
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 50, right: 0, left: -20, bottom: 0 }}>
                 <defs>
@@ -278,8 +278,8 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--color-secondary)" strokeOpacity={0.1} />
                 <XAxis dataKey="time" hide />
-                <YAxis 
-                  stroke="var(--color-secondary)" 
+                <YAxis
+                  stroke="var(--color-secondary)"
                   strokeOpacity={0.3}
                   fontSize={10}
                   tickLine={false}
@@ -287,9 +287,9 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                   domain={[0, 'auto']}
                   fontWeight="700"
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'var(--color-surface)', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--color-surface)',
                     border: '1px solid var(--color-surface)',
                     borderRadius: '12px',
                     fontSize: '11px',
@@ -298,22 +298,22 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                   itemStyle={{ color: 'var(--color-primary)', fontWeight: 'bold' }}
                   cursor={{ stroke: 'var(--color-primary)', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="raw" 
-                  stroke="var(--color-secondary)" 
-                  strokeWidth={2} 
+                <Area
+                  type="monotone"
+                  dataKey="raw"
+                  stroke="var(--color-secondary)"
+                  strokeWidth={2}
                   strokeOpacity={0.2}
-                  fill="transparent" 
+                  fill="transparent"
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="wpm" 
-                  stroke="var(--color-primary)" 
-                  strokeWidth={4} 
-                  fillOpacity={1} 
-                  fill="url(#colorWpm)" 
-                  activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--color-primary)' }} 
+                <Area
+                  type="monotone"
+                  dataKey="wpm"
+                  stroke="var(--color-primary)"
+                  strokeWidth={4}
+                  fillOpacity={1}
+                  fill="url(#colorWpm)"
+                  activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--color-primary)' }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -325,9 +325,9 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
           <StatItem label="raw wpm" value={stats.rawWpm.toString()} />
           <StatItem label="consistency" value={`${stats.consistency}%`} />
           <StatItem label="time" value={`${stats.time}s`} />
-          <StatItem 
-            label="characters" 
-            value={`${stats.correctChars}/${stats.incorrectChars}/${stats.extraChars}/${stats.missedChars}`} 
+          <StatItem
+            label="characters"
+            value={`${stats.correctChars}/${stats.incorrectChars}/${stats.extraChars}/${stats.missedChars}`}
             tooltip="correct/incorrect/extra/missed"
           />
         </div>
@@ -335,7 +335,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         {/* Action Buttons Row - Centered */}
         <div className="action-buttons-row flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
           <div className="flex gap-2 order-2 sm:order-1">
-            <button 
+            <button
               onClick={onRestart}
               className="flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover text-text px-4 py-2 rounded-lg transition-colors cursor-pointer border border-surface active:scale-95 group"
               title="Restart Test"
@@ -343,7 +343,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
               <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
               <span className="text-[9px] font-black uppercase tracking-widest">Restart</span>
             </button>
-            <button 
+            <button
               onClick={handleShare}
               disabled={isSharing}
               className="p-2.5 bg-surface hover:bg-surface-hover text-text rounded-lg transition-colors cursor-pointer border border-surface active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -357,7 +357,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
             </button>
           </div>
 
-          <button 
+          <button
             onClick={onNext}
             className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-primary text-background font-black py-2.5 px-8 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all group shadow-xl shadow-primary/10 cursor-pointer uppercase text-[10px] tracking-[0.1em] order-1 sm:order-2"
           >
@@ -367,53 +367,55 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         </div>
 
         {/* Kreo Advertisement - Horizontal Bottom - Adjusted for mobile */}
-        <div className="group relative w-full overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] bg-surface border border-surface shadow-2xl h-[250px] md:h-[300px]">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={swarm65Images[swarm65Index]}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.2 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1 }}
-              className="absolute inset-0 bg-cover bg-center scale-110 group-hover:scale-100 transition-transform duration-1000 blur-[2px] group-hover:blur-0"
-              style={{ backgroundImage: `url('${swarm65Images[swarm65Index]}')` }}
-            />
-          </AnimatePresence>
-          
-          <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 px-6 md:px-12 py-8 md:py-10 z-10 h-full">
-            <div className="flex flex-col gap-2 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-4">
-                <div className="bg-primary text-background text-[8px] md:text-[9px] font-black px-2 md:px-2.5 py-0.5 md:py-1 rounded-full uppercase tracking-widest shadow-lg shadow-primary/30">
-                  New Arrival
+        <a
+          href="https://kreo-tech.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full"
+        >
+          <div className="group relative w-full overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] bg-surface border border-surface shadow-2xl h-[250px] md:h-[300px] cursor-pointer hover:border-primary/30 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={swarm65Images[swarm65Index]}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.2 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1 }}
+                className="absolute inset-0 bg-cover bg-center scale-110 group-hover:scale-100 transition-transform duration-1000 blur-[2px] group-hover:blur-0"
+                style={{ backgroundImage: `url('${swarm65Images[swarm65Index]}')` }}
+              />
+            </AnimatePresence>
+
+            <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 px-6 md:px-12 py-8 md:py-10 z-10 h-full">
+              <div className="flex flex-col gap-2 text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start gap-4">
+                  <div className="bg-primary text-background text-[8px] md:text-[9px] font-black px-2 md:px-2.5 py-0.5 md:py-1 rounded-full uppercase tracking-widest shadow-lg shadow-primary/30">
+                    New Arrival
+                  </div>
+                  <div className="hidden md:block h-px w-12 bg-secondary/20" />
                 </div>
-                <div className="hidden md:block h-px w-12 bg-secondary/20" />
+                <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter text-text uppercase leading-tight">
+                  Swarm65 <span className="text-primary group-hover:text-text transition-colors">Black Purple</span>
+                </h3>
+                <p className="text-secondary text-[11px] md:text-sm font-medium max-w-sm opacity-80 group-hover:opacity-100 transition-opacity">
+                  Wireless Mechanical Gaming Keyboard with premium switches and elite purple accents.
+                </p>
+                <p className="text-primary/50 text-[10px] md:text-xs font-bold tracking-widest uppercase mt-2">
+                  kreo-tech.com
+                </p>
               </div>
-              <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter text-text uppercase leading-tight">
-                Swarm65 <span className="text-primary group-hover:text-text transition-colors">Black Purple</span>
-              </h3>
-              <p className="text-secondary text-[11px] md:text-sm font-medium max-w-sm opacity-80 group-hover:opacity-100 transition-opacity">
-                Wireless Mechanical Gaming Keyboard with premium switches and elite purple accents.
-              </p>
-              <p className="text-primary/50 text-[10px] md:text-xs font-bold tracking-widest uppercase mt-2">
-                kreo-tech.com
-              </p>
-            </div>
-            
-            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 w-full md:w-auto">
-              <a 
-                href="https://kreo-tech.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-full md:w-auto flex items-center justify-center gap-3 bg-primary text-background px-6 md:px-8 py-3 md:py-4 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest hover:opacity-90 transition-all shadow-xl group/btn"
-              >
-                Shop Now
-                <ExternalLink className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
-              </a>
+
+              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 w-full md:w-auto">
+                <div className="w-full md:w-auto flex items-center justify-center gap-3 bg-primary text-background px-6 md:px-8 py-3 md:py-4 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest group-hover:opacity-90 transition-all shadow-xl">
+                  Shop Now
+                  <ExternalLink className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </a>
 
         {/* Shortcuts - hidden on mobile */}
         <div className="mt-8 md:mt-10 flex justify-center gap-10">
@@ -431,63 +433,64 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
       {/* Right Sidebar Ad (Vertical) */}
       <aside className="hidden lg:flex flex-col w-[320px] gap-6 shrink-0 pt-4">
         <div className="sticky top-24 flex flex-col gap-6">
-          <div className="relative group overflow-hidden rounded-[2rem] bg-surface border border-surface p-6 flex flex-col gap-6 min-h-[500px]">
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-background/40">
-              <AnimatePresence mode="wait">
-                <motion.img 
-                  key={swarmWhiteImages[swarmWhiteIndex]}
-                  src={swarmWhiteImages[swarmWhiteIndex]} 
-                  alt="Swarm White Purple" 
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.8 }}
-                  className="w-full h-full object-cover transition-transform duration-1000"
-                />
-              </AnimatePresence>
-              <div className="absolute top-4 left-4 bg-primary text-background text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter shadow-lg shadow-primary/20 z-10">
-                Wireless Elite
-              </div>
-            </div>
+          <a
+            href="https://kreo-tech.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <div className="relative group overflow-hidden rounded-[2rem] bg-surface border border-surface p-6 flex flex-col gap-6 min-h-[500px] cursor-pointer hover:border-primary/30 transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-            <div className="relative flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <span className="text-primary text-[10px] font-black uppercase tracking-widest">Swarm Series</span>
-                <h4 className="text-xl font-black text-text uppercase tracking-tighter leading-tight">Swarm <span className="text-primary italic">White</span> Purple</h4>
+              <div className="relative aspect-square rounded-2xl overflow-hidden bg-background/40">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={swarmWhiteImages[swarmWhiteIndex]}
+                    src={swarmWhiteImages[swarmWhiteIndex]}
+                    alt="Swarm White Purple"
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full h-full object-cover transition-transform duration-1000"
+                  />
+                </AnimatePresence>
+                <div className="absolute top-4 left-4 bg-primary text-background text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter shadow-lg shadow-primary/20 z-10">
+                  Wireless Elite
+                </div>
               </div>
-              <p className="text-secondary text-xs font-medium opacity-80 leading-relaxed">
-                Clean aesthetic meets mechanical precision. Tri-mode connectivity for seamless gaming.
-              </p>
-              <p className="text-primary/50 text-[10px] font-bold tracking-widest uppercase mt-1">
-                kreo-tech.com
-              </p>
-              
-              <div className="flex items-center justify-end mt-2">
-                <a 
-                  href="https://kreo-tech.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="bg-primary text-background p-3 rounded-full hover:opacity-90 transition-all hover:scale-110 shadow-xl"
-                >
-                  <ExternalLink className="w-4 h-4 md:w-4.5 md:h-4.5" />
-                </a>
-              </div>
-            </div>
-            
-            <div className="h-px w-full bg-secondary/10" />
-            
-            <div className="flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="w-6 h-6 rounded-full border-2 border-surface bg-surface" />
-                ))}
-              </div>
-              <span className="text-[9px] text-secondary font-bold uppercase tracking-widest opacity-60">+200 reviews</span>
-            </div>
-          </div>
 
+              <div className="relative flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <span className="text-primary text-[10px] font-black uppercase tracking-widest">Swarm Series</span>
+                  <h4 className="text-xl font-black text-text uppercase tracking-tighter leading-tight">Swarm <span className="text-primary italic">White</span> Purple</h4>
+                </div>
+                <p className="text-secondary text-xs font-medium opacity-80 leading-relaxed">
+                  Clean aesthetic meets mechanical precision. Tri-mode connectivity for seamless gaming.
+                </p>
+                <p className="text-primary/50 text-[10px] font-bold tracking-widest uppercase mt-1">
+                  kreo-tech.com
+                </p>
+
+                <div className="flex items-center justify-end mt-2">
+                  <div className="bg-primary text-background p-3 rounded-full group-hover:opacity-90 transition-all group-hover:scale-110 shadow-xl">
+                    <ExternalLink className="w-4 h-4 md:w-4.5 md:h-4.5" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-px w-full bg-secondary/10" />
+
+              <div className="flex items-center gap-3">
+                <div className="flex -space-x-2">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="w-6 h-6 rounded-full border-2 border-surface bg-surface" />
+                  ))}
+                </div>
+                <span className="text-[9px] text-secondary font-bold uppercase tracking-widest opacity-60">+200 reviews</span>
+              </div>
+            </div>
+          </a>
 
         </div>
       </aside>
@@ -495,14 +498,14 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
   );
 }
 
-function StatItem({ 
-  label, 
-  value, 
-  subValue, 
-  tooltip 
-}: { 
-  label: string; 
-  value: string | number | undefined; 
+function StatItem({
+  label,
+  value,
+  subValue,
+  tooltip
+}: {
+  label: string;
+  value: string | number | undefined;
   subValue?: string;
   tooltip?: string;
 }) {

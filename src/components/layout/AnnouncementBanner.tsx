@@ -46,15 +46,20 @@ export function AnnouncementBanner() {
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--color-background)_1px,_transparent_1px)] bg-[size:10px_10px]" />
       {/* Background Decorative Gradient */}
       <div className="absolute inset-0 opacity-20 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
-      
-      <div className="flex-1 flex items-center justify-center gap-4 relative z-10 h-full">
+
+      <a
+        href="https://kreo-tech.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 flex items-center justify-center gap-4 relative z-10 h-full cursor-pointer group/banner"
+      >
         {/* Large Clipped Image Container with Slideshow */}
         <div className="hidden sm:block relative h-full w-24 md:w-32">
           <AnimatePresence mode="wait">
-            <motion.img 
+            <motion.img
               key={swarm65Images[currentImageIndex]}
-              src={swarm65Images[currentImageIndex]} 
-              alt="Swarm65" 
+              src={swarm65Images[currentImageIndex]}
+              alt="Swarm65"
               initial={{ opacity: 0, scale: 0.8, rotate: -20 }}
               animate={{ opacity: 1, scale: 1, rotate: -12 }}
               exit={{ opacity: 0, scale: 1.2, rotate: 0 }}
@@ -69,17 +74,12 @@ export function AnnouncementBanner() {
             <span className="text-background/50 not-italic mr-2">Featured:</span>
             Swarm65 Black Purple Elite
           </p>
-          
-          <a 
-            href="https://kreo-tech.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="bg-background text-primary px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-tighter hover:bg-white transition-all hover:scale-105 active:scale-95 shadow-lg whitespace-nowrap"
-          >
+
+          <div className="bg-background text-primary px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-tighter group-hover/banner:bg-white transition-all group-hover/banner:scale-105 active:scale-95 shadow-lg whitespace-nowrap">
             Shop Now
-          </a>
+          </div>
         </div>
-      </div>
+      </a>
 
       <button
         onClick={handleDismiss}
