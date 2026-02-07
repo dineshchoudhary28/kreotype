@@ -73,7 +73,11 @@ export function TestConfig() {
           </div>
 
           {/* Modes */}
-          <div className="flex items-center flex-wrap justify-center gap-4 md:gap-6 md:border-r border-surface md:pr-8">
+          <div
+            className={`flex items-center flex-wrap justify-center gap-4 md:gap-6 ${
+              currentValues ? "md:border-r border-surface md:pr-8" : ""
+            }`}
+          >
             {modes.map((m) => (
               <button
                 key={m}
@@ -88,10 +92,10 @@ export function TestConfig() {
             ))}
           </div>
 
-          {/* Values */}
-          <div className="flex items-center justify-center gap-4 md:gap-5 min-w-0 md:min-w-[140px]">
-            {currentValues ? (
-              currentValues.map((v) => (
+          {/* Values (conditionally rendered) */}
+          {currentValues && (
+            <div className="flex items-center justify-center gap-4 md:gap-5 min-w-0 md:min-w-[140px]">
+              {currentValues.map((v) => (
                 <button
                   key={v}
                   onClick={() => setConfig("value", v)}
@@ -101,11 +105,9 @@ export function TestConfig() {
                 >
                   {v}
                 </button>
-              ))
-            ) : (
-              <span className="italic opacity-30 text-[11px]">no options</span>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
