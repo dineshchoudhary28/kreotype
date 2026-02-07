@@ -7,7 +7,7 @@ import { useFocusModeStore } from "@/store/useFocusModeStore";
 import { useThemeStore } from "@/store/themeStore";
 import { themes } from "@/data/themes";
 import { useState, useRef, useEffect } from "react";
-import { Palette, Check, ChevronDown } from "lucide-react";
+import { Palette, Check, ChevronDown, Menu, X } from "lucide-react";
 
 const navLinks = [
   {
@@ -74,6 +74,7 @@ export function Header() {
   const setTheme = useThemeStore((s) => s.setTheme);
   
   const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -86,6 +87,19 @@ export function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    // Cleanup on component unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
 
   // In focus mode on home page
   if (pathname === "/" && isFocused) {
@@ -117,7 +131,7 @@ export function Header() {
         </Link>
 
         {/* Center: Main Navigation Icons - Hidden on very small mobile, shown as tight icons on medium */}
-        <nav className="flex items-center gap-4 sm:gap-6 md:gap-10 text-secondary">
+        <nav className="hidden md:flex items-center gap-4 sm:gap-6 md:gap-10 text-secondary">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
 
@@ -152,7 +166,7 @@ export function Header() {
         </nav>
 
         {/* Right: Actions and Profile */}
-        <div className="flex items-center gap-3 sm:gap-6 text-secondary">
+        <div className="hidden md:flex items-center gap-3 sm:gap-6 text-secondary">
           {/* Theme Changer Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button 
@@ -244,7 +258,150 @@ export function Header() {
             </Link>
           )}
         </div>
+
+        {/* Mobile Menu Button */}
+        <div className="md:hidden">
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-secondary hover:text-text">
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 bg-background z-40 p-4 pt-20">
+          <nav className="flex flex-col gap-4">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+
+              if (link.external) {
+                return (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="flex items-center gap-4 text-lg font-bold text-secondary hover:text-text transition-colors p-3 rounded-lg hover:bg-surface"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.icon}
+                    <span>{link.label}</span>
+                  </a>
+                );
+              }
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-4 text-lg font-bold p-3 rounded-lg hover:bg-surface transition-colors ${
+                    isActive ? "text-primary bg-surface" : "text-secondary hover:text-text"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.icon}
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Theme Changer */}
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              className={`hover:text-text transition-all cursor-pointer flex items-center justify-between w-full p-3 rounded-lg hover:bg-surface ${isThemeOpen ? 'text-text bg-surface' : ''}`}
+              onClick={() => setIsThemeOpen(!isThemeOpen)}
+            >
+              <div className="flex items-center gap-4 text-lg font-bold text-secondary">
+                <Palette size={26} />
+                <span>Theme</span>
+              </div>
+              <ChevronDown size={20} className={`transition-transform duration-200 ${isThemeOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isThemeOpen && (
+              <div className="absolute bottom-full left-0 w-full mb-2 max-h-[250px] overflow-y-auto bg-surface border border-surface rounded-xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 scrollbar-hide">
+                <div className="p-2 grid grid-cols-1 gap-1">
+                  {themes.map((theme) => {
+                    const isActive = currentTheme.name === theme.name;
+                    return (
+                      <button
+                        key={theme.name}
+                        onClick={() => {
+                          setTheme(theme.name);
+                          setIsThemeOpen(false);
+                        }}
+                        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all text-left group cursor-pointer ${
+                          isActive ? 'bg-primary/10 text-primary' : 'hover:bg-background text-secondary hover:text-text'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-3 h-3 rounded-full border border-black/20"
+                            style={{ backgroundColor: theme.colors.primary }}
+                          />
+                          <span className="text-xs font-bold">{theme.label}</span>
+                        </div>
+                        {isActive && <Check size={14} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="absolute bottom-8 left-4 right-4 flex flex-col gap-4">
+            {/* Profile */}
+            {session?.user ? (
+              <div className="flex items-center justify-between gap-2 sm:gap-4 p-3 rounded-lg bg-surface">
+                <Link
+                  href="/account"
+                  className="flex items-center gap-3"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <div
+                    className="w-10 h-10 rounded-full bg-background border border-surface flex items-center justify-center cursor-pointer overflow-hidden"
+                  >
+                    <span className="text-sm font-medium text-secondary">
+                      {(session.user.name || session.user.email || "U").charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-text">{session.user.name || session.user.email}</span>
+                    <span className="text-xs text-secondary">Account</span>
+                  </div>
+                </Link>
+                <button
+                  onClick={() => {
+                    signOut({ callbackUrl: "/" });
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="hover:text-text transition-colors cursor-pointer text-secondary"
+                  title="Sign out"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="w-full bg-primary text-background font-bold py-4 px-6 rounded-xl text-center hover:opacity-90 transition-opacity"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }

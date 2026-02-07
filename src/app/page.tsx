@@ -11,7 +11,7 @@ import { useFocusModeStore } from "@/store/useFocusModeStore";
 const MOUSE_IDLE_TIMEOUT = 2000; // Hide UI after 2 seconds of no mouse movement
 
 export default function Home() {
-  const sidebarExpanded = useConfigStore((s) => s.sidebarExpanded);
+  const sidebarExpanded = false; // useConfigStore((s) => s.sidebarExpanded);
   const isFinished = useTypingTestStore((s) => s.isFinished);
   const isActive = useTypingTestStore((s) => s.isActive);
   const showUITemporarily = useFocusModeStore((s) => s.showUITemporarily);
@@ -67,17 +67,15 @@ export default function Home() {
       onMouseMove={handleMouseMove}
     >
       {/* Sidebar: Hidden on mobile, hidden when typing (unless mouse moved) or showing results */}
-      {shouldShowUI && !isFinished && (
+      {/* {shouldShowUI && !isFinished && (
         <div className="hidden md:block absolute left-0 top-0 bottom-0 z-40">
           <SideConfigBar />
         </div>
-      )}
+      )} */}
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto flex flex-col w-full ${
-          (shouldShowUI && !isFinished && sidebarExpanded) ? "md:pl-[256px]" : "md:pl-0"
-        }`}
+        className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto flex flex-col w-full md:pl-0`}
       >
         <main className="flex-1 w-full max-w-[1500px] mx-auto px-4 md:px-6 pt-4 md:pt-6 flex flex-col">
           {shouldShowUI && !isFinished && <TestConfig />}

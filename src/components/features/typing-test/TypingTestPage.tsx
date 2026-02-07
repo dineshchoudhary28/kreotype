@@ -7,6 +7,7 @@ import { useFocusModeStore } from "@/store/useFocusModeStore";
 import { TestResults } from "./TestResults";
 import englishWords from "@/data/languages/english.json";
 import englishQuotes from "@/data/quotes/english.json";
+import clsx from "clsx";
 
 const punctuationMarks = [".", ",", "!", "?", ";", ":"];
 
@@ -436,14 +437,15 @@ export function TypingTestPage() {
         style={{ maxHeight: "200px" }}
       >
         {/* Blur overlay when input not focused */}
-        {!isInputFocused && (
-          <div
-            className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex items-center justify-center cursor-pointer rounded-lg px-6"
-            onClick={handleBlurOverlayClick}
-          >
-            <div className="text-secondary text-base md:text-lg text-center">Click here or press any key to focus</div>
-          </div>
-        )}
+        <div
+          className={clsx(
+            "absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex items-center justify-center cursor-pointer rounded-2xl px-6 transition-all duration-300 ease-in-out",
+            isInputFocused ? "opacity-0 pointer-events-none" : "opacity-100"
+          )}
+          onClick={handleBlurOverlayClick}
+        >
+          <div className="text-secondary text-base md:text-lg text-center">Click here or press any key to focus</div>
+        </div>
 
         <div className="text-2xl md:text-3xl leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2">
           {words.map((wordData, wordIndex) => (

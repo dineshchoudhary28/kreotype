@@ -15,6 +15,8 @@ import { RefreshCw, ChevronRight, Share2, Info, ExternalLink, AlertTriangle, Loa
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toPng } from "html-to-image";
+import { toast } from "sonner";
+
 
 const swarm65Images = [
   "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Frame1000006038.png?v=1764739426&width=1080",
@@ -97,6 +99,20 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
   const tabCount = useTypingTestStore(s => s.tabCount);
   const blurCount = useTypingTestStore(s => s.blurCount);
 
+  useEffect(() => {
+    if (tabCount > 0 || blurCount > 0) {
+      const message = [
+        afkCount > 0 && `AFK: ${afkCount}`,
+        tabCount > 0 && `Alt+Tab: ${tabCount}`,
+        blurCount > 0 && `Blur: ${blurCount}`,
+      ].filter(Boolean).join(' | ');
+
+      toast.warning("Integrity Report", {
+        description: message,
+      });
+    }
+  }, [afkCount, tabCount, blurCount]);
+
   // Prepare data for the chart - ensure we have at least some data
   const chartData = stats.wpmHistory.length > 0 
     ? stats.wpmHistory.map((wpm, index) => ({
@@ -127,21 +143,6 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
             </div>
           </div>
           
-          {/* Integrity Indicators - Adjusted for mobile */}
-          {(afkCount > 0 || tabCount > 0 || blurCount > 0) && (
-            <div className="md:hidden flex flex-col gap-2 p-3 bg-error/5 border border-error/10 rounded-xl mb-4">
-              <div className="flex items-center gap-2 text-error text-[10px] font-black uppercase tracking-widest">
-                <AlertTriangle size={12} />
-                Integrity Report
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
-                {afkCount > 0 && <span className="text-error/70 text-[10px] font-medium">AFK: {afkCount}</span>}
-                {tabCount > 0 && <span className="text-error/70 text-[10px] font-medium">Alt+Tab: {tabCount}</span>}
-                {blurCount > 0 && <span className="text-error/70 text-[10px] font-medium">Blur: {blurCount}</span>}
-              </div>
-            </div>
-          )}
-
           {/* Graph Section */}
           <div className="md:col-span-9 h-[250px] md:h-[400px] w-full bg-surface/40 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 relative group overflow-hidden border border-surface shadow-2xl">
             <div className="absolute top-4 md:top-6 left-4 md:left-8 flex items-center gap-4 md:gap-6 z-10">
@@ -205,23 +206,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-
-          {/* Desktop Integrity Indicators */}
-          {(afkCount > 0 || tabCount > 0 || blurCount > 0) && (
-            <div className="hidden md:flex col-span-3 flex-col gap-2 p-4 bg-error/5 border border-surface rounded-xl mt-[-2rem]">
-              <div className="flex items-center gap-2 text-error text-[10px] font-black uppercase tracking-widest">
-                <AlertTriangle size={12} />
-                Integrity Report
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
-                {afkCount > 0 && <span className="text-error/70 text-[10px] font-medium">AFK: {afkCount}</span>}
-                {tabCount > 0 && <span className="text-error/70 text-[10px] font-medium">Alt+Tab: {tabCount}</span>}
-                {blurCount > 0 && <span className="text-error/70 text-[10px] font-medium">Blur: {blurCount}</span>}
-              </div>
-            </div>
-          )}
         </div>
-
         {/* Secondary Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8 mb-10">
           <StatItem label="test type" value={mode} subValue={value} />
