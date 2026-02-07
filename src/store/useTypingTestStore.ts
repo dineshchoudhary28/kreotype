@@ -208,122 +208,143 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
   },
 
   handleInput: (char) => {
-    const state = get();
-    if (state.isFinished) return;
+    set((state) => {
+      if (state.isFinished) return state;
 
-    // Start test on first input
-    if (!state.isActive) {
       const now = Date.now();
-      set({ isActive: true, startTime: now, lastWordTimestamp: now });
-    }
+      let startTime = state.startTime;
+      let isActive = state.isActive;
 
-    const words = [...state.words];
-    const currentWord = { ...words[state.currentWordIndex] };
-    if (!currentWord) return;
+      // Start test on first input
+      if (!isActive) {
+        isActive = true;
+        startTime = now;
+      }
 
-    const charIndex = state.currentCharIndex;
-    const newChars = [...currentWord.chars];
+      const words = [...state.words];
+      const currentWord = { ...words[state.currentWordIndex] };
+      if (!currentWord) return state;
 
-    if (charIndex < currentWord.word.length) {
-      // Typing within word bounds
-      const expectedChar = newChars[charIndex].char;
-      const isCorrect = char === expectedChar;
+      const charIndex = state.currentCharIndex;
+      const newChars = [...currentWord.chars];
 
-      newChars[charIndex] = {
-        ...newChars[charIndex],
-        state: isCorrect ? "correct" : "incorrect",
-        typed: char,
-      };
-    } else {
-      // Extra character beyond word length
-      newChars.push({
-        char: "",
-        state: "extra",
-        typed: char,
-      });
-    }
-
-    currentWord.chars = newChars;
-    words[state.currentWordIndex] = currentWord;
-
-    set({
-      words,
-      currentCharIndex: charIndex + 1,
-      input: state.input + char,
-    });
-  },
-
-  handleBackspace: () => {
-    const state = get();
-    if (state.isFinished || state.input.length === 0) return;
-
-    const words = [...state.words];
-    const currentWord = { ...words[state.currentWordIndex] };
-    if (!currentWord) return;
-
-    const charIndex = state.currentCharIndex - 1;
-    const newChars = [...currentWord.chars];
-
-    if (charIndex >= 0) {
-      if (charIndex >= currentWord.word.length) {
-        // Remove extra character
-        newChars.pop();
-      } else {
-        // Reset character state
+      if (charIndex < currentWord.word.length) {
+        const expectedChar = newChars[charIndex].char;
         newChars[charIndex] = {
           ...newChars[charIndex],
-          state: "pending",
-          typed: null,
+          state: char === expectedChar ? "correct" : "incorrect",
+          typed: char,
         };
+      } else {
+        newChars.push({ char: "", state: "extra", typed: char });
       }
 
       currentWord.chars = newChars;
       words[state.currentWordIndex] = currentWord;
-
-      set({
+      
+      const updatedState = {
+        ...state,
         words,
-        currentCharIndex: charIndex,
-        input: state.input.slice(0, -1),
-      });
-    }
+        isActive,
+        startTime,
+        currentCharIndex: charIndex + 1,
+        input: state.input + char,
+        elapsedTime: now - (startTime || now),
+      };
+
+      const stats = calculateStats(updatedState);
+      stats.wpmHistory = state.wpmHistory;
+      stats.rawWpmHistory = state.rawWpmHistory;
+
+      return { ...updatedState, stats };
+    });
+  },
+
+  handleBackspace: () => {
+    set((state) => {
+      if (state.isFinished || state.input.length === 0) return state;
+
+      const words = [...state.words];
+      const currentWord = { ...words[state.currentWordIndex] };
+      if (!currentWord) return state;
+
+      const charIndex = state.currentCharIndex - 1;
+      const newChars = [...currentWord.chars];
+
+      if (charIndex >= 0) {
+        if (charIndex >= currentWord.word.length) {
+          newChars.pop();
+        } else {
+          newChars[charIndex] = {
+            ...newChars[charIndex],
+            state: "pending",
+            typed: null,
+          };
+        }
+
+        currentWord.chars = newChars;
+        words[state.currentWordIndex] = currentWord;
+
+        const now = Date.now();
+        const updatedState = {
+          ...state,
+          words,
+          currentCharIndex: charIndex,
+          input: state.input.slice(0, -1),
+          elapsedTime: now - (state.startTime || now),
+        };
+
+        const stats = calculateStats(updatedState);
+        stats.wpmHistory = state.wpmHistory;
+        stats.rawWpmHistory = state.rawWpmHistory;
+
+        return { ...updatedState, stats };
+      }
+
+      return state;
+    });
   },
 
   handleSpace: () => {
-    const state = get();
-    if (state.isFinished) return;
+    set((state) => {
+      if (state.isFinished || state.currentCharIndex === 0) return state;
 
-    const currentWord = state.words[state.currentWordIndex];
-    if (!currentWord || state.currentCharIndex === 0) return;
+      const now = Date.now();
+      const currentWord = state.words[state.currentWordIndex];
+      const isWordCorrect =
+        currentWord.chars.every((c) => c.state === "correct") &&
+        !currentWord.chars.some((c) => c.state === "extra");
 
-    // Check if word is complete and correct
-    const isWordCorrect = currentWord.chars.every(
-      (c) => c.state === "correct" || (c.state === "pending" && c.typed === null)
-    ) && currentWord.chars.filter(c => c.typed !== null).length === currentWord.word.length
-      && !currentWord.chars.some(c => c.state === "extra");
+      const words = [...state.words];
+      words[state.currentWordIndex] = { ...currentWord, isCorrect: isWordCorrect };
 
-    const words = [...state.words];
-    words[state.currentWordIndex] = {
-      ...currentWord,
-      isCorrect: isWordCorrect,
-    };
+      const nextWordIndex = state.currentWordIndex + 1;
+      if (nextWordIndex >= words.length) {
+        // Let finishTest handle final stats
+        return { ...state, words, lastWordTimestamp: now };
+      }
 
-    const nextWordIndex = state.currentWordIndex + 1;
-    const now = Date.now();
+      const updatedState = {
+        ...state,
+        words,
+        currentWordIndex: nextWordIndex,
+        currentCharIndex: 0,
+        input: "",
+        lastWordTimestamp: now,
+        elapsedTime: now - (state.startTime || now),
+      };
 
-    // Check if test is complete (words mode)
-    if (nextWordIndex >= words.length) {
-      set({ lastWordTimestamp: now });
-      get().finishTest();
-      return;
-    }
+      const stats = calculateStats(updatedState);
+      stats.wpmHistory = state.wpmHistory;
+      stats.rawWpmHistory = state.rawWpmHistory;
 
-    set({
-      words,
-      currentWordIndex: nextWordIndex,
-      currentCharIndex: 0,
-      input: "",
-      lastWordTimestamp: now,
+      return { ...updatedState, stats };
     });
+
+    const state = get();
+    if (state.currentWordIndex + 1 >= state.words.length) {
+      get().finishTest();
+    }
   },
 
   finishTest: () => {
@@ -383,7 +404,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
     const now = Date.now();
     const elapsed = now - (state.startTime || now);
 
-    // Calculate current WPM for history
+    // Only calculate stats for history, don't set the main stats object
     const currentStats = calculateStats({ ...state, elapsedTime: elapsed });
 
     set({
@@ -394,7 +415,7 @@ export const useTypingTestStore = create<TypingTestState>((set, get) => ({
     });
 
     // Check if time is up (time mode)
-    if (state.timeLeft <= 1) {
+    if (get().timeLeft <= 1) {
       get().finishTest();
     }
   },
