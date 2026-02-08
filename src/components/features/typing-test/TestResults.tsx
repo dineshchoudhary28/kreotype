@@ -61,6 +61,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
   const [swarmWhiteIndex, setSwarmWhiteIndex] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
   const shareRef = useRef<HTMLDivElement>(null);
+  const saveAttemptedRef = useRef(false);
 
   const saveToLocalStorage = (data: CompletedEventInput & { testId: string }) => {
     try {
@@ -78,7 +79,9 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
 
   useEffect(() => {
     const performSave = async () => {
-      if (isSaved || isSyncing || status === "loading") return;
+      // Use ref to prevent double-execution from React re-renders / StrictMode
+      if (saveAttemptedRef.current || isSaved || isSyncing || status === "loading") return;
+      saveAttemptedRef.current = true;
       setSaved(true);
 
       // Cheating detection
@@ -94,7 +97,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
 
       // Add testId to the type
       const resultData: CompletedEventInput & { testId: string } = {
-        testId, // Add the testId to the payload
+        testId, // Send client testId for server-side deduplication
         wpm: stats.wpm,
         rawWpm: stats.rawWpm,
         accuracy: stats.accuracy,
@@ -165,7 +168,8 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
     };
 
     performSave();
-  }, [status, stats, mode, value, punctuation, numbers, language, isSaved, setSaved, isSyncing, testId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, testId]);
 
   const handleShare = async () => {
     if (!shareRef.current) return;

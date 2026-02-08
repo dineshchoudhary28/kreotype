@@ -5,12 +5,12 @@ import { z } from "zod/v4";
  */
 
 export const paginationQuerySchema = z.object({
-    cursor: z.string().optional(),
-    limit: z.string().regex(/^\d+$/).optional().transform(val => val ? parseInt(val) : 25),
+    cursor: z.string().nullable().optional().transform(val => val ?? undefined),
+    limit: z.string().regex(/^\d+$/).nullable().optional().transform(val => val ? parseInt(val) : 25),
 });
 
 export const resultsQuerySchema = paginationQuerySchema.extend({
-    mode: z.enum(["time", "words", "zen"]).optional(),
+    mode: z.enum(["time", "words", "zen"]).nullable().optional().transform(val => val ?? undefined),
 });
 
 export const leaderboardQuerySchema = z.object({

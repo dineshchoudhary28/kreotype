@@ -72,16 +72,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate testId server-side for security
-    const testId = randomUUID();
+    // Use client testId if provided (for deduplication), otherwise generate server-side
+    const testId = data.testId || randomUUID();
 
-    // Deduplication check
+    // Deduplication check using the unique (userId, testId) index
     const existingResult = await Result.findOne({
       userId,
-      timestamp: new Date(data.timestamp),
-      wpm: data.wpm,
-      accuracy: data.accuracy,
-      consistency: data.consistency,
+      testId,
     });
 
     if (existingResult) {
@@ -95,8 +92,6 @@ export async function POST(request: NextRequest) {
         { headers: corsHeaders(request) }
       );
     }
-
-    console.log("Saving result for userId:", userId);
 
     const result = await Result.create({
       userId,
@@ -285,8 +280,6 @@ export async function GET(request: NextRequest) {
 
   const hasMore = results.length > limit;
   const data = results.slice(0, limit);
-
-  console.log("Fetching results for userId:", session.user!.id, data);
 
   // Generate next cursor
   const nextCursor =
