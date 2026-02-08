@@ -81,7 +81,7 @@ export default function LoginPage() {
         </h1>
         <p className="text-secondary text-sm">
           {otpSent 
-            ? `We sent a code to ${loginEmail}` 
+            ? `We sent a code to your registered email` 
             : "Please enter your details to sign in."}
         </p>
       </div>
@@ -104,30 +104,34 @@ export default function LoginPage() {
         </div>
       )}
 
-      <div className="flex items-center gap-4 mb-8">
-        <div className="flex-1 h-px bg-surface" />
-        <span className="text-xs text-secondary font-bold uppercase tracking-widest opacity-30">or</span>
-        <div className="flex-1 h-px bg-surface" />
-      </div>
+      {!otpSent && (
+        <div className="flex items-center gap-4 mb-8">
+          <div className="flex-1 h-px bg-surface" />
+          <span className="text-xs text-secondary font-bold uppercase tracking-widest opacity-30">or</span>
+          <div className="flex-1 h-px bg-surface" />
+        </div>
+      )}
 
       {loginError && (
         <p className="text-error text-xs mb-6 p-3 bg-error/10 border border-error/20 rounded-xl text-center font-medium">{loginError}</p>
       )}
 
       <form onSubmit={handleLogin} className="flex flex-col gap-4">
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-bold text-secondary uppercase tracking-wider ml-1">Email Address</label>
-          <input
-            type="email"
-            placeholder="name@example.com"
-            value={loginEmail}
-            onChange={(e) => setLoginEmail(e.target.value)}
-            disabled={otpSent}
-            className="w-full px-4 py-3.5 bg-surface border border-surface rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm disabled:opacity-50"
-            autoComplete="email"
-            required
-          />
-        </div>
+        {!otpSent && (
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-secondary uppercase tracking-wider ml-1">Email or Username</label>
+            <input
+              type="text"
+              placeholder="Email or Username"
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
+              disabled={otpSent}
+              className="w-full px-4 py-3.5 bg-surface border border-surface rounded-xl text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-secondary/30 text-sm disabled:opacity-50"
+              autoComplete="username"
+              required
+            />
+          </div>
+        )}
 
         {useOtp ? (
           <div className="space-y-1.5">

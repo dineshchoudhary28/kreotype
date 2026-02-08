@@ -43,6 +43,23 @@ export async function POST(request: NextRequest) {
   // Note: Transactions removed for development compatibility
   // In production with replica sets, re-enable transactions for atomicity
   try {
+    // Server-side result validation (never trust client-sent isValid)
+    const invalidReasons: string[] = [];
+    const afkRatio = data.testDuration > 0 ? data.afkDuration / data.testDuration : 0;
+    if (afkRatio > 0.5) {
+      invalidReasons.push("AFK duration exceeds 50% of test duration");
+    }
+    if (data.wpm > 350) {
+      invalidReasons.push("WPM exceeds plausible threshold");
+    }
+    if (data.mode === "time" && data.testDuration < 1) {
+      invalidReasons.push("Test duration too short");
+    }
+    if (data.accuracy < 50 && data.wpm > 200) {
+      invalidReasons.push("Suspicious low accuracy with high WPM");
+    }
+    const isValid = invalidReasons.length === 0;
+
     // Check for PB
     const pbKey = `${data.mode}|${data.mode2}`;
     const user = await User.findById(userId).select("username personalBests");
@@ -54,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const currentPb = user.personalBests.get(pbKey);
-    const isPb = data.validation.isValid && (!currentPb || data.wpm > currentPb.wpm);
+    const isPb = isValid && (!currentPb || data.wpm > currentPb.wpm);
 
     // Validate tag ownership
     const tags = data.tags ?? [];
@@ -117,8 +134,8 @@ export async function POST(request: NextRequest) {
       burstHistory: data.burstHistory,
       errorHistory: data.errorHistory,
       keypressTimings: data.keypressTimings,
-      isValid: data.validation.isValid,
-      invalidReasons: data.validation.invalidReasons,
+      isValid,
+      invalidReasons,
       tags: data.tags ?? [],
       isPb,
       timestamp: new Date(data.timestamp),

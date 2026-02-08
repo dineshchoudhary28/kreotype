@@ -125,11 +125,11 @@ async function fetchLeaderboard(config: LeaderboardConfig) {
 
   const pipeline: mongoose.PipelineStage[] = [
     { $match: matchStage },
-    { $sort: { wpm: -1 as const } },
+    { $sort: { userId: 1, wpm: -1 as const } },
     {
       $group: {
         _id: "$userId",
-        wpm: { $max: "$wpm" },
+        wpm: { $first: "$wpm" },
         rawWpm: { $first: "$rawWpm" },
         accuracy: { $first: "$accuracy" },
         consistency: { $first: "$consistency" },

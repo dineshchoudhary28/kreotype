@@ -143,7 +143,11 @@ function calculateStats(state: TypingTestState): TestStats {
         missedChars++;
       }
     }
-    // Don't count spaces - they're implicit, not typed characters
+    // Count space between completed words (matches core typing-engine.ts)
+    if (i < state.currentWordIndex) {
+      correctChars++;
+      totalTypedChars++;
+    }
   }
 
   // WPM = (correct chars / 5) / minutes
@@ -507,7 +511,8 @@ export const useTypingTestStore = create<TypingTestState>()(
       // - time mode: countdown from configured time
       // - words/zen: count up (elapsed seconds)
       if (mode === "time") {
-        draft.timeLeft = Math.max(0, draft.timeLeft - 1);
+        const configuredTime = Number(useConfigStore.getState().value) || 30;
+        draft.timeLeft = Math.max(0, configuredTime - Math.floor(elapsed / 1000));
       } else {
         draft.timeLeft = Math.round(elapsed / 1000);
       }

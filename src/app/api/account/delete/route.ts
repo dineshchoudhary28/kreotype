@@ -4,6 +4,8 @@ import { User } from "@/server/models/User";
 import { Result } from "@/server/models/Result";
 import { FriendRequest } from "@/server/models/FriendRequest";
 import { ApeKey } from "@/server/models/ApeKey";
+import { Tag } from "@/server/models/Tag";
+import { Preset } from "@/server/models/Preset";
 import { requireAuth } from "@/server/middleware/auth";
 
 export async function POST() {
@@ -19,6 +21,8 @@ export async function POST() {
 
   await Promise.all([
     Result.deleteMany({ userId }),
+    Tag.deleteMany({ userId }),
+    Preset.deleteMany({ userId }),
     FriendRequest.deleteMany({ $or: [{ from: userId }, { to: userId }] }),
     ApeKey.deleteMany({ userId }),
     // Remove from others' friends lists

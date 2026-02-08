@@ -47,6 +47,9 @@ export default function AccountSettingsPage() {
   // Auth tab
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [resetOtp, setResetOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [showResetFlow, setShowResetFlow] = useState(false);
 
   // Blocked users tab
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
@@ -249,29 +252,106 @@ export default function AccountSettingsPage() {
               title="change password"
               description="Ensure your account is secure by using a strong password."
             >
-              <div className="flex flex-col gap-3 max-w-sm mt-2">
-                <input
-                  type="password"
-                  placeholder="Current password"
-                  value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
-                />
-                <input
-                  type="password"
-                  placeholder="New password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
-                />
-                <button
-                  onClick={() => apiAction("/api/account/password", "PATCH", { oldPassword, newPassword }, () => { setOldPassword(""); setNewPassword(""); })}
-                  disabled={loading || !oldPassword || !newPassword}
-                  className="w-fit px-8 py-2.5 mt-2 rounded-xl bg-primary text-background text-xs font-bold disabled:opacity-50 hover:opacity-90 transition-all cursor-pointer shadow-lg shadow-primary/10"
-                >
-                  Update Password
-                </button>
-              </div>
+              {!showResetFlow ? (
+                <div className="flex flex-col gap-3 max-w-sm mt-2">
+                  <input
+                    type="password"
+                    placeholder="Current password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                  />
+                  <input
+                    type="password"
+                    placeholder="New password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                  />
+                  <div className="flex items-center gap-4 mt-2">
+                    <button
+                      onClick={() => apiAction("/api/account/password", "PATCH", { oldPassword, newPassword }, () => { setOldPassword(""); setNewPassword(""); })}
+                      disabled={loading || !oldPassword || !newPassword}
+                      className="px-8 py-2.5 rounded-xl bg-primary text-background text-xs font-bold disabled:opacity-50 hover:opacity-90 transition-all cursor-pointer shadow-lg shadow-primary/10"
+                    >
+                      Update Password
+                    </button>
+                    <button
+                      onClick={() => setShowResetFlow(true)}
+                      className="text-xs font-bold text-secondary hover:text-primary transition-colors cursor-pointer"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 max-w-sm mt-2">
+                  {!otpSent ? (
+                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl flex flex-col gap-3">
+                      <p className="text-xs text-secondary">We'll send a verification code to your email to reset your password.</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => apiAction("/api/auth/otp/request", "POST", { email: username, type: "reset" }, () => setOtpSent(true))}
+                          disabled={loading}
+                          className="px-6 py-2 rounded-lg bg-primary text-background text-xs font-bold hover:opacity-90 transition-all cursor-pointer"
+                        >
+                          Send Code
+                        </button>
+                        <button
+                          onClick={() => setShowResetFlow(false)}
+                          className="px-6 py-2 rounded-lg bg-surface border border-surface text-secondary text-xs font-bold hover:text-text transition-all cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-secondary uppercase tracking-widest ml-1">Verification Code</label>
+                        <input
+                          type="text"
+                          placeholder="123456"
+                          value={resetOtp}
+                          onChange={(e) => setResetOtp(e.target.value)}
+                          className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all text-center tracking-[0.5em] font-bold"
+                          maxLength={6}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-secondary uppercase tracking-widest ml-1">New Password</label>
+                        <input
+                          type="password"
+                          placeholder="Enter new password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                        />
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => apiAction("/api/auth/reset-password", "POST", { identifier: username, otp: resetOtp, newPassword }, () => {
+                            setShowResetFlow(false);
+                            setOtpSent(false);
+                            setResetOtp("");
+                            setNewPassword("");
+                          })}
+                          disabled={loading || !resetOtp || !newPassword}
+                          className="px-8 py-2.5 rounded-xl bg-primary text-background text-xs font-bold disabled:opacity-50 hover:opacity-90 transition-all cursor-pointer shadow-lg shadow-primary/10"
+                        >
+                          Reset Password
+                        </button>
+                        <button
+                          onClick={() => { setOtpSent(false); setResetOtp(""); }}
+                          className="px-6 py-2.5 rounded-xl bg-surface border border-surface text-secondary text-xs font-bold hover:text-text transition-all cursor-pointer"
+                        >
+                          Back
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </SettingsCard>
 
             <SettingsCard

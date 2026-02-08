@@ -9,7 +9,9 @@ interface RateLimitConfig {
 const RATE_LIMITS: Record<string, RateLimitConfig> = {
   register: { maxRequests: 5, windowSeconds: 3600 },
   login: { maxRequests: 10, windowSeconds: 60 },
+  otpRequest: { maxRequests: 3, windowSeconds: 300 },
   resultSubmit: { maxRequests: 30, windowSeconds: 60 },
+  resultsGet: { maxRequests: 60, windowSeconds: 60 },
   general: { maxRequests: 60, windowSeconds: 60 },
 };
 

@@ -29,14 +29,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.email) return null;
 
         await connectDB();
+        const identifier = credentials.email as string;
+        
+        // Find user by email (case-insensitive) or username (case-insensitive)
         const user = await User.findOne({
-          email: (credentials.email as string).toLowerCase(),
-        });
+          $or: [
+            { email: identifier.toLowerCase() },
+            { username: identifier }
+          ]
+        }).collation({ locale: 'en', strength: 2 });
 
         // OTP Login
         if (credentials.otp) {
           if (!user) return null;
-          const isValid = await verifyOTP(credentials.email as string, credentials.otp as string);
+          // OTP verification still uses email internally
+          const isValid = await verifyOTP(user.email, credentials.otp as string);
           if (!isValid) return null;
 
           return {
@@ -95,29 +102,48 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             await existing.save();
           }
         } else {
-          // Create new user from OAuth
+          // Create new user from OAuth with retry for username race condition
           const baseName = (user.name || user.email.split("@")[0]!)
             .replace(/[^a-zA-Z0-9_]/g, "")
             .slice(0, 16);
           let username = baseName || "user";
-          // Ensure unique username
           let suffix = 0;
-          while (await User.findOne({ username })) {
-            suffix++;
-            username = `${baseName.slice(0, 12)}${suffix}`;
-          }
+          const maxRetries = 5;
 
-          await User.create({
-            username,
-            email: user.email.toLowerCase(),
-            image: user.image || null,
-            accounts: [
-              {
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-              },
-            ],
-          });
+          for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+              if (attempt > 0 || await User.findOne({ username })) {
+                suffix++;
+                username = `${baseName.slice(0, 12)}${suffix}`;
+                // Re-check availability for first attempt's fallback
+                if (attempt === 0) continue;
+              }
+
+              await User.create({
+                username,
+                email: user.email.toLowerCase(),
+                image: user.image || null,
+                accounts: [
+                  {
+                    provider: account.provider,
+                    providerAccountId: account.providerAccountId,
+                  },
+                ],
+              });
+              break; // Success
+            } catch (err: unknown) {
+              const isDuplicateKey =
+                err instanceof Error &&
+                "code" in err &&
+                (err as { code: number }).code === 11000;
+              if (!isDuplicateKey || attempt === maxRetries - 1) {
+                throw err;
+              }
+              // Duplicate key: retry with new suffix
+              suffix++;
+              username = `${baseName.slice(0, 12)}${suffix}`;
+            }
+          }
         }
       }
 

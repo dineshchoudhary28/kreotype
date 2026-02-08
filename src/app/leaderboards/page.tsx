@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 
 type LeaderboardType = "allTime" | "weekly" | "daily";
 type TimeMode = "15" | "60";
@@ -343,37 +344,58 @@ export default function LeaderboardsPage() {
             </div>
           )}
 
-          {/* Leaderboard Rules */}
-          <div className="bg-surface/30 border border-surface rounded-2xl p-6">
-            <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest mb-4">About Leaderboards</h3>
-            <ul className="space-y-4">
-              <li className="flex gap-3">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                <p className="text-xs text-secondary leading-normal">
-                  <strong className="text-text/80">All-Time:</strong> The highest verified scores ever recorded in Kreotype history.
-                </p>
-              </li>
-              <li className="flex gap-3">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                <p className="text-xs text-secondary leading-normal">
-                  <strong className="text-text/80">Weekly:</strong> Resets every Sunday at 00:00 UTC. Compete for the week&apos;s top spot.
-                </p>
-              </li>
-              <li className="flex gap-3">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                <p className="text-xs text-secondary leading-normal">
-                  <strong className="text-text/80">Daily:</strong> Competitive field that refreshes every 24 hours.
-                </p>
-              </li>
-            </ul>
-          </div>
+          {/* Advertisement Card */}
+          <a
+            href="https://kreo-tech.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <div className="relative group overflow-hidden rounded-[2rem] bg-surface border border-surface p-6 flex flex-col gap-6 min-h-[450px] cursor-pointer hover:border-primary/30 transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-          <div className="mt-auto pt-4 text-center">
-             <Link href="https://github.com" target="_blank" className="text-[10px] text-secondary hover:text-text transition-colors font-medium uppercase tracking-widest flex items-center justify-center gap-2">
-               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1s5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-               Report Cheater
-             </Link>
-          </div>
+              <div className="relative aspect-square rounded-2xl overflow-hidden bg-background/40">
+                <img
+                  src="https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.489.png?v=1763559972&width=1080"
+                  alt="Swarm White Purple"
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                />
+                <div className="absolute top-4 left-4 bg-primary text-background text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter shadow-lg shadow-primary/20 z-10">
+                  Wireless Elite
+                </div>
+              </div>
+
+              <div className="relative flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <span className="text-primary text-[10px] font-black uppercase tracking-widest">Swarm Series</span>
+                  <h4 className="text-xl font-black text-text uppercase tracking-tighter leading-tight">Swarm <span className="text-primary italic">White</span> Purple</h4>
+                </div>
+                <p className="text-secondary text-xs font-medium opacity-80 leading-relaxed">
+                  Clean aesthetic meets mechanical precision. Tri-mode connectivity for seamless gaming.
+                </p>
+                <p className="text-primary/50 text-[10px] font-bold tracking-widest uppercase mt-1">
+                  kreo-tech.com
+                </p>
+
+                <div className="flex items-center justify-end mt-2">
+                  <div className="bg-primary text-background p-3 rounded-full group-hover:opacity-90 transition-all group-hover:scale-110 shadow-xl">
+                    <ExternalLink className="w-4 h-4 md:w-4.5 md:h-4.5" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-px w-full bg-secondary/10" />
+
+              <div className="flex items-center gap-3">
+                <div className="flex -space-x-2">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="w-6 h-6 rounded-full border-2 border-surface bg-surface" />
+                  ))}
+                </div>
+                <span className="text-[9px] text-secondary font-bold uppercase tracking-widest opacity-60">+200 reviews</span>
+              </div>
+            </div>
+          </a>
         </div>
       </div>
     </div>

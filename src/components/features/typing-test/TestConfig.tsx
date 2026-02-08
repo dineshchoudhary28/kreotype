@@ -51,7 +51,7 @@ export function TestConfig() {
 
   return (
     <div className="flex flex-col items-center w-full mt-4 px-4 md:px-0">
-      <div className="bg-surface rounded-xl flex flex-col shadow-2xl border border-surface overflow-hidden w-full max-w-[1000px] md:w-fit">
+      <div className="bg-surface rounded-2xl flex flex-col shadow-2xl border border-surface overflow-hidden w-full max-w-[1000px] md:w-fit">
         {/* Basic Config */}
         <div className="px-4 md:px-6 py-2.5 flex flex-wrap md:flex-nowrap items-center justify-center md:justify-start gap-4 md:gap-8 text-[12px] md:text-[13px] font-medium text-secondary">
           {/* Toggles */}

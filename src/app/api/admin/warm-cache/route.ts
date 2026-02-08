@@ -29,9 +29,15 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+  } else if (process.env.NODE_ENV === "production") {
+    // In production, CRON_SECRET is mandatory
+    return NextResponse.json(
+      { error: "CRON_SECRET not configured" },
+      { status: 500 }
+    );
   } else {
     // In development, allow without auth but warn
-    console.warn("⚠️  CRON_SECRET not set - cache warming endpoint is unprotected!");
+    console.warn("CRON_SECRET not set - cache warming endpoint is unprotected in dev mode");
   }
 
   try {

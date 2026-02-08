@@ -29,7 +29,7 @@ export function Footer() {
             <a href="https://reddit.com/r/kreotype" target="_blank" rel="noopener noreferrer" className="hover:text-text transition-colors" aria-label="Reddit">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20.9c-6.2-1.3-9.5-6-9.5-9.5 0-5.3 4.3-9.5 9.5-9.5s9.5 4.3 9.5 9.5c0 3.5-3.3 8.2-9.5 9.5zM12 15c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4zM12 21c-2.2 0-4-1.8-4-4h8c0 2.2-1.8 4-4 4z"></path><path d="m16.5 11.5-.5-2.5"></path><path d="m7.5 11.5.5-2.5"></path></svg>
             </a>
-            <a href="mailto:contact@kreotype.com" className="hover:text-text transition-colors" aria-label="Email">
+            <a href="mailto:kreotype@gmail.com" className="hover:text-text transition-colors" aria-label="Email">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
             </a>
             
@@ -38,8 +38,6 @@ export function Footer() {
 
             {/* Page Links */}
             <Link href="/about" className="hover:text-text transition-colors">About</Link>
-            <Link href="/terms" className="hover:text-text transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-text transition-colors">Privacy</Link>
           </div>
 
           {/* Right: Copyright */}

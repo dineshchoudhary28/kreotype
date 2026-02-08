@@ -129,7 +129,6 @@ const resultSchema = new Schema<IResult>(
 
 resultSchema.index({ userId: 1, testId: 1 }, { unique: true });
 resultSchema.index({ userId: 1, timestamp: -1 });
-resultSchema.index({ mode: 1, mode2: 1, wpm: -1, isValid: 1 });
 resultSchema.index({ mode: 1, mode2: 1, timestamp: -1, wpm: -1 });
 resultSchema.index({ userId: 1, mode: 1, mode2: 1, wpm: -1 });
 resultSchema.index({ tags: 1 });

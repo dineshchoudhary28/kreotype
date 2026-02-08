@@ -112,13 +112,6 @@ export async function GET(request: NextRequest) {
     // Fail silently if cache write fails
   }
 
-  console.log({
-    userId,
-    counts,
-    all,
-    recent,
-  });
-
   return NextResponse.json(
     stats,
     {

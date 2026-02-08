@@ -1,6 +1,6 @@
 "use client";
 
-import { Zap, Target, TrendingUp, Palette, Keyboard, BarChart3, Users, Github, Mail, Twitter } from "lucide-react";
+import { Zap, Target, TrendingUp, Palette, Keyboard, BarChart3, Users } from "lucide-react";
 
 export default function AboutPage() {
   return (
@@ -236,87 +236,6 @@ export default function AboutPage() {
               <p className="text-xs text-secondary leading-relaxed">
                 Based on the variance of your raw WPM throughout the test. Values closer to 100% indicate more
                 consistent typing speed.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Community & Support */}
-        <section>
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-text mb-1">Community & Support</h2>
-            <p className="text-xs text-secondary">Connect with us</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-6 rounded-2xl border border-surface bg-surface/20">
-              <h3 className="text-base font-bold text-text mb-3">Get in Touch</h3>
-              <div className="space-y-3">
-                <a
-                  href="mailto:contact@kreotype.com"
-                  className="flex items-center gap-3 text-sm text-secondary hover:text-primary transition-colors group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
-                    <Mail size={16} className="text-primary" />
-                  </div>
-                  <span>contact@kreotype.com</span>
-                </a>
-                <a
-                  href="https://github.com/kreotype"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-secondary hover:text-primary transition-colors group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
-                    <Github size={16} className="text-primary" />
-                  </div>
-                  <span>GitHub</span>
-                </a>
-                <a
-                  href="https://twitter.com/kreotype"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-secondary hover:text-primary transition-colors group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
-                    <Twitter size={16} className="text-primary" />
-                  </div>
-                  <span>@kreotype</span>
-                </a>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-2xl border border-surface bg-surface/20">
-              <h3 className="text-base font-bold text-text mb-3">Report Issues</h3>
-              <p className="text-sm text-secondary leading-relaxed mb-4">
-                Found a bug or have a feature request? We'd love to hear from you! Create an issue on our
-                GitHub repository or send us an email.
-              </p>
-              <a
-                href="https://github.com/kreotype/kreotype/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-background text-sm font-bold hover:opacity-90 transition-opacity"
-              >
-                <Github size={16} />
-                Open an Issue
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* Open Source */}
-        <section className="p-6 rounded-2xl border border-surface bg-primary/5 border-primary/20">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-              <Github className="text-primary" size={24} />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-text mb-2">Open Source</h3>
-              <p className="text-sm text-secondary leading-relaxed">
-                Kreotype is built with modern web technologies including Next.js, React, TypeScript, and
-                Tailwind CSS. We believe in transparency and community-driven development. Check out our
-                code, contribute, or fork the project to create your own version!
               </p>
             </div>
           </div>

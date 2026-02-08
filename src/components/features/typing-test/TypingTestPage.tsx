@@ -418,7 +418,7 @@ export function TypingTestPage() {
 
       {/* Paused Overlay */}
       {isPaused && (
-        <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-50">
+        <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-50 rounded-2xl">
           <div className="text-center px-6">
             <div className="text-xl md:text-2xl font-bold text-primary mb-4">Test Paused</div>
             <div className="text-secondary text-sm md:text-base">Click here or press any key to continue</div>
@@ -429,21 +429,23 @@ export function TypingTestPage() {
       {/* Typing Text Display */}
       <div
         ref={wordsContainerRef}
-        className="mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto overflow-hidden"
+        className="mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto overflow-hidden rounded-2xl cursor-pointer"
         style={{ maxHeight: "200px" }}
+        onClick={handleBlurOverlayClick}
       >
-        {/* Blur overlay when input not focused */}
+        {/* Simple overlay for providing focus text */}
+        {!isInputFocused && (
+          <div className="absolute inset-0 bg-transparent z-10 flex items-center justify-center">
+            <div className="text-secondary text-base md:text-lg text-center">Click here or press any key to focus</div>
+          </div>
+        )}
+
         <div
           className={clsx(
-            "absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex items-center justify-center cursor-pointer rounded-2xl px-6 transition-all duration-300 ease-in-out",
-            isInputFocused ? "opacity-0 pointer-events-none" : "opacity-100"
+            "text-2xl md:text-3xl leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2 transition-all duration-300",
+            !isInputFocused && "blur-sm"
           )}
-          onClick={handleBlurOverlayClick}
         >
-          <div className="text-secondary text-base md:text-lg text-center">Click here or press any key to focus</div>
-        </div>
-
-        <div className="text-2xl md:text-3xl leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2">
           {words.map((wordData, wordIndex) => (
             <Word
               key={wordIndex}
