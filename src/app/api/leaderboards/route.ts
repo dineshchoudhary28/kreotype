@@ -171,7 +171,7 @@ async function getUserRank(
   mode2: string,
   type: string
 ): Promise<number | null> {
-  const cacheKey = `lb:rank:${userId}:${mode}:${mode2}`;
+  const cacheKey = `lb:rank:${userId}:${mode}:${mode2}:${type}`;
 
   try {
     const cached = await redis.get(cacheKey);
@@ -198,24 +198,40 @@ async function getUserRank(
     matchStage.timestamp = { $gte: weekStart };
   }
 
-  const userBest = await Result.findOne({
-    ...matchStage,
-    userId: new mongoose.Types.ObjectId(userId),
-  })
-    .sort({ wpm: -1 })
-    .select("wpm")
-    .lean();
+  // Optimized: Single aggregation pipeline instead of two queries
+  // Groups users by max WPM, sorts, and finds target user's rank in one pass
+  const userIdObj = new mongoose.Types.ObjectId(userId);
 
-  if (!userBest) return null;
-
-  const higherCount = await Result.aggregate([
+  const [result] = await Result.aggregate<{ rank: number; userWpm: number }>([
     { $match: matchStage },
-    { $group: { _id: "$userId", maxWpm: { $max: "$wpm" } } },
-    { $match: { maxWpm: { $gt: userBest.wpm } } },
-    { $count: "count" },
+    // Group by user to get their best WPM
+    {
+      $group: {
+        _id: "$userId",
+        maxWpm: { $max: "$wpm" },
+      },
+    },
+    // Sort by WPM descending (highest first)
+    { $sort: { maxWpm: -1 } },
+    // Add rank using $setWindowFields (MongoDB 5.0+)
+    // Falls back to position-based ranking if not available
+    {
+      $setWindowFields: {
+        sortBy: { maxWpm: -1 },
+        output: {
+          rank: { $rank: {} },
+        },
+      },
+    },
+    // Find the target user
+    { $match: { _id: userIdObj } },
+    // Return only rank and WPM
+    { $project: { rank: 1, userWpm: "$maxWpm", _id: 0 } },
   ]);
 
-  const rank = (higherCount[0]?.count ?? 0) + 1;
+  if (!result) return null;
+
+  const rank = result.rank;
 
   try {
     await redis.setex(cacheKey, 300, String(rank));

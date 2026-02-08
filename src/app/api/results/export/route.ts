@@ -10,10 +10,6 @@ export async function GET() {
 
   await connectDB();
 
-  const results = await Result.find({ userId: session.user!.id })
-    .sort({ timestamp: -1 })
-    .lean();
-
   const headers = [
     "wpm",
     "rawWpm",
@@ -31,6 +27,12 @@ export async function GET() {
     "isPb",
     "timestamp",
   ];
+
+  // Only fetch the fields needed for CSV export (excludes large history arrays)
+  const results = await Result.find({ userId: session.user!.id })
+    .sort({ timestamp: -1 })
+    .select(headers.join(" "))
+    .lean();
 
   const rows = results.map((r) =>
     headers

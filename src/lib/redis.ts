@@ -72,6 +72,22 @@ const memoryFallback = {
   }),
 };
 
+// Timeout wrapper to prevent slow Redis from blocking requests
+const REDIS_TIMEOUT_MS = 100; // 100ms timeout for cache operations
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  fallbackValue: T
+): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) =>
+      setTimeout(() => resolve(fallbackValue), timeoutMs)
+    ),
+  ]);
+}
+
 export const redis = new Proxy({} as Redis, {
   get(_target, prop: string) {
     if (!redisAvailable) {
@@ -86,8 +102,21 @@ export const redis = new Proxy({} as Redis, {
       if (typeof value === "function") {
         return async (...args: unknown[]) => {
           try {
-            const result = await value.apply(client, args);
-            // If ioredis returns null or throws, we might be disconnected
+            // Wrap Redis operations with timeout
+            const operation = value.apply(client, args);
+            const result = await withTimeout(
+              operation,
+              REDIS_TIMEOUT_MS,
+              null // Fallback to null on timeout
+            );
+
+            // If we got null due to timeout, fall back to memory storage
+            if (result === null) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const memResult = await (memoryFallback as any)[prop]?.(...args);
+              return memResult ?? null;
+            }
+
             return result;
           } catch {
             redisAvailable = false;

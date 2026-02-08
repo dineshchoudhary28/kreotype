@@ -119,17 +119,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Evaluate badges
-    const [recentResults, totalResults] = await Promise.all([
-      Result.find({ userId })
-        .sort({ timestamp: -1 })
-        .limit(30)
-        .select("timestamp")
-        .session(dbSession)
-        .lean(),
-      Result.countDocuments({ userId }).session(dbSession),
-    ]);
+    // Optimize: Use aggregation to get both recent results and count in single query
+    const [stats] = await Result.aggregate<{
+      recent: Array<{ timestamp: Date }>;
+      total: Array<{ count: number }>;
+    }>([
+      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+      {
+        $facet: {
+          recent: [
+            { $sort: { timestamp: -1 } },
+            { $limit: 30 },
+            { $project: { timestamp: 1 } }
+          ],
+          total: [{ $count: "count" }]
+        }
+      }
+    ]).session(dbSession);
 
-    const recentTestDates = recentResults.map((r) =>
+    const recentResults = stats?.recent ?? [];
+    const totalResults = stats?.total[0]?.count ?? 0;
+
+    const recentTestDates = recentResults.map((r: { timestamp: Date }) =>
       r.timestamp.toISOString().slice(0, 10)
     );
 
@@ -239,9 +250,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Fetch limit + 1 to check if more exist
+  // Use projection to only fetch needed fields (excludes large history arrays)
   const results = await Result.find(filter)
     .sort({ timestamp: -1, _id: -1 })
     .limit(limit + 1)
+    .select('userId wpm rawWpm accuracy consistency keyConsistency mode mode2 difficulty language punctuation numbers blindMode testDuration timestamp isPb tags isValid invalidReasons charStats')
     .lean();
 
   const hasMore = results.length > limit;
