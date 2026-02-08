@@ -32,12 +32,11 @@ export async function POST(req: Request) {
     }
 
     const otp = await generateOTP(email);
-    console.log(`Generated OTP for ${email}: ${otp}`); // Debug log
-    
+
     try {
       await sendOTP(email, otp, type);
     } catch (emailError) {
-      console.error("Failed to send OTP email:", emailError);
+      console.error("Failed to send OTP email");
       return NextResponse.json({ error: "Email delivery failed. Please check SMTP settings." }, { status: 500 });
     }
 

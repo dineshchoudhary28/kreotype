@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/server/models/User";
 import { requireAuth } from "@/server/middleware/auth";
+import mongoose from "mongoose";
 
 export async function DELETE(
   _request: NextRequest,
@@ -11,6 +12,14 @@ export async function DELETE(
   if ("error" in authResult) return authResult.error;
   const { session } = authResult;
   const { friendId } = await params;
+
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(friendId)) {
+    return NextResponse.json(
+      { error: "Invalid friend ID" },
+      { status: 400 }
+    );
+  }
 
   await connectDB();
 

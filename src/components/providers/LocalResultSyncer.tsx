@@ -16,6 +16,8 @@ export function LocalResultSyncer() {
     toast.promise(
       (async () => {
         let successCount = 0;
+        const failedResults: (CompletedEventInput & { testId: string })[] = [];
+
         for (const result of results) {
           try {
             const res = await fetch("/api/results", {
@@ -23,22 +25,36 @@ export function LocalResultSyncer() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(result),
             });
-            if (res.ok) successCount++;
+            if (res.ok) {
+              successCount++;
+            } else {
+              failedResults.push(result);
+            }
           } catch (err) {
             console.error("Failed to sync a result:", err);
+            failedResults.push(result);
           }
         }
 
-        if (successCount > 0) {
-          localStorage.removeItem("kreotype_local_results");
-          return { count: successCount };
+        // Preserve failed results in localStorage, remove only synced ones
+        if (failedResults.length > 0) {
+          localStorage.setItem("kreotype_local_results", JSON.stringify(failedResults));
         } else {
+          localStorage.removeItem("kreotype_local_results");
+        }
+
+        if (successCount === 0) {
           throw new Error("Failed to sync any results");
         }
+
+        return { count: successCount, failed: failedResults.length };
       })(),
       {
         loading: "Syncing results...",
-        success: (data) => `Successfully synced ${data.count} results to your profile!`,
+        success: (data) =>
+          data.failed > 0
+            ? `Synced ${data.count} results. ${data.failed} failed and will retry later.`
+            : `Successfully synced ${data.count} results to your profile!`,
         error: "Failed to sync results. Please try again later.",
         finally: () => setIsSyncing(false),
       }

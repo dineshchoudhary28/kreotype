@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useConfigStore } from "@/store/useConfigStore";
 import { useTypingTestStore, WordData } from "@/store/useTypingTestStore";
 import { useFocusModeStore } from "@/store/useFocusModeStore";
+import { useTestTimer } from "@/hooks/useTestTimer";
 import { TestResults } from "./TestResults";
 import englishWords from "@/data/languages/english.json";
 import clsx from "clsx";
@@ -72,7 +73,6 @@ export function TypingTestPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const wordsContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Local state for input focus
   const [isInputFocused, setIsInputFocused] = useState(true);
@@ -98,9 +98,9 @@ export function TypingTestPage() {
   const handleBackspace = useTypingTestStore((s) => s.handleBackspace);
   const handleSpace = useTypingTestStore((s) => s.handleSpace);
   const resetTest = useTypingTestStore((s) => s.resetTest);
-  const tick = useTypingTestStore((s) => s.tick);
   const setTimeLeft = useTypingTestStore((s) => s.setTimeLeft);
   const incrementBlur = useTypingTestStore((s) => s.incrementBlur);
+  const handleFocus = useTypingTestStore((s) => s.handleFocus);
   const incrementTab = useTypingTestStore((s) => s.incrementTab);
   const setPaused = useTypingTestStore((s) => s.setPaused);
   const recordKeydown = useTypingTestStore((s) => s.recordKeydown);
@@ -108,6 +108,9 @@ export function TypingTestPage() {
 
   // Focus mode store
   const setFocused = useFocusModeStore((s) => s.setFocused);
+
+  // Mount test timer (drives tick() every 1s while active)
+  useTestTimer();
 
   // Initialize words on mount or config change
   const initializeTest = useCallback(() => {
@@ -129,21 +132,6 @@ export function TypingTestPage() {
     inputRef.current?.focus();
   }, []);
 
-  // Timer tick
-  useEffect(() => {
-    if (isActive && !isPaused) {
-      timerRef.current = setInterval(() => {
-        tick();
-      }, 1000);
-    }
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [isActive, isPaused, tick]);
-
   // Focus mode when typing
   useEffect(() => {
     setFocused(isActive);
@@ -156,6 +144,7 @@ export function TypingTestPage() {
         incrementBlur();
         setPaused(true);
       } else if (!document.hidden && isPaused) {
+        handleFocus();
         setPaused(false);
         inputRef.current?.focus();
       }
@@ -170,6 +159,7 @@ export function TypingTestPage() {
 
     const handleWindowFocus = () => {
       if (isPaused) {
+        handleFocus();
         setPaused(false);
         inputRef.current?.focus();
       }
@@ -184,7 +174,7 @@ export function TypingTestPage() {
       window.removeEventListener("blur", handleWindowBlur);
       window.removeEventListener("focus", handleWindowFocus);
     };
-  }, [isActive, isPaused, incrementBlur, setPaused]);
+  }, [isActive, isPaused, incrementBlur, handleFocus, setPaused]);
 
   // Scroll to current word
   useEffect(() => {

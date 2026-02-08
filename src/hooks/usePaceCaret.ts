@@ -17,7 +17,7 @@ export function usePaceCaret(config: PaceCaretConfig) {
     const { words, elapsedTime, startTime } = useTypingTestStore();
 
     const pacePosition = useMemo(() => {
-        if (!config.enabled || !startTime) {
+        if (!config.enabled || !startTime || !words || words.length === 0) {
             return { wordIndex: 0, charIndex: 0 };
         }
 

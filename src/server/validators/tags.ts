@@ -3,12 +3,12 @@ import { configSchema } from "@/types/config";
 
 export const createTagSchema = z.object({
   name: z.string().min(1).max(20),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color"),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color").nullable().optional(),
 });
 
 export const updateTagSchema = z.object({
   name: z.string().min(1).max(20).optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color").optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color").nullable().optional(),
 });
 
 export const createPresetSchema = z.object({

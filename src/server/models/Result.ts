@@ -68,20 +68,21 @@ export interface IResult extends Document {
   timestamp: Date;
 }
 
-const resultSchema = new Schema<IResult>({
-  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+const resultSchema = new Schema<IResult>(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   testId: { type: String, required: true },
   name: { type: String, default: "" },
 
-  wpm: { type: Number, required: true },
-  rawWpm: { type: Number, required: true },
-  accuracy: { type: Number, required: true },
-  consistency: { type: Number, required: true },
-  keyConsistency: { type: Number, required: true },
+  wpm: { type: Number, required: true, min: 0, max: 500 },
+  rawWpm: { type: Number, required: true, min: 0, max: 500 },
+  accuracy: { type: Number, required: true, min: 0, max: 100 },
+  consistency: { type: Number, required: true, min: 0, max: 100 },
+  keyConsistency: { type: Number, required: true, min: 0, max: 100 },
 
-  mode: { type: String, required: true },
+  mode: { type: String, required: true, enum: ["time", "words", "quote", "zen"] },
   mode2: { type: Schema.Types.Mixed, required: true },
-  difficulty: { type: String, default: "normal" },
+  difficulty: { type: String, default: "normal", enum: ["normal", "expert", "master"] },
   language: { type: String, required: true },
   punctuation: { type: Boolean, default: false },
   numbers: { type: Boolean, default: false },
@@ -122,7 +123,9 @@ const resultSchema = new Schema<IResult>({
   isPb: { type: Boolean, default: false },
   tags: { type: [Schema.Types.ObjectId], ref: "Tag", default: [] },
   timestamp: { type: Date, default: Date.now },
-});
+  },
+  { timestamps: true }
+);
 
 resultSchema.index({ userId: 1, testId: 1 }, { unique: true });
 resultSchema.index({ userId: 1, timestamp: -1 });

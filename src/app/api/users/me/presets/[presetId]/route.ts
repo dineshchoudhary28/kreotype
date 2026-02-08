@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
-import { User } from "@/server/models/User";
+import { Preset } from "@/server/models/Preset";
 import { updatePresetSchema } from "@/server/validators/tags";
 import { requireAuth } from "@/server/middleware/auth";
+import mongoose from "mongoose";
 
 type RouteParams = { params: Promise<{ presetId: string }> };
 
@@ -22,19 +23,22 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   await connectDB();
-  const user = await User.findById(session.user!.id).select("presets");
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(presetId)) {
+    return NextResponse.json({ error: "Invalid preset ID" }, { status: 400 });
   }
 
-  const preset = (user.presets as unknown as import("mongoose").Types.DocumentArray<import("@/server/models/User").IPreset>).id(presetId);
+  // Find and update preset owned by user
+  const preset = await Preset.findOneAndUpdate(
+    { _id: presetId, userId: session.user!.id },
+    { $set: parsed.data },
+    { new: true, runValidators: true }
+  );
+
   if (!preset) {
     return NextResponse.json({ error: "Preset not found" }, { status: 404 });
   }
-
-  if (parsed.data.name !== undefined) preset.name = parsed.data.name;
-  if (parsed.data.config !== undefined) preset.config = parsed.data.config;
-  await user.save();
 
   return NextResponse.json({ preset });
 }
@@ -46,14 +50,20 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const { presetId } = await params;
 
   await connectDB();
-  const result = await User.findByIdAndUpdate(
-    session.user!.id,
-    { $pull: { presets: { _id: presetId } } },
-    { new: true }
-  );
 
-  if (!result) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(presetId)) {
+    return NextResponse.json({ error: "Invalid preset ID" }, { status: 400 });
+  }
+
+  // Delete preset owned by user
+  const preset = await Preset.findOneAndDelete({
+    _id: presetId,
+    userId: session.user!.id
+  });
+
+  if (!preset) {
+    return NextResponse.json({ error: "Preset not found" }, { status: 404 });
   }
 
   return NextResponse.json({ message: "Preset deleted" });

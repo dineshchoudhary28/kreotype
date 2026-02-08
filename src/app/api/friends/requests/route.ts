@@ -4,6 +4,7 @@ import { User } from "@/server/models/User";
 import { FriendRequest } from "@/server/models/FriendRequest";
 import { sendRequestSchema, handleRequestSchema } from "@/server/validators/friends";
 import { requireAuth } from "@/server/middleware/auth";
+import mongoose from "mongoose";
 
 export async function GET() {
   const authResult = await requireAuth();
@@ -102,17 +103,23 @@ export async function PATCH(request: NextRequest) {
   }
 
   if (parsed.data.action === "accept") {
-    friendRequest.status = "accepted";
-    await friendRequest.save();
+    // Note: Transaction removed for development compatibility
+    // Update request status
+    await FriendRequest.findByIdAndUpdate(
+      parsed.data.requestId,
+      { status: "accepted" }
+    );
 
     // Add to both users' friends arrays
     await Promise.all([
-      User.findByIdAndUpdate(session.user!.id, {
-        $addToSet: { friends: friendRequest.from },
-      }),
-      User.findByIdAndUpdate(friendRequest.from, {
-        $addToSet: { friends: session.user!.id },
-      }),
+      User.findByIdAndUpdate(
+        friendRequest.to,
+        { $addToSet: { friends: friendRequest.from } }
+      ),
+      User.findByIdAndUpdate(
+        friendRequest.from,
+        { $addToSet: { friends: friendRequest.to } }
+      ),
     ]);
 
     return NextResponse.json({ message: "Friend request accepted" });

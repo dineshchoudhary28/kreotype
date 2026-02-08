@@ -48,8 +48,6 @@ export interface IUser extends Document {
   leaderboardOptOut: boolean;
   streakHourOffset: number | null;
   lastNameChange: Date | null;
-  tags: Types.ObjectId[];
-  presets: Types.ObjectId[];
   badges: IEarnedBadge[];
   createdAt: Date;
   updatedAt: Date;
@@ -102,6 +100,7 @@ const userSchema = new Schema<IUser>(
       required: true,
       unique: true,
       lowercase: true,
+      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     },
     passwordHash: { type: String, default: null },
     image: { type: String, default: null },
@@ -116,8 +115,6 @@ const userSchema = new Schema<IUser>(
     leaderboardOptOut: { type: Boolean, default: false },
     streakHourOffset: { type: Number, default: null },
     lastNameChange: { type: Date, default: null },
-    tags: { type: [Schema.Types.ObjectId], ref: "Tag", default: [] },
-    presets: { type: [Schema.Types.ObjectId], ref: "Preset", default: [] },
     badges: { type: [earnedBadgeSchema], default: [] },
   },
   { timestamps: true }

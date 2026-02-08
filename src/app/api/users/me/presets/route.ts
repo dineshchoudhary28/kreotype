@@ -2,20 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Preset } from "@/server/models/Preset";
 import { requireAuth } from "@/server/middleware/auth";
-import { z } from "zod";
-
-const createPresetSchema = z.object({
-  name: z.string().min(1).max(32).trim(),
-  config: z.object({
-    mode: z.enum(["time", "words", "quote", "zen", "custom"]),
-    mode2: z.union([z.string(), z.number()]),
-    punctuation: z.boolean().optional(),
-    numbers: z.boolean().optional(),
-    blindMode: z.boolean().optional(),
-    language: z.string().optional(),
-    difficulty: z.string().optional(),
-  }),
-});
+import { createPresetSchema } from "@/server/validators/tags";
 
 export async function GET() {
   const authResult = await requireAuth();

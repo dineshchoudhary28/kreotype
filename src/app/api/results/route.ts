@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Result } from "@/server/models/Result";
 import { User, type IPersonalBest } from "@/server/models/User";
+import { Tag } from "@/server/models/Tag";
 import { completedEventSchema } from "@/server/validators/result";
 import { resultsQuerySchema } from "@/server/validators/query";
 import { requireAuth } from "@/server/middleware/auth";
@@ -11,6 +12,7 @@ import { corsHeaders, handleCorsOptions } from "@/server/middleware/cors";
 import { redis } from "@/lib/redis";
 import { logError } from "@/lib/logger";
 import mongoose from "mongoose";
+import { randomUUID } from "crypto";
 
 export async function OPTIONS(request: NextRequest) {
   return handleCorsOptions(request) || NextResponse.json({});
@@ -38,33 +40,13 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
 
-  // Start a transaction session for atomic operations
-  const dbSession = await mongoose.startSession();
-  dbSession.startTransaction();
-
+  // Note: Transactions removed for development compatibility
+  // In production with replica sets, re-enable transactions for atomicity
   try {
-    // Deduplication check
-    const existingResult = await Result.findOne({ userId, testId: data.testId }).session(dbSession);
-    if (existingResult) {
-      await dbSession.abortTransaction();
-      dbSession.endSession();
-      return NextResponse.json(
-        {
-          message: "Result already exists",
-          resultId: existingResult._id,
-          isPb: existingResult.isPb,
-          newBadges: [],
-        },
-        { headers: corsHeaders(request) }
-      );
-    }
-
     // Check for PB
     const pbKey = `${data.mode}|${data.mode2}`;
-    const user = await User.findById(userId).session(dbSession);
+    const user = await User.findById(userId).select("username personalBests");
     if (!user) {
-      await dbSession.abortTransaction();
-      dbSession.endSession();
       return NextResponse.json(
         { error: "User not found" },
         { status: 404, headers: corsHeaders(request) }
@@ -74,9 +56,52 @@ export async function POST(request: NextRequest) {
     const currentPb = user.personalBests.get(pbKey);
     const isPb = data.validation.isValid && (!currentPb || data.wpm > currentPb.wpm);
 
-    const result = await Result.create([{
+    // Validate tag ownership
+    const tags = data.tags ?? [];
+    if (tags.length > 0) {
+      const userTags = await Tag.find({
+        userId: new mongoose.Types.ObjectId(userId),
+        _id: { $in: tags.map(id => new mongoose.Types.ObjectId(id)) }
+      });
+
+      if (userTags.length !== tags.length) {
+        return NextResponse.json(
+          { error: "Some tags do not belong to user" },
+          { status: 403, headers: corsHeaders(request) }
+        );
+      }
+    }
+
+    // Generate testId server-side for security
+    const testId = randomUUID();
+
+    // Deduplication check
+    const existingResult = await Result.findOne({
       userId,
-      testId: data.testId,
+      timestamp: new Date(data.timestamp),
+      wpm: data.wpm,
+      accuracy: data.accuracy,
+      consistency: data.consistency,
+    });
+
+    if (existingResult) {
+      return NextResponse.json(
+        {
+          message: "Result already saved",
+          resultId: existingResult._id,
+          isPb: existingResult.isPb,
+          newBadges: [],
+        },
+        { headers: corsHeaders(request) }
+      );
+    }
+
+    console.log("Saving result for userId:", userId);
+
+    const result = await Result.create({
+      userId,
+      testId,
+      name: user.username,
       wpm: data.wpm,
       rawWpm: data.rawWpm,
       accuracy: data.accuracy,
@@ -102,7 +127,7 @@ export async function POST(request: NextRequest) {
       tags: data.tags ?? [],
       isPb,
       timestamp: new Date(data.timestamp),
-    }], { session: dbSession });
+    });
 
     // Update user stats (only PBs and badges)
     const updates: Record<string, unknown> = {};
@@ -135,7 +160,7 @@ export async function POST(request: NextRequest) {
           total: [{ $count: "count" }]
         }
       }
-    ]).session(dbSession);
+    ]);
 
     const recentResults = stats?.recent ?? [];
     const totalResults = stats?.total[0]?.count ?? 0;
@@ -165,14 +190,10 @@ export async function POST(request: NextRequest) {
 
     // Only update if there's something to write
     if (Object.keys(updates).length > 0) {
-      await User.findByIdAndUpdate(userId, updates, { session: dbSession });
+      await User.findByIdAndUpdate(userId, updates);
     }
 
-    // Commit transaction
-    await dbSession.commitTransaction();
-    dbSession.endSession();
-
-    // Invalidate cache (outside transaction)
+    // Invalidate cache
     try {
       await redis.del(`stats:${userId}`);
     } catch (err) {
@@ -182,16 +203,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message: "Result saved",
-        resultId: result[0]._id,
+        resultId: result._id,
         isPb,
         newBadges: newBadgeIds,
       },
       { headers: corsHeaders(request) }
     );
   } catch (error) {
-    await dbSession.abortTransaction();
-    dbSession.endSession();
-
     logError(error, { userId, endpoint: "/api/results", action: "POST" });
 
     return NextResponse.json(
@@ -231,9 +249,17 @@ export async function GET(request: NextRequest) {
   await connectDB();
 
   // Decode cursor
-  const cursorData = cursor
-    ? JSON.parse(Buffer.from(cursor, "base64").toString())
-    : null;
+  let cursorData = null;
+  if (cursor) {
+    try {
+      cursorData = JSON.parse(Buffer.from(cursor, "base64").toString());
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid cursor" },
+        { status: 400, headers: corsHeaders(request) }
+      );
+    }
+  }
 
   // Build filter
   const filter: Record<string, unknown> = { userId: session.user!.id };
@@ -259,6 +285,8 @@ export async function GET(request: NextRequest) {
 
   const hasMore = results.length > limit;
   const data = results.slice(0, limit);
+
+  console.log("Fetching results for userId:", session.user!.id, data);
 
   // Generate next cursor
   const nextCursor =

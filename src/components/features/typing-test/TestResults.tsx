@@ -65,6 +65,8 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
   const saveToLocalStorage = (data: CompletedEventInput & { testId: string }) => {
     try {
       const localResults = JSON.parse(localStorage.getItem("kreotype_local_results") || "[]");
+      // Deduplicate: skip if testId already exists (e.g. React StrictMode re-render)
+      if (localResults.some((r: { testId: string }) => r.testId === data.testId)) return;
       localResults.push(data);
       // Keep only last 50 local results
       if (localResults.length > 50) localResults.shift();
@@ -83,6 +85,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
       const afkCount = useTypingTestStore.getState().afkCount;
       const tabCount = useTypingTestStore.getState().tabCount;
       const blurCount = useTypingTestStore.getState().blurCount;
+      const totalAfkDuration = useTypingTestStore.getState().totalAfkDuration;
       const invalidReasons: string[] = [];
       if (afkCount > 0) invalidReasons.push(`afk:${afkCount}`);
       if (tabCount > 0) invalidReasons.push(`tab:${tabCount}`);
@@ -101,7 +104,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         mode2: mode === "time" || mode === "words" ? (parseInt(value) || value) : value,
         timestamp: Date.now(),
         testDuration: stats.time,
-        afkDuration: 0, // Note: This is separate from afkCount, might need implementation
+        afkDuration: totalAfkDuration,
         charStats: {
           correct: stats.correctChars,
           incorrect: stats.incorrectChars,

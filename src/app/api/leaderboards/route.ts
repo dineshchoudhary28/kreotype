@@ -69,9 +69,11 @@ export async function GET(request: NextRequest) {
   await connectDB();
 
   // Build time filter
+  // mode2 is validated to be a numeric string by leaderboardQuerySchema
+  const mode2Value = Number(mode2);
   const matchStage: Record<string, unknown> = {
     mode,
-    mode2: isNaN(Number(mode2)) ? mode2 : Number(mode2),
+    mode2: mode2Value,
     isValid: true,
   };
 

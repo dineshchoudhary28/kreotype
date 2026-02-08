@@ -2,12 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Tag } from "@/server/models/Tag";
 import { requireAuth } from "@/server/middleware/auth";
-import { z } from "zod";
-
-const createTagSchema = z.object({
-  name: z.string().min(1).max(32).trim(),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
-});
+import { createTagSchema } from "@/server/validators/tags";
 
 export async function GET() {
   const authResult = await requireAuth();
@@ -50,10 +45,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const tag = await Tag.create({
-    userId: session.user!.id,
-    ...parsed.data,
-  });
+  const tagData = {
+    userId: session.user!.id!,
+    name: parsed.data.name,
+    ...(parsed.data.color && { color: parsed.data.color }),
+  };
+
+  const tag = await Tag.create(tagData);
 
   return NextResponse.json({ tag }, { status: 201 });
 }

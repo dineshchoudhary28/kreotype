@@ -21,13 +21,12 @@ const validationSchema = z.object({
 });
 
 export const completedEventSchema = z.object({
-  testId: z.string().uuid(),
-  wpm: z.number().min(0),
-  rawWpm: z.number().min(0),
+  wpm: z.number().min(0).max(500),
+  rawWpm: z.number().min(0).max(500),
   accuracy: z.number().min(0).max(100),
   consistency: z.number().min(0).max(100),
   keyConsistency: z.number().min(0).max(100),
-  mode: z.enum(["time", "words", "zen"]),
+  mode: z.enum(["time", "words", "quote", "zen"]),
   mode2: z.union([z.number(), z.string()]),
   timestamp: z.number(),
   testDuration: z.number().positive(),
@@ -39,7 +38,7 @@ export const completedEventSchema = z.object({
   burstHistory: z.array(z.number()),
   errorHistory: z.array(z.number()),
   language: z.string(),
-  difficulty: z.string(),
+  difficulty: z.enum(["normal", "expert", "master"]),
   punctuation: z.boolean(),
   numbers: z.boolean(),
   blindMode: z.boolean(),

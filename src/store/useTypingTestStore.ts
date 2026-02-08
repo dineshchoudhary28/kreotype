@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { useConfigStore } from "@/store/useConfigStore";
 
 export type CharState = "correct" | "incorrect" | "extra" | "pending";
 
@@ -75,6 +76,8 @@ interface TypingTestState {
   afkCount: number;
   tabCount: number;
   blurCount: number;
+  afkStartTime: number | null;
+  totalAfkDuration: number;
   isPaused: boolean;
 
   // Stats
@@ -98,6 +101,7 @@ interface TypingTestState {
   incrementAfk: () => void;
   incrementTab: () => void;
   incrementBlur: () => void;
+  handleFocus: () => void;
   setPaused: (paused: boolean) => void;
 }
 
@@ -139,11 +143,7 @@ function calculateStats(state: TypingTestState): TestStats {
         missedChars++;
       }
     }
-    // Count space between words
-    if (i < state.currentWordIndex) {
-      correctChars++;
-      totalTypedChars++;
-    }
+    // Don't count spaces - they're implicit, not typed characters
   }
 
   // WPM = (correct chars / 5) / minutes
@@ -227,6 +227,8 @@ export const useTypingTestStore = create<TypingTestState>()(
   afkCount: 0,
   tabCount: 0,
   blurCount: 0,
+  afkStartTime: null,
+  totalAfkDuration: 0,
   isPaused: false,
   stats: null,
 
@@ -377,36 +379,38 @@ export const useTypingTestStore = create<TypingTestState>()(
   },
 
   handleSpace: () => {
+    let shouldFinish = false;
+
     set((draft) => {
       if (draft.isFinished || draft.currentCharIndex === 0) return;
 
       const now = Date.now();
       const currentWord = draft.words[draft.currentWordIndex];
+      if (!currentWord) return; // Null safety
+
       const isWordCorrect =
         currentWord.chars.every((c) => c.state === "correct") &&
         !currentWord.chars.some((c) => c.state === "extra");
 
       currentWord.isCorrect = isWordCorrect;
+      draft.lastWordTimestamp = now;
 
       const nextWordIndex = draft.currentWordIndex + 1;
-      if (nextWordIndex >= draft.words.length) {
-        // Let finishTest handle final stats
-        draft.lastWordTimestamp = now;
-        return;
-      }
 
-      draft.currentWordIndex = nextWordIndex;
-      draft.currentCharIndex = 0;
-      draft.input = "";
-      draft.lastWordTimestamp = now;
-      draft.elapsedTime = now - (draft.startTime || now);
+      if (nextWordIndex >= draft.words.length) {
+        shouldFinish = true; // Mark for finish outside set()
+      } else {
+        draft.currentWordIndex = nextWordIndex;
+        draft.currentCharIndex = 0;
+        draft.input = "";
+        draft.elapsedTime = now - (draft.startTime || now);
+      }
 
       // Stats are calculated in tick() to avoid blocking
     });
 
-    const state = get();
-    if (state.currentWordIndex + 1 >= state.words.length) {
-      get().finishTest();
+    if (shouldFinish) {
+      get().finishTest(); // Call outside set() but based on atomic check
     }
   },
 
@@ -428,48 +432,50 @@ export const useTypingTestStore = create<TypingTestState>()(
   },
 
   resetTest: () => {
-    set({
-      testId: crypto.randomUUID(), // <-- Generate new ID for new test
-      currentWordIndex: 0,
-      currentCharIndex: 0,
-      input: "",
-      lastWordTimestamp: null,
-      isActive: false,
-      isFinished: false,
-      isSaved: false,
-      isSyncing: false, // And here
-      startTime: null,
-      endTime: null,
-      elapsedTime: 0,
-      wpmHistory: [],
-      rawWpmHistory: [],
-      errorHistory: [],
-      burstHistory: [],
-      keypressTimings: {
+    set((draft) => {
+      // Reset all test state
+      draft.testId = crypto.randomUUID();
+      draft.currentWordIndex = 0;
+      draft.currentCharIndex = 0;
+      draft.input = "";
+      draft.lastWordTimestamp = null;
+      draft.isActive = false;
+      draft.isFinished = false;
+      draft.isSaved = false;
+      draft.isSyncing = false;
+      draft.startTime = null;
+      draft.endTime = null;
+      draft.elapsedTime = 0;
+      draft.wpmHistory = [];
+      draft.rawWpmHistory = [];
+      draft.errorHistory = [];
+      draft.burstHistory = [];
+      draft.keypressTimings = {
         spacing: [],
         duration: [],
         last: -1,
         first: -1,
-      },
-      keyDownData: {},
-      afkCount: 0,
-      tabCount: 0,
-      blurCount: 0,
-      isPaused: false,
-      stats: null,
-    });
+      };
+      draft.keyDownData = {};
+      draft.afkCount = 0;
+      draft.tabCount = 0;
+      draft.blurCount = 0;
+      draft.afkStartTime = null;
+      draft.totalAfkDuration = 0;
+      draft.isPaused = false;
+      draft.stats = null;
 
-    // Reset all word states
-    const words = get().words.map((w) => ({
-      ...w,
-      isCorrect: null,
-      chars: w.word.split("").map((char) => ({
-        char,
-        state: "pending" as CharState,
-        typed: null,
-      })),
-    }));
-    set({ words });
+      // Reset all word states inline
+      draft.words = draft.words.map((w) => ({
+        ...w,
+        isCorrect: null,
+        chars: w.word.split("").map((char) => ({
+          char,
+          state: "pending" as CharState,
+          typed: null,
+        })),
+      }));
+    });
   },
 
   tick: () => {
@@ -478,25 +484,33 @@ export const useTypingTestStore = create<TypingTestState>()(
 
     const now = Date.now();
     const elapsed = now - (state.startTime || now);
+    const mode = useConfigStore.getState().mode;
 
     // Track errors in the last second
     let errorsInLastSecond = 0;
     const currentWord = state.words[state.currentWordIndex];
     if (currentWord) {
       errorsInLastSecond = currentWord.chars.filter(c => c.state === "incorrect" || c.state === "extra").length;
-      // This is a simple approximation, Monkeytype tracks error history more precisely
     }
 
     // Calculate stats once per second (instead of on every keystroke)
     // This is our debouncing strategy - reduces CPU usage by 95%
     const currentStats = calculateStats({ ...state, elapsedTime: elapsed });
 
-    // Limit history arrays to prevent unbounded growth (Task #4)
+    // Limit history arrays to prevent unbounded growth
     const MAX_HISTORY = 120; // 2 minutes max
 
     set((draft) => {
       draft.elapsedTime = elapsed;
-      draft.timeLeft = Math.max(0, draft.timeLeft - 1);
+
+      // Mode-aware timer:
+      // - time mode: countdown from configured time
+      // - words/zen: count up (elapsed seconds)
+      if (mode === "time") {
+        draft.timeLeft = Math.max(0, draft.timeLeft - 1);
+      } else {
+        draft.timeLeft = Math.round(elapsed / 1000);
+      }
 
       // Update current stats (debounced to 1 second interval)
       draft.stats = currentStats;
@@ -515,8 +529,8 @@ export const useTypingTestStore = create<TypingTestState>()(
       }
     });
 
-    // Check if time is up (time mode)
-    if (get().timeLeft <= 1) {
+    // Auto-finish only in time mode when countdown reaches 0
+    if (mode === "time" && get().timeLeft <= 0) {
       get().finishTest();
     }
   },
@@ -534,7 +548,21 @@ export const useTypingTestStore = create<TypingTestState>()(
   },
 
   incrementBlur: () => {
-    set((state) => ({ blurCount: state.blurCount + 1 }));
+    set((draft) => {
+      draft.blurCount++;
+      if (!draft.afkStartTime) {
+        draft.afkStartTime = Date.now();
+      }
+    });
+  },
+
+  handleFocus: () => {
+    set((draft) => {
+      if (draft.afkStartTime) {
+        draft.totalAfkDuration += Date.now() - draft.afkStartTime;
+        draft.afkStartTime = null;
+      }
+    });
   },
 
   setPaused: (paused) => {

@@ -14,13 +14,22 @@ export interface ITag extends Document {
 const tagSchema = new Schema<ITag>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    name: { 
-      type: String, 
-      required: true, 
-      maxlength: 32,
-      trim: true 
+    name: {
+      type: String,
+      required: true,
+      maxlength: 20,
+      trim: true
     },
-    color: { type: String, default: null },
+    color: {
+      type: String,
+      default: null,
+      validate: {
+        validator: function(v: string | null) {
+          return v === null || /^#[0-9a-fA-F]{6}$/.test(v);
+        },
+        message: 'Color must be a valid hex code (e.g., #FF5733) or null'
+      }
+    },
     personalBest: { type: Number, default: 0 },
     active: { type: Boolean, default: false },
   },

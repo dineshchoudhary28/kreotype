@@ -20,20 +20,20 @@ export interface IPreset extends Document {
 const presetSchema = new Schema<IPreset>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    name: { 
-      type: String, 
-      required: true, 
-      maxlength: 32,
-      trim: true 
+    name: {
+      type: String,
+      required: true,
+      maxlength: 30,
+      trim: true
     },
     config: {
-      mode: { type: String, required: true },
+      mode: { type: String, required: true, enum: ["time", "words", "quote", "zen"] },
       mode2: { type: Schema.Types.Mixed, required: true },
       punctuation: { type: Boolean, default: false },
       numbers: { type: Boolean, default: false },
       blindMode: { type: Boolean, default: false },
       language: { type: String, default: "english" },
-      difficulty: { type: String, default: "normal" },
+      difficulty: { type: String, default: "normal", enum: ["normal", "expert", "master"] },
     },
   },
   { timestamps: true }

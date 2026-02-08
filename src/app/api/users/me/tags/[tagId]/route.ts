@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
-import { User } from "@/server/models/User";
+import { Tag } from "@/server/models/Tag";
+import { Result } from "@/server/models/Result";
 import { updateTagSchema } from "@/server/validators/tags";
 import { requireAuth } from "@/server/middleware/auth";
+import mongoose from "mongoose";
 
 type RouteParams = { params: Promise<{ tagId: string }> };
 
@@ -22,19 +24,22 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   await connectDB();
-  const user = await User.findById(session.user!.id).select("tags");
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(tagId)) {
+    return NextResponse.json({ error: "Invalid tag ID" }, { status: 400 });
   }
 
-  const tag = (user.tags as unknown as import("mongoose").Types.DocumentArray<import("@/server/models/User").ITag>).id(tagId);
+  // Find and update tag owned by user
+  const tag = await Tag.findOneAndUpdate(
+    { _id: tagId, userId: session.user!.id },
+    { $set: parsed.data },
+    { new: true, runValidators: true }
+  );
+
   if (!tag) {
     return NextResponse.json({ error: "Tag not found" }, { status: 404 });
   }
-
-  if (parsed.data.name !== undefined) tag.name = parsed.data.name;
-  if (parsed.data.color !== undefined) tag.color = parsed.data.color;
-  await user.save();
 
   return NextResponse.json({ tag });
 }
@@ -46,15 +51,28 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const { tagId } = await params;
 
   await connectDB();
-  const result = await User.findByIdAndUpdate(
-    session.user!.id,
-    { $pull: { tags: { _id: tagId } } },
-    { new: true }
-  );
 
-  if (!result) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(tagId)) {
+    return NextResponse.json({ error: "Invalid tag ID" }, { status: 400 });
   }
+
+  // Note: Transaction removed for development compatibility
+  // Delete tag owned by user
+  const tag = await Tag.findOneAndDelete({
+    _id: tagId,
+    userId: session.user!.id
+  });
+
+  if (!tag) {
+    return NextResponse.json({ error: "Tag not found" }, { status: 404 });
+  }
+
+  // Cascade delete: Remove tag from all results
+  await Result.updateMany(
+    { tags: tagId },
+    { $pull: { tags: tagId } }
+  );
 
   return NextResponse.json({ message: "Tag deleted" });
 }

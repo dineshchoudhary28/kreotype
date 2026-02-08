@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/server/models/User";
 import { requireAuth } from "@/server/middleware/auth";
+import mongoose from "mongoose";
 
 export async function GET() {
   const authResult = await requireAuth();
@@ -54,6 +55,14 @@ export async function DELETE(request: NextRequest) {
   const { userId } = await request.json();
   if (!userId) {
     return NextResponse.json({ error: "User ID required" }, { status: 400 });
+  }
+
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return NextResponse.json(
+      { error: "Invalid user ID" },
+      { status: 400 }
+    );
   }
 
   await connectDB();
