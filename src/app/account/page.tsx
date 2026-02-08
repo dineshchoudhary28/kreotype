@@ -2,21 +2,21 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  Trophy, 
-  TrendingUp, 
-  Target, 
-  Clock, 
-  Zap, 
-  Download, 
+import { useEffect, useState, useCallback, useMemo } from "react";
+import {
+  User,
+  Mail,
+  Calendar,
+  Trophy,
+  TrendingUp,
+  Target,
+  Clock,
+  Zap,
+  Download,
   History,
   Activity,
   Award,
-  ChevronRight
+  Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +52,12 @@ interface PersonalBest {
   accuracy: number;
   consistency: number;
   timestamp: string;
+}
+
+interface ActivityDay {
+  date: string;
+  count: number;
+  avgWpm: number;
 }
 
 interface ResultEntry {
@@ -102,26 +108,29 @@ export default function AccountPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [pbs, setPbs] = useState<Record<string, PersonalBest>>({});
   const [results, setResults] = useState<ResultEntry[]>([]);
+  const [activity, setActivity] = useState<ActivityDay[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [userRes, statsRes, pbsRes, resultsRes] = await Promise.all([
+      const [userRes, statsRes, pbsRes, resultsRes, activityRes] = await Promise.all([
         fetch("/api/users/me"),
         fetch("/api/users/me/stats"),
         fetch("/api/users/me/personal-bests"),
         fetch("/api/results?limit=25"),
+        fetch("/api/users/me/activity"),
       ]);
 
       if (userRes.ok) {
         const { user } = await userRes.json();
-        setProfile({ 
-          username: user.username, 
+        setProfile({
+          username: user.username,
           name: user.name,
-          email: user.email, 
+          email: user.email,
           image: user.image,
-          createdAt: user.createdAt 
+          createdAt: user.createdAt
         });
       }
       if (statsRes.ok) setStats(await statsRes.json());
@@ -133,10 +142,35 @@ export default function AccountPage() {
         const { results: r } = await resultsRes.json();
         setResults(r);
       }
+      if (activityRes.ok) {
+        const { activity: a } = await activityRes.json();
+        setActivity(a ?? []);
+      }
     } catch (err) {
       console.error("Failed to fetch account data:", err);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const handleExportCsv = useCallback(async () => {
+    setExporting(true);
+    try {
+      const res = await fetch("/api/results/export");
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "kreotype-results.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("CSV export failed:", err);
+    } finally {
+      setExporting(false);
     }
   }, []);
 
@@ -149,6 +183,42 @@ export default function AccountPage() {
       fetchData();
     }
   }, [status, router, fetchData]);
+
+  const activityMap = useMemo(() => new Map(activity.map((a) => [a.date, a])), [activity]);
+
+  const { currentStreak, longestStreak } = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Current streak: consecutive days backward from today
+    let current = 0;
+    let d = new Date(today);
+    // If today has no activity, start from yesterday
+    if (!activityMap.has(d.toISOString().slice(0, 10))) {
+      d.setDate(d.getDate() - 1);
+    }
+    while (activityMap.has(d.toISOString().slice(0, 10)) && (activityMap.get(d.toISOString().slice(0, 10))?.count ?? 0) > 0) {
+      current++;
+      d.setDate(d.getDate() - 1);
+    }
+
+    // Longest streak: max consecutive run across 365 days
+    let longest = 0;
+    let run = 0;
+    for (let i = 364; i >= 0; i--) {
+      const dd = new Date(today);
+      dd.setDate(dd.getDate() - i);
+      const key = dd.toISOString().slice(0, 10);
+      if (activityMap.has(key) && (activityMap.get(key)?.count ?? 0) > 0) {
+        run++;
+        if (run > longest) longest = run;
+      } else {
+        run = 0;
+      }
+    }
+
+    return { currentStreak: current, longestStreak: longest };
+  }, [activityMap]);
 
   if (status === "loading" || loading) {
     return (
@@ -346,6 +416,76 @@ export default function AccountPage() {
         </section>
       </div>
 
+      {/* Activity Streak Heatmap */}
+      <section className="rounded-2xl bg-surface border border-surface p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest flex items-center gap-2">
+            <Calendar size={14} className="text-green-400" /> Activity Streak
+          </h3>
+          <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest text-secondary/60">
+            <div className="flex items-center gap-2">
+              <Flame size={14} className="text-green-400" />
+              <span className="text-text">{currentStreak}</span>
+              <span>Current</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Trophy size={14} className="text-green-400" />
+              <span className="text-text">{longestStreak}</span>
+              <span>Longest</span>
+            </div>
+          </div>
+        </div>
+
+        {activity.length === 0 ? (
+          <div className="py-12 flex flex-col items-center justify-center gap-2 text-secondary/40 italic text-sm">
+            No activity yet. Complete a test to start building your streak.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-[3px] flex-wrap justify-center">
+              {(() => {
+                const today = new Date();
+                const cells = [];
+                for (let i = 364; i >= 0; i--) {
+                  const d = new Date(today);
+                  d.setDate(d.getDate() - i);
+                  const key = d.toISOString().slice(0, 10);
+                  const day = activityMap.get(key);
+                  const count = day?.count ?? 0;
+                  const opacity = count === 0 ? 0.05 : Math.min(0.2 + count * 0.15, 1);
+                  cells.push(
+                    <div
+                      key={key}
+                      className="w-[11px] h-[11px] rounded-[2px] cursor-default transition-all hover:scale-150 hover:z-10"
+                      style={{
+                        backgroundColor: count === 0 ? 'var(--color-secondary)' : '#4ade80',
+                        opacity,
+                      }}
+                      title={`${key}: ${count} test${count !== 1 ? 's' : ''}${day ? `, avg ${Math.round(day.avgWpm)} wpm` : ''}`}
+                    />
+                  );
+                }
+                return cells;
+              })()}
+            </div>
+            <div className="flex justify-between items-center px-4 text-[10px] font-bold text-secondary uppercase tracking-widest">
+              <span>Last 12 Months</span>
+              <div className="flex items-center gap-2">
+                <span>Less</span>
+                <div className="flex gap-[2px]">
+                  <div className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: 'var(--color-secondary)', opacity: 0.05 }} />
+                  <div className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: '#4ade80', opacity: 0.2 }} />
+                  <div className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: '#4ade80', opacity: 0.5 }} />
+                  <div className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: '#4ade80', opacity: 0.8 }} />
+                  <div className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: '#4ade80', opacity: 1 }} />
+                </div>
+                <span>More</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Result history */}
       <section className="rounded-2xl bg-surface border border-surface overflow-hidden shadow-sm">
         <div className="p-6 border-b border-surface flex items-center justify-between bg-surface/50">
@@ -355,9 +495,13 @@ export default function AccountPage() {
             </div>
             <h2 className="text-[11px] font-bold text-secondary uppercase tracking-widest">Result History</h2>
           </div>
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-background border border-surface rounded-lg text-[10px] font-bold text-secondary hover:text-text transition-all cursor-pointer">
-            <Download size={12} />
-            EXPORT CSV
+          <button
+            onClick={handleExportCsv}
+            disabled={exporting}
+            className="flex items-center gap-2 px-3 py-1.5 bg-background border border-surface rounded-lg text-[10px] font-bold text-secondary hover:text-text transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download size={12} className={exporting ? "animate-pulse" : ""} />
+            {exporting ? "EXPORTING..." : "EXPORT CSV"}
           </button>
         </div>
         
@@ -372,13 +516,12 @@ export default function AccountPage() {
                 <th className="hidden lg:table-cell px-6 py-4">Chars</th>
                 <th className="px-4 md:px-6 py-4">Mode</th>
                 <th className="hidden sm:table-cell px-6 py-4 text-right">Date</th>
-                <th className="px-4 md:px-6 py-4"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-900/30">
               {results.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-secondary text-sm italic">
+                  <td colSpan={7} className="px-6 py-12 text-center text-secondary text-sm italic">
                     No results yet. Complete a test to see your history.
                   </td>
                 </tr>
@@ -415,9 +558,6 @@ export default function AccountPage() {
                       </div>
                     </td>
                     <td className="hidden sm:table-cell px-6 py-4 text-right text-[10px] md:text-xs text-secondary font-medium">{formatDate(r.timestamp)}</td>
-                    <td className="px-4 md:px-6 py-4 text-right">
-                       <ChevronRight size={14} className="text-secondary/20 group-hover:text-primary transition-colors inline-block" />
-                    </td>
                   </tr>
                 ))
               )}

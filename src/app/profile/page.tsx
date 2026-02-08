@@ -12,7 +12,6 @@ import {
   UserPlus, 
   Check, 
   AlertTriangle,
-  ChevronRight,
   TrendingUp,
   Award
 } from "lucide-react";
@@ -488,7 +487,6 @@ function RecentTestsChart({ tests }: { tests: RecentTest[] }) {
                 <span className="text-lg font-bold text-text">{Math.round(t.accuracy)}%</span>
                 <span className="text-[9px] font-bold text-secondary uppercase tracking-tighter">ACC</span>
               </div>
-              <ChevronRight size={14} className="text-secondary/20 group-hover:text-primary transition-colors" />
             </div>
           </div>
         ))}

@@ -205,9 +205,12 @@ export async function POST(request: NextRequest) {
       await User.findByIdAndUpdate(userId, updates);
     }
 
-    // Invalidate cache
+    // Invalidate caches
     try {
-      await redis.del(`stats:${userId}`);
+      await Promise.all([
+        redis.del(`stats:${userId}`),
+        redis.del(`activity:${userId}`),
+      ]);
     } catch (err) {
       logError(err, { userId, action: "cache_invalidation" });
     }

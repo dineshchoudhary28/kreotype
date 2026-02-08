@@ -178,21 +178,20 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
     // Give a tiny bit of time for any hover states to settle
     await new Promise(resolve => setTimeout(resolve, 100));
 
+    // Find the action buttons row to hide it temporarily
+    const buttonsRow = shareRef.current.querySelector('.action-buttons-row') as HTMLElement;
     try {
-      // Find the action buttons row to hide it temporarily
-      const buttonsRow = shareRef.current.querySelector('.action-buttons-row') as HTMLElement;
       if (buttonsRow) buttonsRow.style.display = 'none';
 
       const dataUrl = await toPng(shareRef.current, {
         cacheBust: true,
-        backgroundColor: '#000000', // Capture with a solid background
+        skipFonts: true, // Skip remote font fetching (avoids CORS failures with Google Fonts)
+        backgroundColor: '#000000',
         style: {
           padding: '40px',
           borderRadius: '32px',
-        }
+        },
       });
-
-      if (buttonsRow) buttonsRow.style.display = '';
 
       const link = document.createElement('a');
       link.download = `kreotype-${stats.wpm}wpm-${Date.now()}.png`;
@@ -200,7 +199,9 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
       link.click();
     } catch (err) {
       console.error("Failed to share results:", err);
+      toast.error("Failed to generate image. Please try again.");
     } finally {
+      if (buttonsRow) buttonsRow.style.display = '';
       setIsSharing(false);
     }
   };
