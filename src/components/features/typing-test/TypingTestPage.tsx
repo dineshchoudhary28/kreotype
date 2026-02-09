@@ -195,28 +195,41 @@ export function TypingTestPage() {
     }
   }, [currentWordIndex]);
 
-  // Global keydown listener to refocus input when blurred
+  // Global listener to refocus input when blurred (keyboard + touch)
   useEffect(() => {
-    const handleGlobalKeyDown = () => {
+    const refocusInput = () => {
       if (!isInputFocused && !isFinished) {
-        // Any key press refocuses the input
         inputRef.current?.focus();
         setIsInputFocused(true);
       }
     };
 
-    document.addEventListener("keydown", handleGlobalKeyDown);
+    document.addEventListener("keydown", refocusInput);
+    document.addEventListener("touchstart", refocusInput);
+    document.addEventListener("click", refocusInput);
     return () => {
-      document.removeEventListener("keydown", handleGlobalKeyDown);
+      document.removeEventListener("keydown", refocusInput);
+      document.removeEventListener("touchstart", refocusInput);
+      document.removeEventListener("click", refocusInput);
     };
   }, [isInputFocused, isFinished]);
 
   // Track Tab key state for Tab+Enter restart
   const tabPressedRef = useRef(false);
 
+  // Track composition state for mobile virtual keyboards
+  const isComposingRef = useRef(false);
+
   // Handle keyboard events - sync (no async handlers for input)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // Skip during mobile composition (virtual keyboard with predictions)
+      // Mobile fires keydown with key="Unidentified" or keyCode=229 during composition
+      if (isComposingRef.current || e.key === "Process" || e.nativeEvent.isComposing) {
+        // Still allow Escape/Tab during composition
+        if (e.key !== "Escape" && e.key !== "Tab") return;
+      }
+
       // Record timing
       recordKeydown(e.code);
 
@@ -280,8 +293,8 @@ export function TypingTestPage() {
         return;
       }
 
-      // Regular character input
-      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // Regular character input (skip "Unidentified" from mobile — handled by beforeinput)
+      if (e.key.length === 1 && e.key !== "Unidentified" && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         handleInput(e.key);
       }
@@ -296,6 +309,104 @@ export function TypingTestPage() {
       tabPressedRef.current = false;
     }
   }, [recordKeyup]);
+
+  // Handle mobile virtual keyboard input via beforeinput events
+  // On desktop: keydown calls preventDefault() first, so beforeinput never fires
+  // On mobile: keydown gets "Unidentified" key, skips handling, so beforeinput processes input
+  const handleBeforeInput = useCallback(
+    (e: React.FormEvent<HTMLInputElement>) => {
+      const nativeEvent = e.nativeEvent as InputEvent;
+
+      // During composition, let the browser handle input natively.
+      // Composed text is processed on compositionEnd instead.
+      if (isComposingRef.current || nativeEvent.inputType === "insertCompositionText") {
+        return;
+      }
+
+      if (isFinished || isPaused) {
+        e.preventDefault();
+        return;
+      }
+
+      if (nativeEvent.inputType === "insertText" && nativeEvent.data) {
+        e.preventDefault();
+        for (const char of nativeEvent.data) {
+          if (char === " ") {
+            handleSpace();
+          } else {
+            handleInput(char);
+          }
+        }
+      } else if (
+        nativeEvent.inputType === "deleteContentBackward" ||
+        nativeEvent.inputType === "deleteWordBackward"
+      ) {
+        e.preventDefault();
+        handleBackspace();
+      } else if (nativeEvent.inputType === "insertLineBreak") {
+        e.preventDefault();
+      }
+    },
+    [isFinished, isPaused, handleInput, handleSpace, handleBackspace]
+  );
+
+  // Fallback input handler for older mobile browsers that don't support beforeinput.
+  // When beforeinput calls preventDefault(), this event won't fire (input was cancelled).
+  // This only fires if beforeinput didn't handle the input.
+  const handleInputChange = useCallback(
+    (e: React.FormEvent<HTMLInputElement>) => {
+      // During composition, don't process or clear — it breaks the composition session.
+      // The composed text will be handled by compositionEnd.
+      if (isComposingRef.current) return;
+
+      const target = e.target as HTMLInputElement;
+      const value = target.value;
+
+      if (!isFinished && !isPaused && value) {
+        for (const char of value) {
+          if (char === " ") {
+            handleSpace();
+          } else {
+            handleInput(char);
+          }
+        }
+      }
+
+      // Always clear to prevent autocomplete/suggestion buildup
+      target.value = "";
+    },
+    [isFinished, isPaused, handleInput, handleSpace]
+  );
+
+  // Composition event handlers for mobile virtual keyboards with predictive text.
+  // Mobile keyboards use the Composition API for word prediction/autocorrect.
+  // Without these, composition text never reaches the typing engine.
+  const handleCompositionStart = useCallback(() => {
+    isComposingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback(
+    (e: React.CompositionEvent<HTMLInputElement>) => {
+      isComposingRef.current = false;
+      const data = e.data;
+
+      if (data && !isFinished && !isPaused) {
+        for (const char of data) {
+          if (char === " ") {
+            handleSpace();
+          } else {
+            handleInput(char);
+          }
+        }
+      }
+
+      // Clear the input value after composition ends to prevent text buildup
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+    },
+    [isFinished, isPaused, handleInput, handleSpace]
+  );
 
   // Block copy/paste (cheating prevention)
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
@@ -330,12 +441,6 @@ export function TypingTestPage() {
     setIsInputFocused(true);
   }, [initializeTest, resetTest]);
 
-  // Focus container on click (for blur overlay)
-  const handleBlurOverlayClick = useCallback(() => {
-    inputRef.current?.focus();
-    setIsInputFocused(true);
-  }, []);
-
   // Show results if finished
   if (isFinished && stats) {
     return <TestResults stats={stats} onRestart={handleRestart} onNext={handleNext} />;
@@ -367,23 +472,6 @@ export function TypingTestPage() {
       ref={containerRef}
       className="flex-1 flex flex-col justify-center outline-none relative px-4 md:px-0"
     >
-      {/* Hidden input for keyboard capture */}
-      <input
-        ref={inputRef}
-        type="text"
-        className="absolute opacity-0 pointer-events-none"
-        onKeyDown={handleKeyDown}
-        onKeyUp={handleKeyUp}
-        onPaste={handlePaste}
-        onCopy={handleCopy}
-        onFocus={handleInputFocus}
-        onBlur={handleInputBlur}
-        autoFocus
-        autoComplete="off"
-        autoCapitalize="off"
-        autoCorrect="off"
-        spellCheck={false}
-      />
 
       {/* Language Indicator (hidden when typing) OR Test Info (when typing) */}
       <div className="flex items-center justify-center w-full max-w-[1500px] mx-auto px-2 h-10 md:h-12">
@@ -418,10 +506,16 @@ export function TypingTestPage() {
 
       {/* Paused Overlay */}
       {isPaused && (
-        <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-50 rounded-2xl">
+        <div
+          className="absolute inset-0 bg-background/80 flex items-center justify-center z-50 rounded-2xl cursor-pointer"
+          onClick={() => {
+            inputRef.current?.focus();
+            setIsInputFocused(true);
+          }}
+        >
           <div className="text-center px-6">
             <div className="text-xl md:text-2xl font-bold text-primary mb-4">Test Paused</div>
-            <div className="text-secondary text-sm md:text-base">Click here or press any key to continue</div>
+            <div className="text-secondary text-sm md:text-base">Tap here or press any key to continue</div>
           </div>
         </div>
       )}
@@ -429,14 +523,46 @@ export function TypingTestPage() {
       {/* Typing Text Display */}
       <div
         ref={wordsContainerRef}
-        className="mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto overflow-hidden rounded-2xl cursor-pointer"
+        className="mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto overflow-hidden rounded-2xl cursor-text"
         style={{ maxHeight: "200px" }}
-        onClick={handleBlurOverlayClick}
       >
-        {/* Simple overlay for providing focus text */}
+        {/* Full-size transparent input overlay — real dimensions so mobile keyboards activate */}
+        <input
+          ref={inputRef}
+          type="text"
+          inputMode="text"
+          className="absolute inset-0 w-full h-full z-20 border-none outline-none"
+          style={{
+            fontSize: "16px",
+            color: "transparent",
+            caretColor: "transparent",
+            background: "transparent",
+            WebkitAppearance: "none",
+            touchAction: "manipulation",
+          }}
+          onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
+          onBeforeInput={handleBeforeInput}
+          onInput={handleInputChange}
+          onCompositionStart={handleCompositionStart}
+          onCompositionEnd={handleCompositionEnd}
+          onPaste={handlePaste}
+          onCopy={handleCopy}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
+          autoFocus
+          autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="done"
+          aria-label="Type here"
+        />
+
+        {/* Focus prompt overlay — pointer-events-none so taps pass through to input */}
         {!isInputFocused && (
-          <div className="absolute inset-0 bg-transparent z-10 flex items-center justify-center">
-            <div className="text-secondary text-base md:text-lg text-center">Click here or press any key to focus</div>
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+            <div className="text-secondary text-base md:text-lg text-center">Tap here or press any key to focus</div>
           </div>
         )}
 
