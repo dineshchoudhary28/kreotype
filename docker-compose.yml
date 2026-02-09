@@ -3,8 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
     env_file:
       - .env.production
     depends_on:
@@ -13,6 +11,20 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - default
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      # HTTPS router (Cloudflare Full mode — uses Traefik default cert)
+      - "traefik.http.routers.kreotype.rule=Host(`kreotype.com`) || Host(`www.kreotype.com`)"
+      - "traefik.http.routers.kreotype.entrypoints=https"
+      - "traefik.http.routers.kreotype.tls=true"
+      - "traefik.http.services.kreotype.loadbalancer.server.port=3000"
+      # HTTP router (Cloudflare Flexible fallback — no redirect, serve directly)
+      - "traefik.http.routers.kreotype-http.rule=Host(`kreotype.com`) || Host(`www.kreotype.com`)"
+      - "traefik.http.routers.kreotype-http.entrypoints=http"
+      - "traefik.http.routers.kreotype-http.service=kreotype"
 
   mongo:
     image: mongo:7
@@ -46,3 +58,7 @@ services:
 volumes:
   mongo_data:
   redis_data:
+
+networks:
+  coolify:
+    external: true
