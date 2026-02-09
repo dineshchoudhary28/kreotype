@@ -1,12 +1,6 @@
 import { Collection, Document } from "mongodb";
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-
-if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI environment variable is not defined");
-}
-
 declare global {
   var mongoose: {
     conn: typeof import("mongoose") | null;
@@ -23,6 +17,11 @@ if (!cached) {
 export async function connectDB() {
   if (cached.conn) {
     return cached.conn;
+  }
+
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI environment variable is not defined");
   }
 
   if (!cached.promise) {

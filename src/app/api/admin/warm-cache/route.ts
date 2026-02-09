@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { warmLeaderboardCache } from "@/lib/cache-warmer";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Cache Warming Endpoint
  *
