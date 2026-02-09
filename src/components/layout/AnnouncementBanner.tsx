@@ -41,7 +41,7 @@ export function AnnouncementBanner() {
   };
 
   return (
-    <div className="bg-primary text-background h-8 md:h-10 flex justify-between items-center relative z-50 overflow-hidden border-b border-white/5 px-4">
+    <div className="bg-primary text-background h-8 md:h-10 flex justify-between items-center relative z-30 overflow-hidden border-b border-white/5 px-4">
       {/* Background Decorative Pattern (Dots) */}
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--color-background)_1px,_transparent_1px)] bg-[size:10px_10px]" />
       {/* Background Decorative Gradient */}

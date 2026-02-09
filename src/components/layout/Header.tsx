@@ -7,7 +7,8 @@ import { useFocusModeStore } from "@/store/useFocusModeStore";
 import { useThemeStore } from "@/store/themeStore";
 import { themes } from "@/data/themes";
 import { useState, useRef, useEffect } from "react";
-import { Palette, Check, ChevronDown, Menu, X, User, Settings, LogOut } from "lucide-react";
+import { Palette, Check, ChevronDown, Menu, User, Settings, LogOut } from "lucide-react";
+import { MobileMenu } from "./MobileMenu";
 
 const navLinks = [
   {
@@ -114,7 +115,7 @@ export function Header() {
     } else {
       // Show only the logo in its normal position
       return (
-        <header className="bg-background py-3.5 px-6 w-full z-50">
+        <header className="bg-background py-3.5 px-6 w-full z-40">
           <div className="max-w-[1500px] mx-auto grid grid-cols-3 items-center font-['Inter']">
             <div className="flex justify-start">
               <Link href="/" className="text-2xl md:text-3xl font-bold text-primary tracking-tighter cursor-pointer">
@@ -129,310 +130,162 @@ export function Header() {
     }
   }
 
-  return (
-    <header className="bg-background border-b border-surface py-2.5 md:py-3.5 px-4 md:px-6 w-full z-50">
-      <div className="max-w-[1500px] mx-auto grid grid-cols-3 items-center font-['Inter']">
-        {/* Left: Logo */}
-        <div className="flex justify-start">
-          <Link href="/" className="text-2xl md:text-3xl font-bold text-primary tracking-tighter cursor-pointer" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-            KREOTYPE
-          </Link>
-        </div>
-
-        {/* Center: Main Navigation Icons - Hidden on very small mobile, shown as tight icons on medium */}
-        <nav className="hidden md:flex items-center justify-center gap-4 sm:gap-6 md:gap-10 text-secondary">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-
-            if (link.external) {
-              return (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="hover:text-text transition-colors cursor-pointer p-1"
-                  title={link.label}
-                >
-                  <span className="scale-90 md:scale-100 block">{link.icon}</span>
-                </a>
-              );
-            }
-
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`hover:text-text transition-colors cursor-pointer p-1 ${
-                  isActive ? "text-primary" : ""
-                }`}
-                title={link.label}
-              >
-                <span className="scale-90 md:scale-100 block">{link.icon}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Right: Actions and Profile */}
-        <div className="flex justify-end items-center gap-3 sm:gap-6 text-secondary">
-          {/* Theme Changer Dropdown */}
-          <div className="hidden md:block relative" ref={themeDropdownRef}>
-            <button 
-              className={`hover:text-text transition-all cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-surface ${isThemeOpen ? 'text-text bg-surface' : ''}`}
-              title="Change Theme"
-              onClick={() => setIsThemeOpen(!isThemeOpen)}
-            >
-              <Palette size={20} />
-              <span className="hidden lg:inline text-[11px] font-bold uppercase tracking-widest">{currentTheme.label}</span>
-              <ChevronDown size={14} className={`transition-transform duration-200 ${isThemeOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {/* ... dropdown content remains the same ... */}
-            {/* ... dropdown content remains the same ... */}
-
-            {isThemeOpen && (
-              <div className="absolute right-0 mt-2 w-64 max-h-[400px] overflow-y-auto bg-surface border border-surface rounded-xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 scrollbar-hide">
-                <div className="p-2 grid grid-cols-1 gap-1">
-                  <div className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-secondary opacity-40">Select Theme</div>
-                  {themes.map((theme) => {
-                    const isActive = currentTheme.name === theme.name;
-                    return (
-                      <button
-                        key={theme.name}
-                        onClick={() => {
-                          setTheme(theme.name);
-                          setIsThemeOpen(false);
-                        }}
-                        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all text-left group cursor-pointer ${
-                          isActive ? 'bg-primary/10 text-primary' : 'hover:bg-background text-secondary hover:text-text'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="w-3 h-3 rounded-full border border-black/20"
-                            style={{ backgroundColor: theme.colors.primary }}
-                          />
-                          <span className="text-xs font-bold">{theme.label}</span>
-                        </div>
-                        {isActive && <Check size={14} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+    return (
+    <>
+      <header className="bg-background border-b border-surface py-2.5 md:py-3.5 px-4 md:px-6 w-full z-40 relative">
+        <div className="max-w-[1500px] mx-auto flex justify-between items-center font-['Inter']">
+          {/* Left: Logo */}
+          <div className="flex items-center">
+            <Link href="/" className="text-2xl md:text-3xl font-bold text-primary tracking-tighter cursor-pointer" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              KREOTYPE
+            </Link>
           </div>
 
-          {/* Notifications - Hidden on small mobile */}
-          <button className="hover:text-text transition-colors cursor-pointer relative hidden sm:block" title="Notifications">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            <span className="absolute -top-1 -right-1 bg-primary w-2 h-2 rounded-full border-2 border-background" />
-          </button>
-
-          {/* Profile Dropdown */}
-          {session?.user ? (
-            <div className="relative" ref={userDropdownRef}>
-              <button
-                onClick={() => setIsUserOpen(!isUserOpen)}
-                className={`flex items-center gap-1.5 md:gap-2 px-1.5 py-1 rounded-xl transition-all cursor-pointer hover:bg-surface/50 group ${isUserOpen ? 'bg-surface/50 text-text' : 'text-secondary hover:text-text'}`}
-                title="Account"
-              >
-                <div className={`w-8 h-8 md:w-9 md:h-9 rounded-full bg-background border flex items-center justify-center overflow-hidden transition-colors ${isUserOpen ? 'border-primary/50' : 'border-surface group-hover:border-secondary'}`}>
-                  <span className="text-xs md:text-sm font-bold">
-                    {(session.user.name || session.user.email || "U").charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <ChevronDown size={14} className={`transition-transform duration-200 ${isUserOpen ? 'rotate-180' : ''} opacity-60`} />
-              </button>
-
-              {isUserOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-surface border border-surface rounded-xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-                  <div className="p-2">
-                    <div className="px-3 py-2 mb-1">
-                      <p className="text-sm font-bold text-text truncate">{session.user.name || "User"}</p>
-                      <p className="text-xs text-secondary truncate">{session.user.email}</p>
-                    </div>
-                    <div className="h-px bg-white/5 my-1" />
-                    <Link href="/account" onClick={() => setIsUserOpen(false)} className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all text-sm text-left group cursor-pointer text-secondary hover:bg-background hover:text-text">
-                      <User size={16} />
-                      <span>Account</span>
-                    </Link>
-                    <Link href="/account-settings" onClick={() => setIsUserOpen(false)} className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all text-sm text-left group cursor-pointer text-secondary hover:bg-background hover:text-text">
-                      <Settings size={16} />
-                      <span>Settings</span>
-                    </Link>
-                    <div className="h-px bg-white/5 my-1" />
-                    <button
-                      onClick={() => {
-                        setIsUserOpen(false);
-                        signOut({ callbackUrl: "/" });
-                      }}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all text-sm text-left group cursor-pointer text-secondary hover:bg-background hover:text-error"
-                    >
-                      <LogOut size={16} />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link
-              href="/login"
-              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface border border-surface flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
-              title="Sign in"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary w-5 h-5 md:w-6 md:h-6">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </Link>
-          )}
-          {/* Mobile Menu Button */}
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-secondary hover:text-text ml-2">
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 bg-background z-40 p-4 pt-20">
-          <nav className="flex flex-col gap-4">
+          {/* Center: Main Navigation Icons */}
+          <nav className="hidden md:flex items-center justify-center gap-4 sm:gap-6 md:gap-10 text-secondary absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
-
               if (link.external) {
                 return (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="flex items-center gap-4 text-lg font-bold text-secondary hover:text-text transition-colors p-3 rounded-lg hover:bg-surface"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {link.icon}
-                    <span>{link.label}</span>
+                  <a key={link.href} href={link.href} target="_blank" rel="noreferrer noopener" className="hover:text-text transition-colors cursor-pointer p-1" title={link.label}>
+                    <span className="scale-90 md:scale-100 block">{link.icon}</span>
                   </a>
                 );
               }
-
               return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`flex items-center gap-4 text-lg font-bold p-3 rounded-lg hover:bg-surface transition-colors ${
-                    isActive ? "text-primary bg-surface" : "text-secondary hover:text-text"
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {link.icon}
-                  <span>{link.label}</span>
+                <Link key={link.href} href={link.href} className={`hover:text-text transition-colors cursor-pointer p-1 ${isActive ? "text-primary" : ""}`} title={link.label}>
+                  <span className="scale-90 md:scale-100 block">{link.icon}</span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* Spacer */}
-          <div className="flex-1" />
+          {/* Right: Actions and Profile */}
+          <div className="flex justify-end items-center gap-3 sm:gap-6 text-secondary">
+            {/* Theme Changer Dropdown */}
+            <div className="hidden md:block relative" ref={themeDropdownRef}>
+              <button 
+                className={`hover:text-text transition-all cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-surface ${isThemeOpen ? 'text-text bg-surface' : ''}`}
+                title="Change Theme"
+                onClick={() => setIsThemeOpen(!isThemeOpen)}
+              >
+                <Palette size={20} />
+                <span className="hidden lg:inline text-[11px] font-bold uppercase tracking-widest">{currentTheme.label}</span>
+                <ChevronDown size={14} className={`transition-transform duration-200 ${isThemeOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isThemeOpen && (
+                <div className="absolute right-0 mt-2 w-64 max-h-[400px] overflow-y-auto bg-surface border border-surface rounded-xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 scrollbar-hide">
+                  <div className="p-2 grid grid-cols-1 gap-1">
+                    <div className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-secondary opacity-40">Select Theme</div>
+                    {themes.map((theme) => {
+                      const isActive = currentTheme.name === theme.name;
+                      return (
+                        <button
+                          key={theme.name}
+                          onClick={() => {
+                            setTheme(theme.name);
+                            setIsThemeOpen(false);
+                          }}
+                          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all text-left group cursor-pointer ${
+                            isActive ? 'bg-primary/10 text-primary' : 'hover:bg-background text-secondary hover:text-text'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-3 h-3 rounded-full border border-black/20"
+                              style={{ backgroundColor: theme.colors.primary }}
+                            />
+                            <span className="text-xs font-bold">{theme.label}</span>
+                          </div>
+                          {isActive && <Check size={14} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
-          {/* Theme Changer */}
-          <div className="relative">
-            <button 
-              className={`hover:text-text transition-all cursor-pointer flex items-center justify-between w-full p-3 rounded-lg hover:bg-surface ${isThemeOpen ? 'text-text bg-surface' : ''}`}
-              onClick={() => setIsThemeOpen(!isThemeOpen)}
-            >
-              <div className="flex items-center gap-4 text-lg font-bold text-secondary">
-                <Palette size={26} />
-                <span>Theme</span>
-              </div>
-              <ChevronDown size={20} className={`transition-transform duration-200 ${isThemeOpen ? 'rotate-180' : ''}`} />
+            {/* Notifications */}
+            <button className="hover:text-text transition-colors cursor-pointer relative hidden sm:block" title="Notifications">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              <span className="absolute -top-1 -right-1 bg-primary w-2 h-2 rounded-full border-2 border-background" />
             </button>
 
-            {isThemeOpen && (
-              <div className="absolute bottom-full left-0 w-full mb-2 max-h-[250px] overflow-y-auto bg-surface border border-surface rounded-xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 scrollbar-hide">
-                <div className="p-2 grid grid-cols-1 gap-1">
-                  {themes.map((theme) => {
-                    const isActive = currentTheme.name === theme.name;
-                    return (
-                      <button
-                        key={theme.name}
-                        onClick={() => {
-                          setTheme(theme.name);
-                          setIsThemeOpen(false);
-                        }}
-                        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all text-left group cursor-pointer ${
-                          isActive ? 'bg-primary/10 text-primary' : 'hover:bg-background text-secondary hover:text-text'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="w-3 h-3 rounded-full border border-black/20"
-                            style={{ backgroundColor: theme.colors.primary }}
-                          />
-                          <span className="text-xs font-bold">{theme.label}</span>
-                        </div>
-                        {isActive && <Check size={14} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="absolute bottom-8 left-4 right-4 flex flex-col gap-4">
-            {/* Profile */}
+            {/* Profile Dropdown */}
             {session?.user ? (
-              <div className="flex items-center justify-between gap-2 sm:gap-4 p-3 rounded-lg bg-surface">
-                <Link
-                  href="/account"
-                  className="flex items-center gap-3"
-                  onClick={() => setIsMobileMenuOpen(false)}
+              <div className="relative" ref={userDropdownRef}>
+                <button
+                  onClick={() => setIsUserOpen(!isUserOpen)}
+                  className={`flex items-center gap-1.5 md:gap-2 px-1.5 py-1 rounded-xl transition-all cursor-pointer hover:bg-surface/50 group ${isUserOpen ? 'bg-surface/50 text-text' : 'text-secondary hover:text-text'}`}
+                  title="Account"
                 >
-                  <div
-                    className="w-10 h-10 rounded-full bg-background border border-surface flex items-center justify-center cursor-pointer overflow-hidden"
-                  >
-                    <span className="text-sm font-medium text-secondary">
+                  <div className={`w-8 h-8 md:w-9 md:h-9 rounded-full bg-background border flex items-center justify-center overflow-hidden transition-colors ${isUserOpen ? 'border-primary/50' : 'border-surface group-hover:border-secondary'}`}>
+                    <span className="text-xs md:text-sm font-bold">
                       {(session.user.name || session.user.email || "U").charAt(0).toUpperCase()}
                     </span>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-text">{session.user.name || session.user.email}</span>
-                    <span className="text-xs text-secondary">Account</span>
-                  </div>
-                </Link>
-                <button
-                  onClick={() => {
-                    signOut({ callbackUrl: "/" });
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="hover:text-text transition-colors cursor-pointer text-secondary"
-                  title="Sign out"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${isUserOpen ? 'rotate-180' : ''} opacity-60`} />
                 </button>
+                {isUserOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-surface border border-surface rounded-xl shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                    <div className="p-2">
+                      <div className="px-3 py-2 mb-1">
+                        <p className="text-sm font-bold text-text truncate">{session.user.name || "User"}</p>
+                        <p className="text-xs text-secondary truncate">{session.user.email}</p>
+                      </div>
+                      <div className="h-px bg-white/5 my-1" />
+                      <Link href="/account" onClick={() => setIsUserOpen(false)} className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all text-sm text-left group cursor-pointer text-secondary hover:bg-background hover:text-text">
+                        <User size={16} />
+                        <span>Account</span>
+                      </Link>
+                      <Link href="/account-settings" onClick={() => setIsUserOpen(false)} className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all text-sm text-left group cursor-pointer text-secondary hover:bg-background hover:text-text">
+                        <Settings size={16} />
+                        <span>Settings</span>
+                      </Link>
+                      <div className="h-px bg-white/5 my-1" />
+                      <button
+                        onClick={() => {
+                          setIsUserOpen(false);
+                          signOut({ callbackUrl: "/" });
+                        }}
+                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all text-sm text-left group cursor-pointer text-secondary hover:bg-background hover:text-error"
+                      >
+                        <LogOut size={16} />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <Link
                 href="/login"
-                className="w-full bg-primary text-background font-bold py-4 px-6 rounded-xl text-center hover:opacity-90 transition-opacity"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface border border-surface flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
+                title="Sign in"
               >
-                Sign In
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary w-5 h-5 md:w-6 md:h-6">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
               </Link>
             )}
+            
+            {/* Mobile Menu Button */}
+            <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-secondary hover:text-text ml-2">
+              <Menu size={24} />
+            </button>
           </div>
         </div>
-      )}
-    </header>
+      </header>
+
+      <MobileMenu 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)} 
+      />
+    </>
   );
 }

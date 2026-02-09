@@ -25,17 +25,17 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Kreotype — Minimalist Typing Test",
-  description: "A minimalist, open-source typing test. Track your speed, accuracy, and consistency.",
+  description: "Test your typing speed, compete on leaderboards, and track your progress over time. Free and open-source.",
   openGraph: {
     title: "Kreotype — Minimalist Typing Test",
-    description: "A minimalist, open-source typing test. Track your speed, accuracy, and consistency.",
+    description: "Test your typing speed, compete on leaderboards, and track your progress over time. Free and open-source.",
     images: [{ url: "/images/og-image.svg", width: 1200, height: 630 }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Kreotype — Minimalist Typing Test",
-    description: "A minimalist, open-source typing test.",
+    description: "Test your typing speed, compete on leaderboards, and track your progress over time.",
     images: ["/images/og-image.svg"],
   },
 };
