@@ -30,7 +30,7 @@ export default function LoginPage() {
       });
 
       if (res?.error) {
-        setLoginError(useOtp ? "Invalid or expired code" : "Invalid email or password");
+        setLoginError(useOtp ? "Invalid or expired code" : "Invalid email/username or password");
       } else {
         router.push("/");
       }
@@ -43,7 +43,7 @@ export default function LoginPage() {
 
   const requestOtp = async () => {
     if (!loginEmail) {
-      setLoginError("Please enter your email first");
+      setLoginError("Please enter your email or username first");
       return;
     }
 

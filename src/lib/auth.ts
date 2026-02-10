@@ -30,7 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         await connectDB();
         const identifier = credentials.email as string;
-        
+
         // Find user by email (case-insensitive) or username (case-insensitive)
         const user = await User.findOne({
           $or: [
@@ -102,7 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             await existing.save();
           }
         } else {
-          // Create new user from OAuth with retry for username race condition
+          // Create new user from OAuth — assign temp username, require setup
           const baseName = (user.name || user.email.split("@")[0]!)
             .replace(/[^a-zA-Z0-9_]/g, "")
             .slice(0, 16);
@@ -115,7 +115,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               if (attempt > 0 || await User.findOne({ username })) {
                 suffix++;
                 username = `${baseName.slice(0, 12)}${suffix}`;
-                // Re-check availability for first attempt's fallback
                 if (attempt === 0) continue;
               }
 
@@ -123,6 +122,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 username,
                 email: user.email.toLowerCase(),
                 image: user.image || null,
+                needsUsername: true,
                 accounts: [
                   {
                     provider: account.provider,
@@ -130,7 +130,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   },
                 ],
               });
-              break; // Success
+              break;
             } catch (err: unknown) {
               const isDuplicateKey =
                 err instanceof Error &&
@@ -139,7 +139,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               if (!isDuplicateKey || attempt === maxRetries - 1) {
                 throw err;
               }
-              // Duplicate key: retry with new suffix
               suffix++;
               username = `${baseName.slice(0, 12)}${suffix}`;
             }
@@ -149,24 +148,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, trigger }) {
       if (user) {
-        if (user.id) {
+        await connectDB();
+
+        if (account?.provider === "credentials") {
+          // For credentials, user.id is already the MongoDB _id
           token.userId = user.id;
+          const dbUser = await User.findById(user.id).select("needsUsername");
+          token.needsUsername = dbUser?.needsUsername ?? false;
         } else if (user.email) {
-          await connectDB();
-          const dbUser = await User.findOne({ email: user.email.toLowerCase() });
+          // For OAuth providers, always resolve MongoDB _id from email
+          const dbUser = await User.findOne(
+            { email: user.email.toLowerCase() },
+            { _id: 1, needsUsername: 1 }
+          );
           if (dbUser) {
             token.userId = dbUser._id.toString();
+            token.needsUsername = dbUser.needsUsername ?? false;
           }
         }
       }
+
+      // Re-check needsUsername from DB when session is refreshed
+      if (trigger === "update" && token.userId) {
+        await connectDB();
+        const dbUser = await User.findById(token.userId).select("needsUsername");
+        token.needsUsername = dbUser?.needsUsername ?? false;
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token.userId) {
-        session.user.id = token.userId as string;
+        session.user.id = token.userId;
       }
+      session.needsUsername = token.needsUsername ?? false;
       return session;
     },
   },

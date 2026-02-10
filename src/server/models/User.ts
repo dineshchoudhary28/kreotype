@@ -38,6 +38,7 @@ export interface IUser extends Document {
   passwordHash: string | null;
   image: string | null;
   accounts: IAccount[];
+  needsUsername: boolean;
   testsStarted: number;
   testsCompleted: number;
   timeTyping: number;
@@ -105,6 +106,7 @@ const userSchema = new Schema<IUser>(
     passwordHash: { type: String, default: null },
     image: { type: String, default: null },
     accounts: { type: [accountSchema], default: [] },
+    needsUsername: { type: Boolean, default: false },
     testsStarted: { type: Number, default: 0 },
     testsCompleted: { type: Number, default: 0 },
     timeTyping: { type: Number, default: 0 },

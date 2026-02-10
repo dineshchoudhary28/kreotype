@@ -74,11 +74,14 @@ export function Header() {
   const currentTheme = useThemeStore((s) => s.currentTheme);
   const setTheme = useThemeStore((s) => s.setTheme);
   
+  const [mounted, setMounted] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [isUserOpen, setIsUserOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const themeDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => setMounted(true), []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -153,7 +156,7 @@ export function Header() {
                 );
               }
               return (
-                <Link key={link.href} href={link.href} className={`hover:text-text transition-colors cursor-pointer p-1 ${isActive ? "text-primary" : ""}`} title={link.label}>
+                <Link key={link.href} href={link.href} className={`hover:text-text transition-colors cursor-pointer p-1 ${mounted && isActive ? "text-primary" : ""}`} title={link.label}>
                   <span className="scale-90 md:scale-100 block">{link.icon}</span>
                 </Link>
               );
