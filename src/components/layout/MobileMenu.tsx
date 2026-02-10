@@ -78,7 +78,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="md:hidden fixed inset-0 bg-background z-50 p-4 flex flex-col overflow-y-auto pb-8">
+    <div data-mobile-menu className="md:hidden fixed inset-0 bg-background z-50 p-4 flex flex-col overflow-y-auto pb-8">
       <div className="flex justify-between items-center mb-8">
         <Link href="/" className="text-2xl md:text-3xl font-bold text-primary tracking-tighter cursor-pointer" style={{ fontFamily: "'DM Sans', sans-serif" }}>
           KREOTYPE

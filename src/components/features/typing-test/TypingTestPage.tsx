@@ -108,6 +108,7 @@ export function TypingTestPage() {
 
   // Focus mode store
   const setFocused = useFocusModeStore((s) => s.setFocused);
+  const setShowUITemporarily = useFocusModeStore((s) => s.setShowUITemporarily);
 
   // Mount test timer (drives tick() every 1s while active)
   useTestTimer();
@@ -197,20 +198,33 @@ export function TypingTestPage() {
 
   // Global listener to refocus input when blurred (keyboard + touch)
   useEffect(() => {
-    const refocusInput = () => {
+    const refocusInputOnKey = () => {
       if (!isInputFocused && !isFinished) {
         inputRef.current?.focus();
         setIsInputFocused(true);
       }
     };
 
-    document.addEventListener("keydown", refocusInput);
-    document.addEventListener("touchstart", refocusInput);
-    document.addEventListener("click", refocusInput);
+    // For touch/click: skip refocus when tapping on navigation elements (header, mobile menu)
+    // to prevent the mobile keyboard from hijacking hamburger menu taps
+    const refocusInputOnInteraction = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("header") || target.closest("[data-mobile-menu]") || target.closest("nav")) {
+        return;
+      }
+      if (!isInputFocused && !isFinished) {
+        inputRef.current?.focus();
+        setIsInputFocused(true);
+      }
+    };
+
+    document.addEventListener("keydown", refocusInputOnKey);
+    document.addEventListener("touchstart", refocusInputOnInteraction);
+    document.addEventListener("click", refocusInputOnInteraction);
     return () => {
-      document.removeEventListener("keydown", refocusInput);
-      document.removeEventListener("touchstart", refocusInput);
-      document.removeEventListener("click", refocusInput);
+      document.removeEventListener("keydown", refocusInputOnKey);
+      document.removeEventListener("touchstart", refocusInputOnInteraction);
+      document.removeEventListener("click", refocusInputOnInteraction);
     };
   }, [isInputFocused, isFinished]);
 
@@ -279,6 +293,9 @@ export function TypingTestPage() {
 
       if (isFinished || isPaused) return;
 
+      // Hide temporarily shown UI when user resumes typing
+      setShowUITemporarily(false);
+
       // Space to move to next word
       if (e.key === " ") {
         e.preventDefault();
@@ -299,7 +316,7 @@ export function TypingTestPage() {
         handleInput(e.key);
       }
     },
-    [isFinished, isPaused, isActive, handleInput, handleBackspace, handleSpace, initializeTest, resetTest, incrementTab, recordKeydown]
+    [isFinished, isPaused, isActive, handleInput, handleBackspace, handleSpace, initializeTest, resetTest, incrementTab, recordKeydown, setShowUITemporarily]
   );
 
   // Reset tab state on key up
@@ -328,6 +345,9 @@ export function TypingTestPage() {
         return;
       }
 
+      // Hide temporarily shown UI when user resumes typing (mobile)
+      setShowUITemporarily(false);
+
       if (nativeEvent.inputType === "insertText" && nativeEvent.data) {
         e.preventDefault();
         for (const char of nativeEvent.data) {
@@ -347,7 +367,7 @@ export function TypingTestPage() {
         e.preventDefault();
       }
     },
-    [isFinished, isPaused, handleInput, handleSpace, handleBackspace]
+    [isFinished, isPaused, handleInput, handleSpace, handleBackspace, setShowUITemporarily]
   );
 
   // Fallback input handler for older mobile browsers that don't support beforeinput.
