@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
 
-  const existingUsername = await User.findOne({ username });
+  const existingUsername = await User.findOne({ username }).collation({
+    locale: "en",
+    strength: 2,
+  });
   if (existingUsername) {
     return NextResponse.json({ error: "Username already taken" }, { status: 409 });
   }

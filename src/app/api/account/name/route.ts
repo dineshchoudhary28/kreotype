@@ -43,7 +43,10 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const existing = await User.findOne({ username });
+    const existing = await User.findOne({ username }).collation({
+      locale: "en",
+      strength: 2,
+    });
     if (existing && existing._id.toString() !== session.user!.id) {
       return NextResponse.json({ error: "Username already taken" }, { status: 409 });
     }

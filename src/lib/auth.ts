@@ -6,6 +6,25 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/server/models/User";
 import { verifyOTP } from "@/lib/otp";
 
+const ADJECTIVES = [
+  "swift", "silent", "rapid", "cosmic", "lunar", "stellar", "neon", "cyber",
+  "turbo", "hyper", "ultra", "mega", "pixel", "glitch", "blur", "flash",
+  "crisp", "sharp", "slick", "bold", "fierce", "zen", "frost", "ember",
+];
+
+const NOUNS = [
+  "typer", "keys", "fox", "wolf", "hawk", "lynx", "puma", "raven",
+  "spark", "bolt", "dash", "byte", "bit", "code", "node", "pulse",
+  "ghost", "shade", "storm", "blaze", "flare", "drift", "echo", "void",
+];
+
+function generateRandomUsername(): string {
+  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]!;
+  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)]!;
+  const num = Math.floor(Math.random() * 999);
+  return `${adj}_${noun}${num}`;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
@@ -102,27 +121,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             await existing.save();
           }
         } else {
-          // Create new user from OAuth — assign temp username, require setup
-          const baseName = (user.name || user.email.split("@")[0]!)
-            .replace(/[^a-zA-Z0-9_]/g, "")
-            .slice(0, 16);
-          let username = baseName || "user";
-          let suffix = 0;
+          // Create new user with a random valid username
           const maxRetries = 5;
-
           for (let attempt = 0; attempt < maxRetries; attempt++) {
             try {
-              if (attempt > 0 || await User.findOne({ username })) {
-                suffix++;
-                username = `${baseName.slice(0, 12)}${suffix}`;
-                if (attempt === 0) continue;
-              }
-
               await User.create({
-                username,
+                username: generateRandomUsername(),
                 email: user.email.toLowerCase(),
                 image: user.image || null,
-                needsUsername: true,
                 accounts: [
                   {
                     provider: account.provider,
@@ -139,8 +145,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               if (!isDuplicateKey || attempt === maxRetries - 1) {
                 throw err;
               }
-              suffix++;
-              username = `${baseName.slice(0, 12)}${suffix}`;
             }
           }
         }
@@ -153,28 +157,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await connectDB();
 
         if (account?.provider === "credentials") {
-          // For credentials, user.id is already the MongoDB _id
           token.userId = user.id;
-          const dbUser = await User.findById(user.id).select("needsUsername");
-          token.needsUsername = dbUser?.needsUsername ?? false;
+          const dbUser = await User.findById(user.id).select("username");
+          token.name = dbUser?.username ?? user.name;
         } else if (user.email) {
-          // For OAuth providers, always resolve MongoDB _id from email
           const dbUser = await User.findOne(
             { email: user.email.toLowerCase() },
-            { _id: 1, needsUsername: 1 }
+            { _id: 1, username: 1 }
           );
           if (dbUser) {
             token.userId = dbUser._id.toString();
-            token.needsUsername = dbUser.needsUsername ?? false;
+            token.name = dbUser.username;
           }
         }
       }
 
-      // Re-check needsUsername from DB when session is refreshed
+      // Refresh username from DB when session is updated (e.g. after username change)
       if (trigger === "update" && token.userId) {
         await connectDB();
-        const dbUser = await User.findById(token.userId).select("needsUsername");
-        token.needsUsername = dbUser?.needsUsername ?? false;
+        const dbUser = await User.findById(token.userId).select("username");
+        token.name = dbUser?.username ?? token.name;
+      }
+
+      // Self-healing: if userId is missing but we have an email, resolve from DB.
+      // Handles stale JWT cookies from previous auth flow changes.
+      if (!token.userId && token.email) {
+        await connectDB();
+        const dbUser = await User.findOne(
+          { email: (token.email as string).toLowerCase() },
+          { _id: 1, username: 1 }
+        );
+        if (dbUser) {
+          token.userId = dbUser._id.toString();
+          token.name = dbUser.username;
+        }
       }
 
       return token;
@@ -183,7 +199,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.userId) {
         session.user.id = token.userId;
       }
-      session.needsUsername = token.needsUsername ?? false;
+      session.user.name = token.name as string | undefined;
       return session;
     },
   },
