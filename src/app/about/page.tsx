@@ -23,7 +23,7 @@ export default function AboutPage() {
             Master Your Typing Skills
           </h2>
           <p className="text-base text-secondary leading-relaxed mb-4">
-            Kreotype is a minimalistic, customizable typing test platform designed to help you improve
+            Kreotype is a dynamic, customizable typing test platform designed to help you improve
             your typing speed and accuracy. Built with modern web technologies, Kreotype offers a smooth,
             distraction-free experience that emulates natural keyboard typing.
           </p>
