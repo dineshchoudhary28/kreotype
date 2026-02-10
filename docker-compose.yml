@@ -10,24 +10,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    ports:
+      - "3000:3000"
     restart: unless-stopped
-    networks:
-      - default
-      - coolify
-    labels:
-      - "traefik.enable=true"
-      # HTTPS router (Cloudflare Full mode — uses Traefik default cert)
-      - "traefik.http.routers.kreotype.rule=Host(`kreotype.com`) || Host(`www.kreotype.com`)"
-      - "traefik.http.routers.kreotype.entrypoints=https"
-      - "traefik.http.routers.kreotype.tls=true"
-      - "traefik.http.services.kreotype.loadbalancer.server.port=3000"
-      # HTTP router (Cloudflare Flexible fallback — no redirect, serve directly)
-      - "traefik.http.routers.kreotype-http.rule=Host(`kreotype.com`) || Host(`www.kreotype.com`)"
-      - "traefik.http.routers.kreotype-http.entrypoints=http"
-      - "traefik.http.routers.kreotype-http.service=kreotype"
 
   mongo:
     image: mongo:7
+    ports:
+      - "27017:27017"
     volumes:
       - mongo_data:/data/db
     env_file:
@@ -58,7 +48,3 @@ services:
 volumes:
   mongo_data:
   redis_data:
-
-networks:
-  coolify:
-    external: true
