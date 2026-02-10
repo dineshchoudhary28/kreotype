@@ -588,7 +588,7 @@ export function TypingTestPage() {
 
         <div
           className={clsx(
-            "text-2xl md:text-3xl leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2 transition-all duration-300",
+            "text-2xl md:text-3xl leading-relaxed md:leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2 transition-all duration-300",
             !isInputFocused && "blur-sm"
           )}
         >

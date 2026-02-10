@@ -192,7 +192,7 @@ export default function AccountPage() {
 
     // Current streak: consecutive days backward from today
     let current = 0;
-    let d = new Date(today);
+    const d = new Date(today);
     // If today has no activity, start from yesterday
     if (!activityMap.has(d.toISOString().slice(0, 10))) {
       d.setDate(d.getDate() - 1);

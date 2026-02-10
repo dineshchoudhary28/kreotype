@@ -7,8 +7,11 @@ import { useFocusModeStore } from "@/store/useFocusModeStore";
 import { useThemeStore } from "@/store/themeStore";
 import { themes } from "@/data/themes";
 import { useState, useRef, useEffect } from "react";
-import { Palette, Check, ChevronDown, Menu, User, Settings, LogOut } from "lucide-react";
+import { Palette, Check, ChevronDown, Menu, User, Settings, LogOut, X } from "lucide-react";
 import { MobileMenu } from "./MobileMenu";
+import { AnimatePresence, motion } from "framer-motion";
+
+const ANNOUNCEMENT_STORAGE_KEY = "kreotype_announcement_dismissed";
 
 const navLinks = [
   {
@@ -78,10 +81,45 @@ export function Header() {
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [isUserOpen, setIsUserOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isBannerVisible, setIsBannerVisible] = useState(false);
+
+  const headerRef = useRef<HTMLElement>(null);
   const themeDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  // Close everything on route change
+  /* eslint-disable react-hooks/set-state-in-effect -- legitimate route-change and hydration sync */
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsNotificationOpen(false);
+    setIsUserOpen(false);
+    setIsThemeOpen(false);
+  }, [pathname]);
 
   useEffect(() => setMounted(true), []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    function measure() {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.getBoundingClientRect().bottom);
+      }
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [isBannerVisible]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isDismissed = localStorage.getItem(ANNOUNCEMENT_STORAGE_KEY);
+      if (!isDismissed) {
+        setTimeout(() => setIsBannerVisible(true), 0);
+      }
+    }
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -97,18 +135,17 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Prevent body scroll when mobile menu is open
+  // Prevent body scroll when mobile menu or notification panel is open
   useEffect(() => {
-    if (isMobileMenuOpen) {
+    if (isMobileMenuOpen || isNotificationOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-    // Cleanup on component unmount
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, isNotificationOpen]);
 
   // In focus mode on home page
   if (pathname === "/" && isFocused) {
@@ -135,7 +172,7 @@ export function Header() {
 
     return (
     <>
-      <header className="bg-background border-b border-surface py-2.5 md:py-3.5 px-4 md:px-6 w-full z-40 relative">
+      <header ref={headerRef} className="bg-background border-b border-surface py-2.5 md:py-3.5 px-4 md:px-6 w-full z-40 relative">
         <div className="max-w-[1500px] mx-auto flex justify-between items-center font-['Inter']">
           {/* Left: Logo */}
           <div className="flex items-center">
@@ -210,19 +247,33 @@ export function Header() {
             </div>
 
             {/* Notifications */}
-            <button className="hover:text-text transition-colors cursor-pointer relative hidden sm:block" title="Notifications">
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsUserOpen(false);
+                setIsThemeOpen(false);
+                setIsNotificationOpen((prev) => !prev);
+              }}
+              className={`hover:text-text transition-colors cursor-pointer relative ${isNotificationOpen ? "text-primary" : ""}`}
+              title="Notifications"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
-              <span className="absolute -top-1 -right-1 bg-primary w-2 h-2 rounded-full border-2 border-background" />
+              {!isNotificationOpen && <span className="absolute -top-1 -right-1 bg-primary w-2 h-2 rounded-full border-2 border-background" />}
             </button>
 
             {/* Profile Dropdown */}
             {session?.user ? (
               <div className="relative" ref={userDropdownRef}>
                 <button
-                  onClick={() => setIsUserOpen(!isUserOpen)}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsNotificationOpen(false);
+                    setIsThemeOpen(false);
+                    setIsUserOpen((prev) => !prev);
+                  }}
                   className={`flex items-center gap-1.5 md:gap-2 px-1.5 py-1 rounded-xl transition-all cursor-pointer hover:bg-surface/50 group ${isUserOpen ? 'bg-surface/50 text-text' : 'text-secondary hover:text-text'}`}
                   title="Account"
                 >
@@ -277,18 +328,240 @@ export function Header() {
               </Link>
             )}
             
-            {/* Mobile Menu Button */}
-            <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-secondary hover:text-text ml-2">
-              <Menu size={24} />
+            {/* Mobile Menu Button — transitions between hamburger and X */}
+            <button
+              onClick={() => {
+                setIsNotificationOpen(false);
+                setIsUserOpen(false);
+                setIsThemeOpen(false);
+                setIsMobileMenuOpen((prev) => !prev);
+              }}
+              className="md:hidden text-secondary hover:text-text ml-2 transition-colors"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {isMobileMenuOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <X size={24} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <Menu size={24} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
           </div>
         </div>
       </header>
 
-      <MobileMenu 
-        isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)} 
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <MobileMenu
+            onClose={() => setIsMobileMenuOpen(false)}
+            topOffset={headerHeight}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isNotificationOpen && (
+          <NotificationPanel
+            onClose={() => setIsNotificationOpen(false)}
+            topOffset={headerHeight}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+const swarm65Images = [
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Frame1000006038.png?v=1764739426&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.622.png?v=1764825408&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.623.png?v=1764825408&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.626.png?v=1764825408&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.624.png?v=1764825408&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/Swarm_65_Material.bip.620.png?v=1764825408&width=1080",
+];
+
+const swarmWhiteImages = [
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.489.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.491.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.490.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.427_ded55aee-2e01-4dcc-bc87-79d332dbbaed.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.493.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.494.png?v=1763559972&width=1080",
+  "https://cdn.shopify.com/s/files/1/0619/4325/1121/files/swarm_pass_through_material_file.bip.429.png?v=1763559972&width=1080",
+];
+
+function NotificationPanel({ onClose, topOffset }: { onClose: () => void; topOffset: number }) {
+  const [swarm65Index, setSwarm65Index] = useState(0);
+  const [swarmWhiteIndex, setSwarmWhiteIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSwarm65Index((prev) => (prev + 1) % swarm65Images.length);
+      setSwarmWhiteIndex((prev) => (prev + 1) % swarmWhiteImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 bg-black/40 z-50"
+        style={{ top: topOffset }}
+        onClick={onClose}
       />
+
+      {/* Panel — slides from right */}
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="fixed right-0 w-full max-w-sm bg-background border-l border-surface z-50 flex flex-col shadow-2xl"
+        style={{ top: topOffset, height: `calc(100% - ${topOffset}px)` }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-surface">
+          <div className="flex items-center gap-2.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <h2 className="text-sm font-bold text-text uppercase tracking-widest">Notifications</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-secondary hover:text-text transition-colors cursor-pointer p-1 rounded-lg hover:bg-surface"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+          {/* Swarm65 Black Purple Ad */}
+          <a
+            href="https://kreo-tech.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <div className="group relative overflow-hidden rounded-2xl bg-surface border border-surface cursor-pointer hover:border-primary/30 transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+              <div className="relative aspect-[16/10] overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={swarm65Images[swarm65Index]}
+                    src={swarm65Images[swarm65Index]}
+                    alt="Swarm65 Black Purple"
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full h-full object-cover"
+                  />
+                </AnimatePresence>
+                <div className="absolute top-3 left-3 bg-primary text-background text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg shadow-primary/30 z-10">
+                  New Arrival
+                </div>
+              </div>
+
+              <div className="relative p-4 flex flex-col gap-2">
+                <span className="text-primary text-[10px] font-black uppercase tracking-widest">Swarm Series</span>
+                <h4 className="text-lg font-black text-text uppercase tracking-tighter leading-tight">
+                  Swarm65 <span className="text-primary italic">Black Purple</span>
+                </h4>
+                <p className="text-secondary text-xs font-medium opacity-80 leading-relaxed">
+                  Wireless Mechanical Gaming Keyboard with premium switches and elite purple accents.
+                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-primary/50 text-[10px] font-bold tracking-widest uppercase">kreo-tech.com</span>
+                  <span className="text-primary text-xs font-bold">Shop Now &rarr;</span>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          {/* Swarm White Purple Ad */}
+          <a
+            href="https://kreo-tech.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <div className="group relative overflow-hidden rounded-2xl bg-surface border border-surface cursor-pointer hover:border-primary/30 transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+              <div className="relative aspect-square rounded-t-2xl overflow-hidden bg-background/40">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={swarmWhiteImages[swarmWhiteIndex]}
+                    src={swarmWhiteImages[swarmWhiteIndex]}
+                    alt="Swarm White Purple"
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full h-full object-cover"
+                  />
+                </AnimatePresence>
+                <div className="absolute top-3 left-3 bg-primary text-background text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg shadow-primary/20 z-10">
+                  Wireless Elite
+                </div>
+              </div>
+
+              <div className="relative p-4 flex flex-col gap-2">
+                <span className="text-primary text-[10px] font-black uppercase tracking-widest">Swarm Series</span>
+                <h4 className="text-lg font-black text-text uppercase tracking-tighter leading-tight">
+                  Swarm <span className="text-primary italic">White</span> Purple
+                </h4>
+                <p className="text-secondary text-xs font-medium opacity-80 leading-relaxed">
+                  Clean aesthetic meets mechanical precision. Tri-mode connectivity for seamless gaming.
+                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-primary/50 text-[10px] font-bold tracking-widest uppercase">kreo-tech.com</span>
+                  <span className="text-primary text-xs font-bold">Shop Now &rarr;</span>
+                </div>
+
+                <div className="flex items-center gap-3 mt-2 pt-3 border-t border-surface/50">
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="w-5 h-5 rounded-full border-2 border-surface bg-surface" />
+                    ))}
+                  </div>
+                  <span className="text-[9px] text-secondary font-bold uppercase tracking-widest opacity-60">+200 reviews</span>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          {/* Empty state */}
+          <div className="text-center py-4">
+            <p className="text-[10px] text-secondary/40 font-bold uppercase tracking-widest">No new notifications</p>
+          </div>
+        </div>
+      </motion.div>
     </>
   );
 }

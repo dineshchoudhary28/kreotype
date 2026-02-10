@@ -6,7 +6,8 @@ import { useSession, signOut } from "next-auth/react";
 import { useThemeStore } from "@/store/themeStore";
 import { themes } from "@/data/themes";
 import { useState } from "react";
-import { Palette, Check, ChevronDown, X, User, Settings, LogOut } from "lucide-react";
+import { Palette, Check, ChevronDown } from "lucide-react";
+import { motion } from "framer-motion";
 
 const navLinks = [
   {
@@ -64,31 +65,38 @@ const navLinks = [
 ];
 
 interface MobileMenuProps {
-  isOpen: boolean;
   onClose: () => void;
+  topOffset: number;
 }
 
-export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
+export function MobileMenu({ onClose, topOffset }: MobileMenuProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const currentTheme = useThemeStore((s) => s.currentTheme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
 
-  if (!isOpen) return null;
-
   return (
-    <div data-mobile-menu className="md:hidden fixed inset-0 bg-background z-50 p-4 flex flex-col overflow-y-auto pb-8">
-      <div className="flex justify-between items-center mb-8">
-        <Link href="/" className="text-2xl md:text-3xl font-bold text-primary tracking-tighter cursor-pointer" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-          KREOTYPE
-        </Link>
-        <button onClick={onClose} className="text-secondary hover:text-text">
-          <X size={24} />
-        </button>
-      </div>
-
-      <nav className="flex flex-col gap-4">
+    <>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="md:hidden fixed inset-0 bg-background/50 z-40"
+      onClick={onClose}
+      style={{ top: topOffset }}
+    />
+    <motion.div
+      initial={{ x: "100%" }}
+      animate={{ x: 0 }}
+      exit={{ x: "100%" }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      data-mobile-menu
+      className="md:hidden fixed right-0 w-full max-w-sm bg-background z-50 p-4 flex flex-col overflow-y-auto pb-8"
+      style={{ top: topOffset, height: `calc(100% - ${topOffset}px)` }}
+    >
+      <nav className="flex flex-col gap-4 mt-2">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
 
@@ -218,6 +226,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           </Link>
         )}
       </div>
-    </div>
+    </motion.div>
+    </>
   );
 }

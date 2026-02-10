@@ -243,28 +243,28 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
     : [{ time: 1, wpm: stats.wpm, raw: stats.rawWpm }];
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row w-full max-w-[1500px] mx-auto py-8 md:py-12 px-4 md:px-6 gap-8 md:gap-12 animate-in fade-in zoom-in-95 duration-700">
+    <div className="flex-1 flex flex-col lg:flex-row w-full max-w-[1500px] mx-auto py-8 md:py-12 px-4 md:px-6 gap-6 md:gap-12 animate-in fade-in zoom-in-95 duration-700">
       {/* Left Content Area (Stats & Graph) */}
       <div ref={shareRef} className="flex-1 flex flex-col min-w-0">
         {/* Main Header Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mb-8 md:mb-10">
-          <div className="md:col-span-3 flex flex-row md:flex-col justify-around md:justify-start md:gap-10">
-            <div className="flex flex-col group">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start mb-8 md:mb-10">
+          <div className="md:col-span-3 flex flex-row md:flex-col justify-around md:justify-start gap-4 md:gap-10">
+            <div className="flex flex-col items-center md:items-start group">
               <span className="text-secondary text-[10px] md:text-sm font-bold uppercase tracking-[0.2em] mb-1 opacity-50 group-hover:opacity-100 transition-opacity">wpm</span>
-              <span className="text-primary text-5xl md:text-8xl font-black leading-none tabular-nums tracking-tighter">
+              <span className="text-primary text-5xl sm:text-6xl md:text-8xl font-black leading-none tabular-nums tracking-tighter">
                 {stats.wpm}
               </span>
             </div>
-            <div className="flex flex-col group">
+            <div className="flex flex-col items-center md:items-start group">
               <span className="text-secondary text-[10px] md:text-sm font-bold uppercase tracking-[0.2em] mb-1 opacity-50 group-hover:opacity-100 transition-opacity">accuracy</span>
-              <span className="text-primary text-5xl md:text-8xl font-black leading-none tabular-nums tracking-tighter">
+              <span className="text-primary text-5xl sm:text-6xl md:text-8xl font-black leading-none tabular-nums tracking-tighter">
                 {stats.accuracy}%
               </span>
             </div>
           </div>
 
           {/* Graph Section */}
-          <div className="md:col-span-9 h-[250px] md:h-[400px] w-full bg-surface/40 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 relative group overflow-hidden border border-surface shadow-2xl">
+          <div className="md:col-span-9 h-[200px] sm:h-[250px] md:h-[400px] w-full bg-surface/40 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 relative group overflow-hidden border border-surface shadow-2xl">
             <div className="absolute top-4 md:top-6 left-4 md:left-8 flex items-center gap-4 md:gap-6 z-10">
               <div className="flex items-center gap-2 group/legend cursor-help">
                 <div className="w-2 md:w-2.5 h-2 md:h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--color-primary),0.5)]" />
@@ -277,7 +277,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
             </div>
 
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 50, right: 0, left: -20, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 40, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorWpm" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.4} />
@@ -318,7 +318,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                   type="monotone"
                   dataKey="wpm"
                   stroke="var(--color-primary)"
-                  strokeWidth={4}
+                  strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorWpm)"
                   activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--color-primary)' }}
@@ -328,7 +328,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
           </div>
         </div>
         {/* Secondary Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8 mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8 mb-10">
           <StatItem label="test type" value={mode} subValue={value} />
           <StatItem label="raw wpm" value={stats.rawWpm.toString()} />
           <StatItem label="consistency" value={`${stats.consistency}%`} />
@@ -381,7 +381,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
           rel="noopener noreferrer"
           className="block w-full"
         >
-          <div className="group relative w-full overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] bg-surface border border-surface shadow-2xl h-[250px] md:h-[300px] cursor-pointer hover:border-primary/30 transition-all duration-300">
+          <div className="group relative w-full overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] bg-surface border border-surface shadow-2xl h-auto md:h-[300px] cursor-pointer hover:border-primary/30 transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
             <AnimatePresence mode="wait">
@@ -415,7 +415,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                 </p>
               </div>
 
-              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 w-full md:w-auto">
+              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 w-full md:w-auto mt-4 md:mt-0">
                 <div className="w-full md:w-auto flex items-center justify-center gap-3 bg-primary text-background px-6 md:px-8 py-3 md:py-4 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest group-hover:opacity-90 transition-all shadow-xl">
                   Shop Now
                   <ExternalLink className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -507,42 +507,81 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
 }
 
 function StatItem({
+
   label,
+
   value,
+
   subValue,
+
   tooltip
+
 }: {
+
   label: string;
+
   value: string | number | undefined;
+
   subValue?: string;
+
   tooltip?: string;
+
 }) {
+
   return (
+
     <div className="flex flex-col gap-2 group relative">
+
       <div className="flex items-center gap-2">
+
         <span className="text-secondary text-[10px] font-black uppercase tracking-[0.15em] opacity-40 group-hover:opacity-100 transition-opacity">
+
           {label}
+
         </span>
+
         {tooltip && (
+
           <div className="relative group/tip">
+
             <Info size={12} className="text-secondary opacity-20 hover:opacity-100 cursor-help" />
+
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-surface text-[10px] text-text rounded-xl font-bold whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-all border border-surface pointer-events-none z-50 shadow-2xl translate-y-2 group-hover/tip:translate-y-0">
+
               {tooltip}
+
             </div>
+
           </div>
+
         )}
+
       </div>
+
       <div className="flex items-baseline gap-2">
-        <span className="text-text text-4xl font-black tabular-nums tracking-tighter">
+
+        <span className="text-text text-2xl sm:text-3xl md:text-4xl font-black tabular-nums tracking-tighter">
+
           {value ?? "-"}
+
         </span>
+
         {subValue && (
-          <span className="text-secondary text-sm font-bold uppercase tracking-widest opacity-40">
+
+          <span className="text-secondary text-xs sm:text-sm font-bold uppercase tracking-widest opacity-40">
+
             {subValue}
+
           </span>
+
         )}
+
       </div>
-      <div className="h-1 w-0 group-hover:w-12 bg-primary/40 transition-all duration-500 rounded-full" />
+
+      <div className="h-0.5 md:h-1 w-0 group-hover:w-12 bg-primary/40 transition-all duration-500 rounded-full" />
+
     </div>
+
   );
+
 }
