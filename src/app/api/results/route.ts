@@ -14,6 +14,11 @@ import { logError } from "@/lib/logger";
 import mongoose from "mongoose";
 import { randomUUID } from "crypto";
 
+import { getYearAndDay } from "@/lib/time";
+import { calculateXp } from "@/lib/xp";
+import { calculateStreak } from "@/lib/streak";
+import { generateResultHash } from "@/lib/hash";
+
 export async function OPTIONS(request: NextRequest) {
   return handleCorsOptions(request) || NextResponse.json({});
 }
@@ -21,7 +26,7 @@ export async function OPTIONS(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth();
   if ("error" in authResult) return authResult.error;
-  const { session } = authResult;
+  const { session, user } = authResult;
   const userId = session.user!.id;
 
   const limited = await rateLimit(request, "resultSubmit", userId);
@@ -43,6 +48,16 @@ export async function POST(request: NextRequest) {
   // Note: Transactions removed for development compatibility
   // In production with replica sets, re-enable transactions for atomicity
   try {
+    // --- P0: Hashing and Deduplication ---
+    const resultHash = generateResultHash(data);
+
+    if (user.lastReultHashes.includes(resultHash)) {
+      return NextResponse.json(
+        { error: "Duplicate result detected" },
+        { status: 409, headers: corsHeaders(request) }
+      );
+    }
+
     // Server-side result validation (never trust client-sent isValid)
     const invalidReasons: string[] = [];
     const afkRatio = data.testDuration > 0 ? data.afkDuration / data.testDuration : 0;
@@ -62,13 +77,6 @@ export async function POST(request: NextRequest) {
 
     // Check for PB
     const pbKey = `${data.mode}|${data.mode2}`;
-    const user = await User.findById(userId).select("username personalBests");
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404, headers: corsHeaders(request) }
-      );
-    }
 
     const currentPb = user.personalBests.get(pbKey);
     const isPb = isValid && (!currentPb || data.wpm > currentPb.wpm);
@@ -86,6 +94,24 @@ export async function POST(request: NextRequest) {
           { error: "Some tags do not belong to user" },
           { status: 403, headers: corsHeaders(request) }
         );
+      }
+
+      // Update Tag PBs
+      for (const tag of userTags) {
+        const currentTagPb = tag.personalBests?.get(pbKey);
+        if (!currentTagPb || data.wpm > currentTagPb.wpm) {
+          if (!tag.personalBests) {
+            tag.personalBests = new Map();
+          }
+          tag.personalBests.set(pbKey, {
+            wpm: data.wpm,
+            rawWpm: data.rawWpm,
+            accuracy: data.accuracy,
+            consistency: data.consistency,
+            timestamp: new Date(data.timestamp),
+          });
+          await tag.save();
+        }
       }
     }
 
@@ -139,10 +165,20 @@ export async function POST(request: NextRequest) {
       tags: data.tags ?? [],
       isPb,
       timestamp: new Date(data.timestamp),
+      funbox: data.funbox,
+      stopOnLetter: data.stopOnLetter,
+      hash: resultHash,
     });
 
-    // Update user stats (only PBs and badges)
-    const updates: Record<string, unknown> = {};
+    // --- P0 Logic to be added ---
+    // - Streak Calculation
+    // - XP Award
+    // - Test Activity Increment
+    // - Tag PB Update
+    // - Leaderboard PB Update
+    
+    // Update user stats (PBs and Hashes)
+    const updates: Record<string, any> = {};
 
     if (isPb) {
       const pb: IPersonalBest = {
@@ -155,49 +191,53 @@ export async function POST(request: NextRequest) {
       updates.$set = { [`personalBests.${pbKey}`]: pb };
     }
 
-    // Evaluate badges
-    // Optimize: Use aggregation to get both recent results and count in single query
-    const [stats] = await Result.aggregate<{
-      recent: Array<{ timestamp: Date }>;
-      total: Array<{ count: number }>;
-    }>([
-      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-      {
-        $facet: {
-          recent: [
-            { $sort: { timestamp: -1 } },
-            { $limit: 30 },
-            { $project: { timestamp: 1 } }
-          ],
-          total: [{ $count: "count" }]
-        }
-      }
-    ]);
+    // Update last result hashes (ring buffer)
+    const newHashes = [resultHash, ...user.lastReultHashes].slice(0, 10);
+    if (!updates.$set) updates.$set = {};
+    updates.$set.lastReultHashes = newHashes;
 
-    const recentResults = stats?.recent ?? [];
-    const totalResults = stats?.total[0]?.count ?? 0;
-
-    const recentTestDates = recentResults.map((r: { timestamp: Date }) =>
-      r.timestamp.toISOString().slice(0, 10)
+    // Calculate and update streak
+    const streakData = calculateStreak(
+      user.lastResultTimestamp,
+      user.streak,
+      user.maxStreak,
+      user.streakHourOffset ?? 0,
+      data.timestamp
     );
+    updates.$set.streak = streakData.streak;
+    updates.$set.maxStreak = streakData.maxStreak;
+    updates.$set.lastResultTimestamp = streakData.lastResultTimestamp;
 
-    const newBadgeIds = evaluateBadges({
-      wpm: data.wpm,
-      accuracy: data.accuracy,
-      consistency: data.consistency,
-      timestamp: new Date(data.timestamp),
-      testsCompleted: totalResults,
-      earnedBadgeIds: buildEarnedBadgeIds(user.badges ?? []),
-      recentTestDates,
-    });
+    // Calculate and update XP
+    const { xpGained } = calculateXp(data);
+    if (xpGained > 0) {
+      if (!updates.$inc) updates.$inc = {};
+      updates.$inc.xp = xpGained;
+    }
 
+    // Update test activity heatmap
+    const { year, dayOfYear } = getYearAndDay(data.timestamp);
+    if (!updates.$inc) updates.$inc = {};
+    updates.$inc[`testActivity.${year}.${dayOfYear}`] = 1;
+    
+    // Evaluate badges
+    const earnedBadgeIds = new Set(user.inventory?.badges ?? []);
+    const newBadgeIds = isValid
+      ? evaluateBadges({
+          wpm: data.wpm,
+          accuracy: data.accuracy,
+          consistency: data.consistency,
+          timestamp: new Date(data.timestamp),
+          testsCompleted: (user.testsCompleted ?? 0) + 1,
+          earnedBadgeIds,
+          recentTestDates: [],
+        })
+      : [];
+
+    // Persist newly earned badges
     if (newBadgeIds.length > 0) {
-      const now = new Date();
-      const badgeEntries = newBadgeIds.map((badgeId) => ({
-        badgeId,
-        earnedAt: now,
-      }));
-      updates.$push = { badges: { $each: badgeEntries } };
+      if (!updates.$push) updates.$push = {};
+      updates.$push["inventory.badges"] = { $each: newBadgeIds };
     }
 
     // Only update if there's something to write
@@ -221,6 +261,8 @@ export async function POST(request: NextRequest) {
         resultId: result._id,
         isPb,
         newBadges: newBadgeIds,
+        xpGained,
+        totalXp: (user.xp ?? 0) + xpGained,
       },
       { headers: corsHeaders(request) }
     );

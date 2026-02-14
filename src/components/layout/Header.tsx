@@ -10,6 +10,8 @@ import { useState, useRef, useEffect } from "react";
 import { Palette, Check, ChevronDown, Menu, User, Settings, LogOut, X } from "lucide-react";
 import { MobileMenu } from "./MobileMenu";
 import { AnimatePresence, motion } from "framer-motion";
+import { useUserData } from "@/hooks/use-user-data";
+import { StreakCounter } from "@/components/features/StreakCounter";
 
 const ANNOUNCEMENT_STORAGE_KEY = "kreotype_announcement_dismissed";
 
@@ -71,6 +73,7 @@ const navLinks = [
 export function Header() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { user, isLoading } = useUserData();
   const isFocused = useFocusModeStore((s) => s.isFocused);
   const showUITemporarily = useFocusModeStore((s) => s.showUITemporarily);
   
@@ -245,6 +248,11 @@ export function Header() {
                 </div>
               )}
             </div>
+
+            {/* Streak Counter */}
+            {session?.user && !isLoading && user?.streak > 0 && (
+              <StreakCounter streak={user.streak} />
+            )}
 
             {/* Notifications */}
             <button

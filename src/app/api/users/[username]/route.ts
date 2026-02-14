@@ -20,7 +20,7 @@ export async function GET(
   await connectDB();
   const user = await User.findOne({ username })
     .select(
-      "username image testsStarted personalBests badges createdAt"
+      "username image testsStarted personalBests badges createdAt profileDetails streak maxStreak xp inventory"
     )
     .lean();
 
@@ -44,6 +44,10 @@ export async function GET(
     ...user,
     testsCompleted: countStats?.testsCompleted ?? 0,
     timeTyping: countStats?.timeTyping ?? 0,
+    streak: user.streak ?? 0,
+    maxStreak: user.maxStreak ?? 0,
+    xp: user.xp ?? 0,
+    badges: user.inventory?.badges ?? [],
   };
 
   const response: Record<string, unknown> = { user: userWithStats };

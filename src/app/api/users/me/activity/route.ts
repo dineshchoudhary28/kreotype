@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { Result } from "@/server/models/Result";
+import { User } from "@/server/models/User";
 import { requireAuth } from "@/server/middleware/auth";
-import { redis } from "@/lib/redis";
-import mongoose from "mongoose";
 
 export async function GET() {
   const authResult = await requireAuth();
@@ -11,55 +9,13 @@ export async function GET() {
   const { session } = authResult;
   const userId = session.user!.id;
 
-  // Check Redis cache
-  const cacheKey = `activity:${userId}`;
-  try {
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return NextResponse.json({ activity: JSON.parse(cached) });
-    }
-  } catch {
-    // Cache miss — proceed to DB
-  }
-
   await connectDB();
 
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const user = await User.findById(userId).select("testActivity").lean();
 
-  const activity = await Result.aggregate([
-    {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-        timestamp: { $gte: oneYearAgo },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$timestamp" },
-        },
-        count: { $sum: 1 },
-        avgWpm: { $avg: "$wpm" },
-      },
-    },
-    { $sort: { _id: 1 } },
-    {
-      $project: {
-        _id: 0,
-        date: "$_id",
-        count: 1,
-        avgWpm: { $round: ["$avgWpm", 1] },
-      },
-    },
-  ]);
-
-  // Cache for 5 minutes
-  try {
-    await redis.setex(cacheKey, 300, JSON.stringify(activity));
-  } catch {
-    // Non-critical — continue without caching
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ activity });
+  return NextResponse.json({ activity: user.testActivity || {} });
 }

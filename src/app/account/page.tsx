@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { XpProgressBar } from "@/components/features/XpProgressBar";
 import {
   User,
   Mail,
@@ -26,6 +27,9 @@ interface UserProfile {
   email: string;
   image?: string;
   createdAt?: string;
+  streak?: number;
+  maxStreak?: number;
+  xp?: number;
 }
 
 interface Stats {
@@ -130,7 +134,10 @@ export default function AccountPage() {
           name: user.name,
           email: user.email,
           image: user.image,
-          createdAt: user.createdAt
+          createdAt: user.createdAt,
+          streak: user.streak,
+          maxStreak: user.maxStreak,
+          xp: user.xp,
         });
       }
       if (statsRes.ok) setStats(await statsRes.json());
@@ -186,40 +193,6 @@ export default function AccountPage() {
 
   const activityMap = useMemo(() => new Map(activity.map((a) => [a.date, a])), [activity]);
 
-  const { currentStreak, longestStreak } = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Current streak: consecutive days backward from today
-    let current = 0;
-    const d = new Date(today);
-    // If today has no activity, start from yesterday
-    if (!activityMap.has(d.toISOString().slice(0, 10))) {
-      d.setDate(d.getDate() - 1);
-    }
-    while (activityMap.has(d.toISOString().slice(0, 10)) && (activityMap.get(d.toISOString().slice(0, 10))?.count ?? 0) > 0) {
-      current++;
-      d.setDate(d.getDate() - 1);
-    }
-
-    // Longest streak: max consecutive run across 365 days
-    let longest = 0;
-    let run = 0;
-    for (let i = 364; i >= 0; i--) {
-      const dd = new Date(today);
-      dd.setDate(dd.getDate() - i);
-      const key = dd.toISOString().slice(0, 10);
-      if (activityMap.has(key) && (activityMap.get(key)?.count ?? 0) > 0) {
-        run++;
-        if (run > longest) longest = run;
-      } else {
-        run = 0;
-      }
-    }
-
-    return { currentStreak: current, longestStreak: longest };
-  }, [activityMap]);
-
   if (status === "loading" || loading) {
     return (
       <div className="w-full max-w-5xl mx-auto px-6 py-12">
@@ -269,6 +242,10 @@ export default function AccountPage() {
                 <span>Joined {profile?.createdAt ? formatDate(profile.createdAt) : "Recently"}</span>
               </div>
               <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-surface">
+                <Flame size={14} className="text-primary" />
+                <span>{profile?.streak ?? 0} Day Streak</span>
+              </div>
+              <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-full border border-surface">
                 <Activity size={14} className="text-primary" />
                 <span>{stats?.testsCompleted ?? 0} Tests</span>
               </div>
@@ -277,6 +254,12 @@ export default function AccountPage() {
                 <span>{stats ? formatTime(stats.timeTyping) : "0s"} Typing</span>
               </div>
             </div>
+
+            {profile?.xp !== undefined && (
+              <div className="mt-4">
+                <XpProgressBar xp={profile.xp} />
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col items-center md:items-end gap-2">
@@ -425,12 +408,12 @@ export default function AccountPage() {
           <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest text-secondary/60">
             <div className="flex items-center gap-2">
               <Flame size={14} className="text-green-400" />
-              <span className="text-text">{currentStreak}</span>
+              <span className="text-text">{profile?.streak ?? 0}</span>
               <span>Current</span>
             </div>
             <div className="flex items-center gap-2">
               <Trophy size={14} className="text-green-400" />
-              <span className="text-text">{longestStreak}</span>
+              <span className="text-text">{profile?.maxStreak ?? 0}</span>
               <span>Longest</span>
             </div>
           </div>

@@ -45,6 +45,8 @@ export const completedEventSchema = z.object({
   blindMode: z.boolean(),
   validation: validationSchema,
   tags: z.array(z.string()).max(10).optional(),
+  funbox: z.array(z.string()).max(10).optional(),
+  stopOnLetter: z.boolean().optional(),
 });
 
 export type CompletedEventInput = z.infer<typeof completedEventSchema>;

@@ -3,16 +3,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { TagManager } from "@/components/features/account/TagManager";
 import { 
   User, 
   Shield, 
   Users, 
   Check, 
-  AlertTriangle, 
+  AlertTriangle,
+  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Tab = "account" | "authentication" | "blockedUsers";
+type Tab = "account" | "authentication" | "blockedUsers" | "tags";
 
 interface BlockedUser {
   _id: string;
@@ -30,6 +32,9 @@ export default function AccountSettingsPage() {
   // Account tab
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [keyboard, setKeyboard] = useState("");
+  const [socialProfiles, setSocialProfiles] = useState({ twitter: "", github: "", website: "" });
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -39,6 +44,9 @@ export default function AccountSettingsPage() {
           if (data.user) {
             setDisplayName(data.user.name || "");
             setUsername(data.user.username || "");
+            setBio(data.user.profileDetails?.bio ?? "");
+            setKeyboard(data.user.profileDetails?.keyboard ?? "");
+            setSocialProfiles(data.user.profileDetails?.socialProfiles ?? { twitter: "", github: "", website: "" });
           }
         });
     }
@@ -104,6 +112,7 @@ export default function AccountSettingsPage() {
     { id: "account", label: "account", icon: <User size={14} /> },
     { id: "authentication", label: "authentication", icon: <Shield size={14} /> },
     { id: "blockedUsers", label: "blocked users", icon: <Users size={14} /> },
+    { id: "tags", label: "tags", icon: <Tag size={14} /> },
   ];
 
   if (status === "loading") {
@@ -201,6 +210,58 @@ export default function AccountSettingsPage() {
                 >
                   Update Handle
                 </button>
+              </div>
+            </SettingsCard>
+
+            <SettingsCard
+              title="profile details"
+              description="Add some more information about yourself."
+            >
+              <div className="flex flex-col gap-4 mt-2">
+                <textarea
+                  placeholder="Bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                  rows={3}
+                />
+                <input
+                  type="text"
+                  placeholder="Keyboard"
+                  value={keyboard}
+                  onChange={(e) => setKeyboard(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                />
+                <input
+                  type="text"
+                  placeholder="Twitter URL"
+                  value={socialProfiles.twitter}
+                  onChange={(e) => setSocialProfiles({ ...socialProfiles, twitter: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                />
+                <input
+                  type="text"
+                  placeholder="GitHub URL"
+                  value={socialProfiles.github}
+                  onChange={(e) => setSocialProfiles({ ...socialProfiles, github: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                />
+                <input
+                  type="text"
+                  placeholder="Website URL"
+                  value={socialProfiles.website}
+                  onChange={(e) => setSocialProfiles({ ...socialProfiles, website: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-background border border-surface rounded-xl text-text text-sm outline-none focus:border-primary transition-all"
+                />
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={() => apiAction("/api/users/profile", "PATCH", { bio, keyboard, socialProfiles })}
+                    disabled={loading}
+                    className="px-6 py-2.5 rounded-xl bg-primary text-background text-xs font-bold disabled:opacity-50 hover:opacity-90 transition-all cursor-pointer"
+                  >
+                    Update Profile
+                  </button>
+                </div>
               </div>
             </SettingsCard>
 
@@ -419,6 +480,8 @@ export default function AccountSettingsPage() {
             </div>
           </SettingsCard>
         )}
+
+        {activeTab === "tags" && <TagManager />}
       </div>
     </div>
   );

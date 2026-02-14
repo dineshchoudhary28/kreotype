@@ -151,6 +151,9 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
                 description: `You set a new PB of ${stats.wpm} WPM!`,
               });
             }
+            if (data.xpGained > 0) {
+              toast.info(`You gained ${data.xpGained} XP!`);
+            }
           } else {
             saveToLocalStorage(resultData);
             toast.error("Failed to sync with server, saved locally");
