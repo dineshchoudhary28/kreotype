@@ -1,0 +1,22 @@
+# Docker Compose override for running database migrations
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.migrate.yml run migrate
+#
+# Run with dry-run:
+#   docker compose -f docker-compose.yml -f docker-compose.migrate.yml run migrate node --import tsx migrations/runner.ts up --dry-run
+#
+# Check migration status:
+#   docker compose -f docker-compose.yml -f docker-compose.migrate.yml run migrate node --import tsx migrations/runner.ts status
+
+services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    command: ["node", "--import", "tsx", "migrations/runner.ts", "up"]
+    env_file:
+      - .env.production
+    depends_on:
+      mongo:
+        condition: service_healthy

@@ -65,6 +65,11 @@ export interface IResult extends Document {
   // Tags
   tags: Types.ObjectId[];
 
+  // Gap-analysis fields (Migration 002)
+  funbox: string[];
+  stopOnLetter: boolean;
+  hash: string | null;
+
   timestamp: Date;
 }
 
@@ -122,6 +127,12 @@ const resultSchema = new Schema<IResult>(
   invalidReasons: { type: [String], default: [] },
   isPb: { type: Boolean, default: false },
   tags: { type: [Schema.Types.ObjectId], ref: "Tag", default: [] },
+
+  // Gap-analysis fields (Migration 002)
+  funbox: { type: [String], default: [] },
+  stopOnLetter: { type: Boolean, default: false },
+  hash: { type: String, default: null },
+
   timestamp: { type: Date, default: Date.now },
   },
   { timestamps: true }

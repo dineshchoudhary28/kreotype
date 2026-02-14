@@ -1,11 +1,20 @@
 import mongoose, { Schema, type Document, type Types } from "mongoose";
 
+export interface ITagPersonalBest {
+  wpm: number;
+  rawWpm: number;
+  accuracy: number;
+  consistency: number;
+  timestamp: Date;
+}
+
 export interface ITag extends Document {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   name: string;
   color?: string; // Hex color for the tag badge
-  personalBest?: number; // Optional: track PB with this tag specifically
+  personalBest?: number; // Optional: track PB with this tag specifically (scalar, legacy)
+  personalBests: Map<string, ITagPersonalBest>; // Mode-specific PBs (Migration 003)
   active: boolean; // Is it currently selected for the next test? (client-side state mostly, but good to store)
   createdAt: Date;
   updatedAt: Date;
@@ -31,6 +40,7 @@ const tagSchema = new Schema<ITag>(
       }
     },
     personalBest: { type: Number, default: 0 },
+    personalBests: { type: Map, of: Schema.Types.Mixed, default: new Map() },
     active: { type: Boolean, default: false },
   },
   { timestamps: true }

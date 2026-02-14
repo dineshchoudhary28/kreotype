@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest"
+    "test": "vitest",
+    "migrate:up": "node --env-file=.env --import tsx migrations/runner.ts up",
+    "migrate:down": "node --env-file=.env --import tsx migrations/runner.ts down",
+    "migrate:status": "node --env-file=.env --import tsx migrations/runner.ts status",
+    "migrate:create": "tsx migrations/runner.ts create",
+    "migrate:dry-run": "node --env-file=.env --import tsx migrations/runner.ts up --dry-run"
   },
   "dependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -46,6 +51,7 @@
     "eslint-config-next": "16.1.6",
     "jsdom": "^27.4.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.0.18"
   }

@@ -30,6 +30,16 @@ export interface IEarnedBadge {
   earnedAt: Date;
 }
 
+export interface IProfileDetails {
+  bio: string;
+  keyboard: string;
+  socialProfiles: Record<string, string>;
+}
+
+export interface IInventory {
+  badges: string[];
+}
+
 export interface IUser extends Document {
   _id: Types.ObjectId;
   username: string;
@@ -50,6 +60,21 @@ export interface IUser extends Document {
   streakHourOffset: number | null;
   lastNameChange: Date | null;
   badges: IEarnedBadge[];
+
+  // Gap-analysis fields (Migration 001)
+  streak: number;
+  maxStreak: number;
+  lastResultTimestamp: number | null;
+  xp: number;
+  profileDetails: IProfileDetails;
+  inventory: IInventory;
+  banned: boolean;
+  verified: boolean;
+  lbPersonalBests: Record<string, Record<string, IPersonalBest>>;
+  testActivity: Record<string, number>;
+  autoBanTimestamps: number[];
+  lastReultHashes: string[];
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -118,6 +143,32 @@ const userSchema = new Schema<IUser>(
     streakHourOffset: { type: Number, default: null },
     lastNameChange: { type: Date, default: null },
     badges: { type: [earnedBadgeSchema], default: [] },
+
+    // Gap-analysis fields (Migration 001)
+    streak: { type: Number, default: 0 },
+    maxStreak: { type: Number, default: 0 },
+    lastResultTimestamp: { type: Number, default: null },
+    xp: { type: Number, default: 0 },
+    profileDetails: {
+      type: {
+        bio: { type: String, default: "" },
+        keyboard: { type: String, default: "" },
+        socialProfiles: { type: Schema.Types.Mixed, default: {} },
+      },
+      default: { bio: "", keyboard: "", socialProfiles: {} },
+    },
+    inventory: {
+      type: {
+        badges: { type: [String], default: [] },
+      },
+      default: { badges: [] },
+    },
+    banned: { type: Boolean, default: false },
+    verified: { type: Boolean, default: false },
+    lbPersonalBests: { type: Schema.Types.Mixed, default: { time: {} } },
+    testActivity: { type: Schema.Types.Mixed, default: {} },
+    autoBanTimestamps: { type: [Number], default: [] },
+    lastReultHashes: { type: [String], default: [] },
   },
   { timestamps: true }
 );
@@ -129,6 +180,8 @@ userSchema.index({ "badges.badgeId": 1 }); // Badge lookups
 userSchema.index({ friends: 1 }); // Friend queries
 userSchema.index({ blockedUsers: 1 }); // Block list checks
 userSchema.index({ createdAt: -1 }); // Recent users
+userSchema.index({ xp: -1 }); // XP leaderboard
+userSchema.index({ banned: 1 }); // Ban status lookups
 
 export const User =
   (mongoose.models.User as mongoose.Model<IUser>) ||
