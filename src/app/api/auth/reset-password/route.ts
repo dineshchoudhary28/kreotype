@@ -4,6 +4,7 @@ import { User } from "@/server/models/User";
 import { verifyOTP } from "@/lib/otp";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import { logError } from "@/lib/logger";
 
 const resetSchema = z.object({
   identifier: z.string().min(1),
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ message: "Password reset successfully" });
   } catch (error) {
-    console.error("Password reset error:", error);
+    logError(error, { endpoint: "/api/auth/reset-password", action: "POST" });
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

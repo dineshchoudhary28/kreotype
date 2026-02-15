@@ -112,7 +112,7 @@ export default function AccountPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [pbs, setPbs] = useState<Record<string, PersonalBest>>({});
   const [results, setResults] = useState<ResultEntry[]>([]);
-  const [activity, setActivity] = useState<ActivityDay[]>([]);
+  const [activity, setActivity] = useState<Record<string, Record<string, number>>>({});
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
@@ -151,7 +151,7 @@ export default function AccountPage() {
       }
       if (activityRes.ok) {
         const { activity: a } = await activityRes.json();
-        setActivity(a ?? []);
+        setActivity(a ?? {});
       }
     } catch (err) {
       console.error("Failed to fetch account data:", err);
@@ -191,7 +191,21 @@ export default function AccountPage() {
     }
   }, [status, router, fetchData]);
 
-  const activityMap = useMemo(() => new Map(activity.map((a) => [a.date, a])), [activity]);
+  const activityMap = useMemo(() => {
+    const map = new Map<string, ActivityDay>();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const toLocalDate = (d: Date) =>
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    for (const [year, days] of Object.entries(activity)) {
+      for (const [dayOfYear, count] of Object.entries(days)) {
+        const d = new Date(Number(year), 0);
+        d.setDate(Number(dayOfYear));
+        const key = toLocalDate(d);
+        map.set(key, { date: key, count, avgWpm: 0 });
+      }
+    }
+    return map;
+  }, [activity]);
 
   if (status === "loading" || loading) {
     return (
@@ -419,7 +433,7 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {activity.length === 0 ? (
+        {activityMap.size === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center gap-2 text-secondary/40 italic text-sm">
             No activity yet. Complete a test to start building your streak.
           </div>
@@ -429,10 +443,13 @@ export default function AccountPage() {
               {(() => {
                 const today = new Date();
                 const cells = [];
+                const pad = (n: number) => String(n).padStart(2, "0");
+                const toLocalDate = (d: Date) =>
+                  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
                 for (let i = 364; i >= 0; i--) {
                   const d = new Date(today);
                   d.setDate(d.getDate() - i);
-                  const key = d.toISOString().slice(0, 10);
+                  const key = toLocalDate(d);
                   const day = activityMap.get(key);
                   const count = day?.count ?? 0;
                   const opacity = count === 0 ? 0.05 : Math.min(0.2 + count * 0.15, 1);

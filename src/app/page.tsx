@@ -48,7 +48,16 @@ export default function Home() {
         className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto flex flex-col w-full md:pl-0`}
       >
         <main className="flex-1 w-full max-w-[1500px] mx-auto px-4 md:px-6 pt-4 md:pt-6 flex flex-col">
-          {shouldShowUI && !isFinished && <TestConfig />}
+          <div
+            className="transition-opacity duration-200"
+            style={{
+              opacity: shouldShowUI && !isFinished ? 1 : 0,
+              visibility: shouldShowUI && !isFinished ? "visible" : "hidden",
+              pointerEvents: shouldShowUI && !isFinished ? "auto" : "none",
+            }}
+          >
+            <TestConfig />
+          </div>
           <TypingTestPage />
         </main>
       </div>

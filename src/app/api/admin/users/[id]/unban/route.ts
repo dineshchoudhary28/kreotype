@@ -5,14 +5,14 @@ import { requireAdmin } from "@/server/middleware/admin";
 import { addLog } from "@/lib/audit-log";
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const adminResult = await requireAdmin();
   if ("error" in adminResult) return adminResult.error;
   const { session } = adminResult;
 
-  const { id: targetUserId } = params;
+  const { id: targetUserId } = await params;
 
   await connectDB();
   const targetUser = await User.findById(targetUserId);

@@ -2,6 +2,7 @@ import { readdir, writeFile } from "node:fs/promises";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import mongoose from "mongoose";
+import type { Db } from "mongodb";
 import { connectDB, getDb } from "../src/lib/db.js";
 import * as ledger from "./ledger.js";
 import * as log from "./logger.js";
@@ -46,8 +47,9 @@ async function discoverMigrations(): Promise<Migration[]> {
 
 async function runUp(dryRun: boolean): Promise<void> {
   await connectDB();
-  const db = await getDb();
-  if (!db) throw new Error("Failed to get database instance");
+  const rawDb = await getDb();
+  if (!rawDb) throw new Error("Failed to get database instance");
+  const db = rawDb as unknown as Db;
 
   const migrations = await discoverMigrations();
   const executed = await ledger.getExecutedNames(db);
@@ -111,8 +113,9 @@ async function runUp(dryRun: boolean): Promise<void> {
 
 async function runDown(): Promise<void> {
   await connectDB();
-  const db = await getDb();
-  if (!db) throw new Error("Failed to get database instance");
+  const rawDb = await getDb();
+  if (!rawDb) throw new Error("Failed to get database instance");
+  const db = rawDb as unknown as Db;
 
   const migrations = await discoverMigrations();
   const executedRecords = await ledger.getExecuted(db);
@@ -171,8 +174,9 @@ async function runDown(): Promise<void> {
 
 async function runStatus(): Promise<void> {
   await connectDB();
-  const db = await getDb();
-  if (!db) throw new Error("Failed to get database instance");
+  const rawDb = await getDb();
+  if (!rawDb) throw new Error("Failed to get database instance");
+  const db = rawDb as unknown as Db;
 
   const migrations = await discoverMigrations();
   const executedRecords = await ledger.getExecuted(db);

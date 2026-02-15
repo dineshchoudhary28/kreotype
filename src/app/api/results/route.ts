@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     // --- P0: Hashing and Deduplication ---
     const resultHash = generateResultHash(data);
 
-    if (user.lastReultHashes.includes(resultHash)) {
+    if ((user.lastReultHashes ?? []).includes(resultHash)) {
       return NextResponse.json(
         { error: "Duplicate result detected" },
         { status: 409, headers: corsHeaders(request) }
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     // Check for PB
     const pbKey = `${data.mode}|${data.mode2}`;
 
-    const currentPb = user.personalBests.get(pbKey);
+    const currentPb = (user.personalBests as unknown as Record<string, IPersonalBest>)?.[pbKey];
     const isPb = isValid && (!currentPb || data.wpm > currentPb.wpm);
 
     // Validate tag ownership
@@ -170,13 +170,6 @@ export async function POST(request: NextRequest) {
       hash: resultHash,
     });
 
-    // --- P0 Logic to be added ---
-    // - Streak Calculation
-    // - XP Award
-    // - Test Activity Increment
-    // - Tag PB Update
-    // - Leaderboard PB Update
-    
     // Update user stats (PBs and Hashes)
     const updates: Record<string, any> = {};
 
@@ -192,24 +185,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Update last result hashes (ring buffer)
-    const newHashes = [resultHash, ...user.lastReultHashes].slice(0, 10);
+    const newHashes = [resultHash, ...(user.lastReultHashes ?? [])].slice(0, 10);
     if (!updates.$set) updates.$set = {};
     updates.$set.lastReultHashes = newHashes;
 
     // Calculate and update streak
+    // getTimezoneOffset() returns minutes from local→UTC (e.g. -330 for IST)
+    // streakHourOffset expects hours to ADD to UTC (e.g. +5.5 for IST), so negate and convert
+    const clientHourOffset = data.timezoneOffset != null
+      ? -(data.timezoneOffset / 60)
+      : user.streakHourOffset ?? 0;
     const streakData = calculateStreak(
       user.lastResultTimestamp,
-      user.streak,
-      user.maxStreak,
-      user.streakHourOffset ?? 0,
+      user.streak ?? 0,
+      user.maxStreak ?? 0,
+      clientHourOffset,
       data.timestamp
     );
     updates.$set.streak = streakData.streak;
     updates.$set.maxStreak = streakData.maxStreak;
     updates.$set.lastResultTimestamp = streakData.lastResultTimestamp;
+    updates.$set.streakHourOffset = clientHourOffset;
 
     // Calculate and update XP
-    const { xpGained } = calculateXp(data);
+    const { xpGained } = calculateXp(data, isValid);
     if (xpGained > 0) {
       if (!updates.$inc) updates.$inc = {};
       updates.$inc.xp = xpGained;
@@ -219,6 +218,8 @@ export async function POST(request: NextRequest) {
     const { year, dayOfYear } = getYearAndDay(data.timestamp);
     if (!updates.$inc) updates.$inc = {};
     updates.$inc[`testActivity.${year}.${dayOfYear}`] = 1;
+    updates.$inc.testsCompleted = 1;
+    updates.$inc.timeTyping = data.testDuration;
     
     // Evaluate badges
     const earnedBadgeIds = new Set(user.inventory?.badges ?? []);

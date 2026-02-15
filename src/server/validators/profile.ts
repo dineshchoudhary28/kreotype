@@ -12,6 +12,8 @@ export const updateProfileSchema = z.object({
   socialProfiles: socialProfilesSchema,
 });
 
+const ALLOWED_INCLUDES = ["activity", "recentTests"] as const;
+
 export const profileQuerySchema = z.object({
-  include: z.array(z.string()).optional(),
+  include: z.array(z.enum(ALLOWED_INCLUDES)).optional(),
 });

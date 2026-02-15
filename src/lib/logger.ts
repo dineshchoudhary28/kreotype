@@ -16,15 +16,24 @@ export function logError(error: Error | unknown, context?: ErrorContext) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
 
-    // Console logging (development)
-    console.error("[ERROR]", {
-        message: errorMessage,
-        stack: errorStack,
-        context,
-        timestamp: new Date().toISOString(),
-    });
+    if (process.env.NODE_ENV === "development") {
+        // Full details in development
+        console.error("[ERROR]", {
+            message: errorMessage,
+            stack: errorStack,
+            context,
+            timestamp: new Date().toISOString(),
+        });
+    } else {
+        // Sanitized logging in production — no stack traces
+        console.error("[ERROR]", {
+            message: errorMessage,
+            context,
+            timestamp: new Date().toISOString(),
+        });
+    }
 
-    // TODO: Send to error tracking service
+    // TODO: Send to error tracking service (Sentry, etc.)
     // if (process.env.SENTRY_DSN) {
     //   Sentry.captureException(error, { contexts: { custom: context } });
     // }

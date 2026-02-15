@@ -3,11 +3,16 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/server/models/User";
 import { Result } from "@/server/models/Result";
 import { profileQuerySchema } from "@/server/validators/profile";
+import { rateLimit } from "@/server/middleware/rateLimit";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ username: string }> }
 ) {
+  // Rate limit by IP to prevent scraping/enumeration
+  const limited = await rateLimit(request, "publicProfile");
+  if (limited) return limited;
+
   const { username } = await params;
   const { searchParams } = new URL(request.url);
 

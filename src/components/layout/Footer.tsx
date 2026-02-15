@@ -8,10 +8,17 @@ export function Footer() {
   const pathname = usePathname();
   const isFocused = useFocusModeStore((s) => s.isFocused);
 
-  if (pathname === "/" && isFocused) return null;
+  const hidden = pathname === "/" && isFocused;
 
   return (
-    <footer className="bg-background border-t border-surface w-full py-2.5 z-50">
+    <footer
+      className="bg-background border-t border-surface w-full py-2.5 z-50 transition-opacity duration-200"
+      style={{
+        opacity: hidden ? 0 : 1,
+        visibility: hidden ? "hidden" : "visible",
+        pointerEvents: hidden ? "none" : "auto",
+      }}
+    >
       <div className="max-w-[1500px] mx-auto px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           {/* Left & Center: Footer Links */}

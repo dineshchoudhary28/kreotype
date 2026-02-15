@@ -134,6 +134,7 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
           isValid,
           invalidReasons,
         },
+        timezoneOffset: new Date().getTimezoneOffset(),
       };
 
       if (status === "authenticated") {
@@ -153,6 +154,9 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
             }
             if (data.xpGained > 0) {
               toast.info(`You gained ${data.xpGained} XP!`);
+            }
+            if (data.newBadges?.length > 0) {
+              toast.success(`Badge earned: ${data.newBadges.join(", ")}!`);
             }
           } else {
             saveToLocalStorage(resultData);

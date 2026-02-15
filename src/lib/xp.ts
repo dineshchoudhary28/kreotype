@@ -10,8 +10,8 @@ import { type CompletedEventInput } from "@/server/validators/result";
  * - Difficulty multiplier: normal=1, expert=1.5, master=2
  * - Duration bonus: 1.0 to 2.0 (scales linearly from 15s to 120s test duration)
  */
-export function calculateXp(data: CompletedEventInput): { xpGained: number } {
-  if (!data.isValid) {
+export function calculateXp(data: CompletedEventInput, isValid: boolean): { xpGained: number } {
+  if (!isValid) {
     return { xpGained: 0 };
   }
 

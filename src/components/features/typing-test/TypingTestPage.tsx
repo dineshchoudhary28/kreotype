@@ -633,20 +633,25 @@ export function TypingTestPage() {
         </button>
 
         {/* Shortcuts - hidden on touch devices ideally, but here just shown as small text */}
-        {!isActive && (
-          <div className="flex gap-4 sm:gap-8 text-secondary text-[10px] md:text-[11px] font-medium opacity-50">
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <kbd className="bg-surface px-1.5 py-0.5 rounded border border-surface text-secondary font-sans">
-                tab
-              </kbd>
-              <span className="hidden sm:inline">+</span>
-              <kbd className="bg-surface px-1.5 py-0.5 rounded border border-surface text-secondary font-sans hidden sm:inline">
-                enter
-              </kbd>
-              <span>restart test</span>
-            </div>
+        <div
+          className="flex gap-4 sm:gap-8 text-secondary text-[10px] md:text-[11px] font-medium transition-opacity duration-200"
+          style={{
+            opacity: isActive ? 0 : 0.5,
+            visibility: isActive ? "hidden" : "visible",
+            pointerEvents: isActive ? "none" : "auto",
+          }}
+        >
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <kbd className="bg-surface px-1.5 py-0.5 rounded border border-surface text-secondary font-sans">
+              tab
+            </kbd>
+            <span className="hidden sm:inline">+</span>
+            <kbd className="bg-surface px-1.5 py-0.5 rounded border border-surface text-secondary font-sans hidden sm:inline">
+              enter
+            </kbd>
+            <span>restart test</span>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ interface Tag {
   _id: string;
   name: string;
   color: string;
-  personalBests?: Map<string, { wpm: number; accuracy: number }>;
+  personalBests?: Record<string, { wpm: number; accuracy: number }>;
 }
 
 export function TagManager() {
@@ -59,7 +59,7 @@ export function TagManager() {
   const handleDeleteTag = async (tagId: string) => {
     if (!confirm("Are you sure you want to delete this tag?")) return;
     try {
-      const res = await fetch(`/api/tags/${tagId}`, { method: "DELETE" });
+      const res = await fetch(`/api/users/me/tags/${tagId}`, { method: "DELETE" });
       if (res.ok) {
         setTags(tags.filter(t => t._id !== tagId));
         toast.success("Tag deleted");
@@ -96,8 +96,8 @@ export function TagManager() {
             <div className="flex items-center gap-4 text-xs">
               {tag.personalBests && (
                 <>
-                  <span>15s: {tag.personalBests.get("time|15")?.wpm ?? "-"} wpm</span>
-                  <span>60s: {tag.personalBests.get("time|60")?.wpm ?? "-"} wpm</span>
+                  <span>15s: {tag.personalBests["time|15"]?.wpm ?? "-"} wpm</span>
+                  <span>60s: {tag.personalBests["time|60"]?.wpm ?? "-"} wpm</span>
                 </>
               )}
               <button onClick={() => handleDeleteTag(tag._id)} className="text-secondary hover:text-error">

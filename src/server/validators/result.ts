@@ -47,6 +47,7 @@ export const completedEventSchema = z.object({
   tags: z.array(z.string()).max(10).optional(),
   funbox: z.array(z.string()).max(10).optional(),
   stopOnLetter: z.boolean().optional(),
+  timezoneOffset: z.number().min(-840).max(840).optional(),
 });
 
 export type CompletedEventInput = z.infer<typeof completedEventSchema>;

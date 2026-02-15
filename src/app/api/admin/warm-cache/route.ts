@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { warmLeaderboardCache } from "@/lib/cache-warmer";
+import { logError } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -32,14 +33,11 @@ export async function GET(request: NextRequest) {
       );
     }
   } else if (process.env.NODE_ENV === "production") {
-    // In production, CRON_SECRET is mandatory
+    // In production, CRON_SECRET is mandatory — deny access
     return NextResponse.json(
-      { error: "CRON_SECRET not configured" },
-      { status: 500 }
+      { error: "Unauthorized" },
+      { status: 401 }
     );
-  } else {
-    // In development, allow without auth but warn
-    console.warn("CRON_SECRET not set - cache warming endpoint is unprotected in dev mode");
   }
 
   try {
@@ -51,12 +49,9 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Cache warming error:", error);
+    logError(error, { endpoint: "/api/admin/warm-cache", action: "GET" });
     return NextResponse.json(
-      {
-        error: "Cache warming failed",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Cache warming failed" },
       { status: 500 }
     );
   }

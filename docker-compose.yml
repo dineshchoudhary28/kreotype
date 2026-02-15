@@ -23,8 +23,8 @@ services:
     env_file:
       - .env.production
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-kreotype}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:-changeme_in_production}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?MONGO_USER must be set in .env.production}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:?MONGO_PASS must be set in .env.production}
       MONGO_INITDB_DATABASE: kreotype
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]

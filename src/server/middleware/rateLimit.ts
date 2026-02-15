@@ -12,6 +12,7 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   otpRequest: { maxRequests: 3, windowSeconds: 300 },
   resultSubmit: { maxRequests: 30, windowSeconds: 60 },
   resultsGet: { maxRequests: 60, windowSeconds: 60 },
+  publicProfile: { maxRequests: 30, windowSeconds: 60 },
   general: { maxRequests: 60, windowSeconds: 60 },
 };
 

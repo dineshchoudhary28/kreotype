@@ -150,28 +150,9 @@ export function Header() {
     };
   }, [isMobileMenuOpen, isNotificationOpen]);
 
-  // In focus mode on home page
-  if (pathname === "/" && isFocused) {
-    // If mouse moved, show full header
-    if (showUITemporarily) {
-      // Fall through to render full header
-    } else {
-      // Show only the logo in its normal position
-      return (
-        <header className="bg-background py-3.5 px-6 w-full z-40">
-          <div className="max-w-[1500px] mx-auto grid grid-cols-3 items-center font-['Inter']">
-            <div className="flex justify-start">
-              <Link href="/" className="text-2xl md:text-3xl font-bold text-primary tracking-tighter cursor-pointer">
-                KREOTYPE
-              </Link>
-            </div>
-            <div />
-            <div />
-          </div>
-        </header>
-      );
-    }
-  }
+  // In focus mode on home page — hide nav/actions but keep header height stable
+  const isFocusedHome = pathname === "/" && isFocused;
+  const showFullHeader = !isFocusedHome || showUITemporarily;
 
     return (
     <>
@@ -185,7 +166,14 @@ export function Header() {
           </div>
 
           {/* Center: Main Navigation Icons */}
-          <nav className="hidden md:flex items-center justify-center gap-4 sm:gap-6 md:gap-10 text-secondary absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <nav
+            className="hidden md:flex items-center justify-center gap-4 sm:gap-6 md:gap-10 text-secondary absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200"
+            style={{
+              opacity: showFullHeader ? 1 : 0,
+              visibility: showFullHeader ? "visible" : "hidden",
+              pointerEvents: showFullHeader ? "auto" : "none",
+            }}
+          >
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               if (link.external) {
@@ -204,7 +192,14 @@ export function Header() {
           </nav>
 
           {/* Right: Actions and Profile */}
-          <div className="flex justify-end items-center gap-3 sm:gap-6 text-secondary">
+          <div
+            className="flex justify-end items-center gap-3 sm:gap-6 text-secondary transition-opacity duration-200"
+            style={{
+              opacity: showFullHeader ? 1 : 0,
+              visibility: showFullHeader ? "visible" : "hidden",
+              pointerEvents: showFullHeader ? "auto" : "none",
+            }}
+          >
             {/* Theme Changer Dropdown */}
             <div className="hidden md:block relative" ref={themeDropdownRef}>
               <button 
@@ -250,8 +245,8 @@ export function Header() {
             </div>
 
             {/* Streak Counter */}
-            {session?.user && !isLoading && user?.streak > 0 && (
-              <StreakCounter streak={user.streak} />
+            {session?.user && !isLoading && (user?.streak ?? 0) > 0 && (
+              <StreakCounter streak={user!.streak!} />
             )}
 
             {/* Notifications */}

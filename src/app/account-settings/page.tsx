@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { TagManager } from "@/components/features/account/TagManager";
-import { 
-  User, 
-  Shield, 
-  Users, 
-  Check, 
+import {
+  User,
+  Shield,
+  Users,
+  Check,
   AlertTriangle,
   Tag,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -172,6 +173,7 @@ export default function AccountSettingsPage() {
             <SettingsCard
               title="display name"
               description="This is your name shown on your profile and leaderboards. It doesn't have to be unique."
+              info="Your display name appears on your public profile, leaderboard entries, and result cards. Unlike your username, it doesn't need to be unique."
             >
               <div className="flex gap-3 items-center mt-2">
                 <input
@@ -194,6 +196,7 @@ export default function AccountSettingsPage() {
             <SettingsCard
               title="username"
               description="Your unique handle. You can only change this once every 30 days."
+              info="Your username is your unique identifier on Kreotype. It's used in your profile URL and must be unique across all users. Changes are limited to once every 30 days."
             >
               <div className="flex gap-3 items-center mt-2">
                 <input
@@ -216,6 +219,7 @@ export default function AccountSettingsPage() {
             <SettingsCard
               title="profile details"
               description="Add some more information about yourself."
+              info="These details are displayed on your public profile page. Your bio, keyboard setup, and social links help other typists learn about you."
             >
               <div className="flex flex-col gap-4 mt-2">
                 <textarea
@@ -268,6 +272,7 @@ export default function AccountSettingsPage() {
             <SettingsCard
               title="privacy"
               description="Manage how your account appears to others on leaderboards."
+              info="Opting out of leaderboards permanently removes your entries from all public leaderboards. Your test history and personal bests are preserved but hidden from others."
             >
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between p-4 bg-background/50 rounded-2xl border border-surface/50">
@@ -289,6 +294,7 @@ export default function AccountSettingsPage() {
             <SettingsCard
               title="personal bests"
               description="Reset your records across all modes. This will not affect your test history."
+              info="Clearing personal bests resets your best WPM, accuracy, and consistency records for all test modes (time, words, zen). Your completed test history is not affected."
             >
               <div className="flex items-center justify-between p-4 bg-background/50 rounded-2xl border border-surface/50">
                 <div>
@@ -312,6 +318,7 @@ export default function AccountSettingsPage() {
             <SettingsCard
               title="change password"
               description="Ensure your account is secure by using a strong password."
+              info="Update your password by entering your current password and choosing a new one. If you've forgotten your password, use the reset flow to receive a verification code via email."
             >
               {!showResetFlow ? (
                 <div className="flex flex-col gap-3 max-w-sm mt-2">
@@ -418,6 +425,7 @@ export default function AccountSettingsPage() {
             <SettingsCard
               title="third-party accounts"
               description="Link social accounts for faster sign-in."
+              info="Connect your Google account to enable one-click sign-in. Your typing data stays the same regardless of which sign-in method you use."
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
@@ -441,6 +449,7 @@ export default function AccountSettingsPage() {
           <SettingsCard
             title="blocked users"
             description="Users you block will not be able to interact with you or send friend requests."
+            info="Blocked users cannot view your profile, see your results on leaderboards, or send you friend requests. Unblocking a user restores their access."
           >
             <div className="overflow-hidden rounded-2xl border border-surface/30 bg-background/50">
               <table className="w-full text-left">
@@ -487,16 +496,18 @@ export default function AccountSettingsPage() {
   );
 }
 
-function SettingsCard({ 
-  title, 
-  description, 
-  children, 
-  danger 
-}: { 
-  title: string; 
-  description: string; 
+function SettingsCard({
+  title,
+  description,
+  children,
+  danger,
+  info,
+}: {
+  title: string;
+  description: string;
   children: React.ReactNode;
   danger?: boolean;
+  info?: string;
 }) {
   return (
     <section className={cn(
@@ -504,12 +515,23 @@ function SettingsCard({
       danger ? "border-error/20 bg-error/[0.02]" : "border-surface/50 bg-surface"
     )}>
       <div className="flex flex-col gap-1">
-        <h3 className={cn(
-          "text-[11px] font-bold uppercase tracking-widest",
-          danger ? "text-error" : "text-secondary"
-        )}>
-          {title}
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className={cn(
+            "text-[11px] font-bold uppercase tracking-widest",
+            danger ? "text-error" : "text-secondary"
+          )}>
+            {title}
+          </h3>
+          {info && (
+            <div className="relative group">
+              <Info size={13} className="text-secondary/40 hover:text-secondary cursor-help transition-colors" />
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-background border border-surface rounded-xl text-xs text-text shadow-xl w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                {info}
+                <div className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-background border-r border-b border-surface rotate-45 -mt-1" />
+              </div>
+            </div>
+          )}
+        </div>
         <p className="text-secondary text-xs">{description}</p>
       </div>
       <div className="mt-1">

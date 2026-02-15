@@ -4,6 +4,7 @@ import { User } from "@/server/models/User";
 import { generateOTP, sendOTP } from "@/lib/otp";
 import { rateLimit } from "@/server/middleware/rateLimit";
 import { z } from "zod";
+import { logError } from "@/lib/logger";
 
 const requestSchema = z.object({
   email: z.string().min(1), // Renamed identifier internally, but keeping key as 'email' for compatibility
@@ -55,13 +56,13 @@ export async function POST(req: NextRequest) {
     try {
       await sendOTP(targetEmail, otp, type);
     } catch (emailError) {
-      console.error("Failed to send OTP email");
+      logError(emailError, { endpoint: "/api/auth/otp/request", action: "sendOTP" });
       return NextResponse.json({ error: "Email delivery failed. Please check SMTP settings." }, { status: 500 });
     }
 
     return NextResponse.json({ message: "OTP sent successfully" });
   } catch (error) {
-    console.error("General OTP request error:", error);
+    logError(error, { endpoint: "/api/auth/otp/request", action: "POST" });
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }
