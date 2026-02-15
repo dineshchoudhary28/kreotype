@@ -11,8 +11,7 @@ export const dynamic = "force-dynamic";
  *
  * Usage:
  * - Manual: GET /api/admin/warm-cache
- * - Vercel Cron: Add to vercel.json
- * - External Cron: cURL this endpoint every 5 minutes
+ * - System Cron: called every 5 minutes via /etc/cron.d/kreotype-cache
  *
  * Security:
  * - Protected by CRON_SECRET environment variable
@@ -57,7 +56,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Support POST as well for Vercel Cron compatibility
 export async function POST(request: NextRequest) {
   return GET(request);
 }
