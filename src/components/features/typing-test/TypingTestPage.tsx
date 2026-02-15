@@ -197,17 +197,54 @@ export function TypingTestPage() {
   }, [currentWordIndex]);
 
   // Global listener to refocus input when blurred (keyboard + touch)
+  // Also handles Tab+Enter restart at document level so it works regardless of input focus
   useEffect(() => {
-    const refocusInputOnKey = () => {
+    const refocusInputOnKey = (e: KeyboardEvent) => {
+      // Escape clears any pending Tab state
+      if (e.key === "Escape") {
+        tabPressedRef.current = false;
+      }
+
+      // Handle Tab at document level for Tab+Enter restart
+      if (e.key === "Tab") {
+        e.preventDefault();
+        if (isFinished) {
+          initializeTest();
+          resetTest();
+        } else {
+          tabPressedRef.current = true;
+        }
+      }
+
+      // Handle Tab+Enter combo at document level
+      if (e.key === "Enter" && tabPressedRef.current) {
+        e.preventDefault();
+        tabPressedRef.current = false;
+        initializeTest();
+        resetTest();
+        return;
+      }
+
       if (!isInputFocused && !isFinished) {
+        e.preventDefault(); // Consume this keypress — only removes blur, doesn't start typing
         inputRef.current?.focus();
         setIsInputFocused(true);
       }
     };
 
-    // For touch/click: skip refocus when tapping on navigation elements (header, mobile menu)
-    // to prevent the mobile keyboard from hijacking hamburger menu taps
+    const handleGlobalKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Tab") {
+        // Give a 1.5s window for Tab→release→Enter sequence
+        setTimeout(() => { tabPressedRef.current = false; }, 1500);
+      }
+    };
+
+    // For touch/click: only auto-refocus when the test is actively running.
+    // When the test hasn't started, clicking outside the text area should keep
+    // the blur overlay visible — the user must click directly on the text area
+    // (which has an input overlay) or press a key to refocus.
     const refocusInputOnInteraction = (e: Event) => {
+      if (!isActive) return;
       const target = e.target as HTMLElement;
       if (target.closest("header") || target.closest("[data-mobile-menu]") || target.closest("nav")) {
         return;
@@ -219,14 +256,16 @@ export function TypingTestPage() {
     };
 
     document.addEventListener("keydown", refocusInputOnKey);
+    document.addEventListener("keyup", handleGlobalKeyUp);
     document.addEventListener("touchstart", refocusInputOnInteraction);
     document.addEventListener("click", refocusInputOnInteraction);
     return () => {
       document.removeEventListener("keydown", refocusInputOnKey);
+      document.removeEventListener("keyup", handleGlobalKeyUp);
       document.removeEventListener("touchstart", refocusInputOnInteraction);
       document.removeEventListener("click", refocusInputOnInteraction);
     };
-  }, [isInputFocused, isFinished]);
+  }, [isInputFocused, isFinished, isActive, initializeTest, resetTest]);
 
   // Track Tab key state for Tab+Enter restart
   const tabPressedRef = useRef(false);
@@ -251,36 +290,20 @@ export function TypingTestPage() {
       if (e.altKey) {
         e.preventDefault();
         if (isActive) {
-          incrementTab();
+          incrementTab(); // Tracks alt-key usage for cheat detection (legacy naming)
         }
         return;
       }
 
-      // Track Tab key press
-      if (e.key === "Tab") {
-        e.preventDefault();
-        if (isFinished) {
-          initializeTest();
-          resetTest();
-        } else {
-          tabPressedRef.current = true;
-        }
-        return;
-      }
-
-      // Tab + Enter to restart (legacy support or extra shortcut)
-      if (e.key === "Enter" && tabPressedRef.current) {
-        e.preventDefault();
-        tabPressedRef.current = false;
-        initializeTest();
-        resetTest();
+      // Tab and Tab+Enter are handled by the global document keydown listener
+      // so they work regardless of input focus state
+      if (e.key === "Tab" || (e.key === "Enter" && tabPressedRef.current)) {
         return;
       }
 
       // Escape to reset/restart test
       if (e.key === "Escape") {
         e.preventDefault();
-        tabPressedRef.current = false;
         if (isFinished) {
           // Restart same test (or just reset)
           resetTest();
@@ -316,15 +339,12 @@ export function TypingTestPage() {
         handleInput(e.key);
       }
     },
-    [isFinished, isPaused, isActive, handleInput, handleBackspace, handleSpace, initializeTest, resetTest, incrementTab, recordKeydown, setShowUITemporarily]
+    [isFinished, isPaused, isActive, handleInput, handleBackspace, handleSpace, resetTest, incrementTab, recordKeydown, setShowUITemporarily]
   );
 
-  // Reset tab state on key up
   const handleKeyUp = useCallback((e: React.KeyboardEvent) => {
     recordKeyup(e.code);
-    if (e.key === "Tab") {
-      tabPressedRef.current = false;
-    }
+    // Tab keyup is handled by the global document keyup listener with a 1.5s timeout
   }, [recordKeyup]);
 
   // Handle mobile virtual keyboard input via beforeinput events
@@ -443,8 +463,13 @@ export function TypingTestPage() {
   }, []);
 
   const handleInputBlur = useCallback(() => {
-    setIsInputFocused(false);
-  }, []);
+    if (!isActive) {
+      setIsInputFocused(false);
+    } else {
+      // Re-focus immediately so typing isn't interrupted
+      inputRef.current?.focus();
+    }
+  }, [isActive]);
 
   // Restart handlers
   const handleRestart = useCallback(() => {
@@ -580,7 +605,7 @@ export function TypingTestPage() {
         />
 
         {/* Focus prompt overlay — pointer-events-none so taps pass through to input */}
-        {!isInputFocused && (
+        {!isInputFocused && !isActive && (
           <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
             <div className="text-secondary text-base md:text-lg text-center">Tap here or press any key to focus</div>
           </div>
@@ -589,7 +614,7 @@ export function TypingTestPage() {
         <div
           className={clsx(
             "text-2xl md:text-3xl leading-relaxed md:leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2 transition-all duration-300",
-            !isInputFocused && "blur-sm"
+            !isInputFocused && !isActive && "blur-sm"
           )}
         >
           {words.map((wordData, wordIndex) => (
