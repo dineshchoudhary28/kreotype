@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useCallback, useState } from "react";
 import { useConfigStore } from "@/store/useConfigStore";
 import { useTypingTestStore, WordData } from "@/store/useTypingTestStore";
 import { useFocusModeStore } from "@/store/useFocusModeStore";
@@ -72,10 +72,18 @@ function generateWords(
 export function TypingTestPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const wordsContainerRef = useRef<HTMLDivElement>(null);
+  const wordsInnerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Timeout ref: delays setting isInputFocused=false so UI button clicks don't flash the blur overlay
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Local state for input focus
   const [isInputFocused, setIsInputFocused] = useState(true);
+
+  // 3-line scroll state (Monkeytype-style translateY)
+  const [lineOffset, setLineOffset] = useState(0);
+  // 0 = not yet measured; real value set by useLayoutEffect after words render
+  const [containerHeight, setContainerHeight] = useState(0);
 
   // Config store
   const mode = useConfigStore((s) => s.mode);
@@ -177,24 +185,56 @@ export function TypingTestPage() {
     };
   }, [isActive, isPaused, incrementBlur, handleFocus, setPaused]);
 
-  // Scroll to current word
+  // Monkeytype-style 3-line scroll: measure line height from DOM, then translateY
   useEffect(() => {
-    if (wordsContainerRef.current) {
-      const currentWordEl = wordsContainerRef.current.querySelector(
-        `[data-word-index="${currentWordIndex}"]`
-      );
-      if (currentWordEl) {
-        const container = wordsContainerRef.current;
-        const wordRect = currentWordEl.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
+    if (!wordsInnerRef.current) return;
 
-        // Check if word is below visible area
-        if (wordRect.top > containerRect.top + containerRect.height * 0.6) {
-          currentWordEl.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }
+    const wordEls = Array.from(
+      wordsInnerRef.current.querySelectorAll('[data-word-index]')
+    ) as HTMLElement[];
+
+    if (wordEls.length < 2) return;
+
+    // Compute the pixel height of one line by finding the first word on the second row
+    const firstTop = wordEls[0].offsetTop;
+    const nextLineEl = wordEls.find((el) => el.offsetTop > firstTop);
+    if (!nextLineEl) return;
+
+    const lh = nextLineEl.offsetTop - firstTop;
+    if (lh > 0) setContainerHeight(lh * 3);
+
+    // Determine which visual line the current word sits on
+    const currentWordEl = wordsInnerRef.current.querySelector(
+      `[data-word-index="${currentWordIndex}"]`
+    ) as HTMLElement | null;
+
+    if (currentWordEl && lh > 0) {
+      const lineIndex = Math.round((currentWordEl.offsetTop - firstTop) / lh);
+      // Keep the current line visible: start sliding up only after line 0 is complete
+      setLineOffset(Math.max(0, lineIndex - 1));
     }
   }, [currentWordIndex]);
+
+  // On every new word set: reset scroll AND measure line height before the browser paints
+  // useLayoutEffect runs synchronously after DOM mutations → no one-frame flash
+  useLayoutEffect(() => {
+    setLineOffset(0);
+
+    if (!wordsInnerRef.current) return;
+
+    const wordEls = Array.from(
+      wordsInnerRef.current.querySelectorAll('[data-word-index]')
+    ) as HTMLElement[];
+
+    if (wordEls.length < 2) return;
+
+    const firstTop = wordEls[0].offsetTop;
+    const nextLineEl = wordEls.find((el) => el.offsetTop > firstTop);
+    if (!nextLineEl) return;
+
+    const lh = nextLineEl.offsetTop - firstTop;
+    if (lh > 0) setContainerHeight(lh * 3);
+  }, [words]);
 
   // Global listener to refocus input when blurred (keyboard + touch)
   // Also handles Tab+Enter restart at document level so it works regardless of input focus
@@ -240,11 +280,9 @@ export function TypingTestPage() {
     };
 
     // For touch/click: only auto-refocus when the test is actively running.
-    // When the test hasn't started, clicking outside the text area should keep
-    // the blur overlay visible — the user must click directly on the text area
-    // (which has an input overlay) or press a key to refocus.
+    // Clicking anywhere in the page (except header/nav) should bring focus back to the input.
+    // This handles config bar buttons, restart button, and any other UI elements.
     const refocusInputOnInteraction = (e: Event) => {
-      if (!isActive) return;
       const target = e.target as HTMLElement;
       if (target.closest("header") || target.closest("[data-mobile-menu]") || target.closest("nav")) {
         return;
@@ -459,16 +497,27 @@ export function TypingTestPage() {
 
   // Handle input focus/blur
   const handleInputFocus = useCallback(() => {
+    // Cancel any pending blur — focus came back before the 150ms expired
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
     setIsInputFocused(true);
   }, []);
 
   const handleInputBlur = useCallback(() => {
-    if (!isActive) {
-      setIsInputFocused(false);
-    } else {
-      // Re-focus immediately so typing isn't interrupted
+    if (isActive) {
+      // During test: refocus immediately so typing isn't interrupted
       inputRef.current?.focus();
+      return;
     }
+    // Before test: delay before showing the blur overlay.
+    // If a button click fires within 150ms (blur always fires before click),
+    // handleInputFocus will cancel this timeout and no overlay flash occurs.
+    blurTimeoutRef.current = setTimeout(() => {
+      blurTimeoutRef.current = null;
+      setIsInputFocused(false);
+    }, 150);
   }, [isActive]);
 
   // Restart handlers
@@ -568,8 +617,15 @@ export function TypingTestPage() {
       {/* Typing Text Display */}
       <div
         ref={wordsContainerRef}
-        className="mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto overflow-hidden rounded-2xl cursor-text"
-        style={{ maxHeight: "200px" }}
+        // text-2xl md:text-3xl is here so that the em unit in the fallback height resolves
+        // to the same font-size as the words — not the inherited body 16px.
+        className="mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto overflow-hidden rounded-2xl cursor-text text-2xl md:text-3xl"
+        style={{
+          // Before first DOM measurement: calc(3 × leading-relaxed × 1em + 2 row-gaps).
+          // em now resolves to text-2xl (24px) on mobile → 3×39px + 8px = 125px
+          //                   text-3xl (30px) on desktop → 3×49px + 16px = 163px
+          height: containerHeight > 0 ? `${containerHeight}px` : "calc(3 * 1.625em + 1rem)",
+        }}
       >
         {/* Full-size transparent input overlay — real dimensions so mobile keyboards activate */}
         <input
@@ -612,21 +668,45 @@ export function TypingTestPage() {
         )}
 
         <div
+          ref={wordsInnerRef}
           className={clsx(
-            "text-2xl md:text-3xl leading-relaxed md:leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2 transition-all duration-300",
+            "text-2xl md:text-3xl leading-relaxed md:leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2",
             !isInputFocused && !isActive && "blur-sm"
           )}
+          style={{
+            transform: `translateY(-${lineOffset * (containerHeight / 3)}px)`,
+            transition: "transform 0.15s ease",
+          }}
         >
-          {words.map((wordData, wordIndex) => (
-            <Word
-              key={wordIndex}
-              wordData={wordData}
-              wordIndex={wordIndex}
-              isCurrentWord={wordIndex === currentWordIndex}
-              currentCharIndex={wordIndex === currentWordIndex ? currentCharIndex : -1}
-              showCursor={isInputFocused}
-            />
-          ))}
+          {words.length === 0 ? (
+            // Inline skeleton — same container, same position, no layout shift
+            <>
+              {[
+                [56, 40, 72, 48, 64, 36, 80, 44, 68, 52, 40, 60, 56, 44],
+                [48, 64, 36, 56, 72, 44, 52, 80, 40, 60, 48, 36, 72, 50],
+                [64, 48, 56, 72, 40, 60, 44, 80, 52, 36, 68, 48, 56, 44],
+                [52, 68, 40, 60, 76, 44, 56, 48, 80, 36, 64, 52, 40, 68],
+              ].flat().map((w, i) => (
+                <span
+                  key={i}
+                  className="inline-block rounded bg-secondary/20 animate-pulse"
+                  // 1.625em matches leading-relaxed — each block is exactly one line tall
+                  style={{ width: w, height: "1.625em" }}
+                />
+              ))}
+            </>
+          ) : (
+            words.map((wordData, wordIndex) => (
+              <Word
+                key={wordIndex}
+                wordData={wordData}
+                wordIndex={wordIndex}
+                isCurrentWord={wordIndex === currentWordIndex}
+                currentCharIndex={wordIndex === currentWordIndex ? currentCharIndex : -1}
+                showCursor={isInputFocused}
+              />
+            ))
+          )}
         </div>
       </div>
 

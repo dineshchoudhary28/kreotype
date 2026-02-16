@@ -12,7 +12,7 @@ export function StreakCounter({ streak }: StreakCounterProps) {
   }
 
   return (
-    <div className="flex items-center gap-1 text-orange-400" title={`Current streak: ${streak} days`}>
+    <div className="flex items-center gap-1 text-orange-400" title={`Daily streak: ${streak} consecutive day${streak !== 1 ? 's' : ''} active`}>
       <Flame size={18} />
       <span className="font-bold text-sm">{streak}</span>
     </div>

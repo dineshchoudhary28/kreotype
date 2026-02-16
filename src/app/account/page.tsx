@@ -413,29 +413,76 @@ export default function AccountPage() {
         </section>
       </div>
 
-      {/* Activity Streak Heatmap */}
+      {/* Daily Streak Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="rounded-2xl bg-surface border border-surface p-5 flex flex-col gap-2 shadow-sm">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest">
+            <Flame size={13} className="text-orange-400" /> Current Streak
+          </div>
+          <div className="text-3xl font-bold text-text tabular-nums">{profile?.streak ?? 0}</div>
+          <div className="text-[10px] text-secondary/60 font-medium">consecutive days</div>
+        </div>
+        <div className="rounded-2xl bg-surface border border-surface p-5 flex flex-col gap-2 shadow-sm">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest">
+            <Trophy size={13} className="text-primary" /> Best Streak
+          </div>
+          <div className="text-3xl font-bold text-text tabular-nums">{profile?.maxStreak ?? 0}</div>
+          <div className="text-[10px] text-secondary/60 font-medium">consecutive days</div>
+        </div>
+        <div className="rounded-2xl bg-surface border border-surface p-5 flex flex-col gap-2 shadow-sm">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest">
+            <Activity size={13} className="text-green-400" /> Active Days (30d)
+          </div>
+          <div className="text-3xl font-bold text-text tabular-nums">
+            {(() => {
+              const today = new Date();
+              const pad = (n: number) => String(n).padStart(2, "0");
+              const toLocalDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+              let count = 0;
+              for (let i = 0; i < 30; i++) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                if (activityMap.has(toLocalDate(d))) count++;
+              }
+              return count;
+            })()}
+          </div>
+          <div className="text-[10px] text-secondary/60 font-medium">days in last 30 days</div>
+        </div>
+        <div className="rounded-2xl bg-surface border border-surface p-5 flex flex-col gap-2 shadow-sm">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest">
+            <Activity size={13} className="text-green-400" /> Active Days (1yr)
+          </div>
+          <div className="text-3xl font-bold text-text tabular-nums">
+            {(() => {
+              const today = new Date();
+              const pad = (n: number) => String(n).padStart(2, "0");
+              const toLocalDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+              let count = 0;
+              for (let i = 0; i < 365; i++) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                if (activityMap.has(toLocalDate(d))) count++;
+              }
+              return count;
+            })()}
+          </div>
+          <div className="text-[10px] text-secondary/60 font-medium">days in last 12 months</div>
+        </div>
+      </div>
+
+      {/* Active Days Heatmap */}
       <section className="rounded-2xl bg-surface border border-surface p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-[11px] font-bold text-secondary uppercase tracking-widest flex items-center gap-2">
-            <Calendar size={14} className="text-green-400" /> Activity Streak
+            <Calendar size={14} className="text-green-400" /> Active Days
           </h3>
-          <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest text-secondary/60">
-            <div className="flex items-center gap-2">
-              <Flame size={14} className="text-green-400" />
-              <span className="text-text">{profile?.streak ?? 0}</span>
-              <span>Current</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Trophy size={14} className="text-green-400" />
-              <span className="text-text">{profile?.maxStreak ?? 0}</span>
-              <span>Longest</span>
-            </div>
-          </div>
+          <span className="text-[10px] text-secondary/50 font-bold uppercase tracking-widest">Last 12 Months</span>
         </div>
 
         {activityMap.size === 0 ? (
           <div className="py-12 flex flex-col items-center justify-center gap-2 text-secondary/40 italic text-sm">
-            No activity yet. Complete a test to start building your streak.
+            No activity yet. Complete a test to start tracking your active days.
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -461,7 +508,7 @@ export default function AccountPage() {
                         backgroundColor: count === 0 ? 'var(--color-secondary)' : '#4ade80',
                         opacity,
                       }}
-                      title={`${key}: ${count} test${count !== 1 ? 's' : ''}${day ? `, avg ${Math.round(day.avgWpm)} wpm` : ''}`}
+                      title={`${key}: ${count} test${count !== 1 ? 's' : ''}`}
                     />
                   );
                 }
@@ -469,7 +516,7 @@ export default function AccountPage() {
               })()}
             </div>
             <div className="flex justify-between items-center px-4 text-[10px] font-bold text-secondary uppercase tracking-widest">
-              <span>Last 12 Months</span>
+              <span>Each cell = 1 day</span>
               <div className="flex items-center gap-2">
                 <span>Less</span>
                 <div className="flex gap-[2px]">

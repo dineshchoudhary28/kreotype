@@ -32,17 +32,17 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Kreotype — The Keyboard Playground",
-  description: "Test your typing speed, compete on leaderboards, and track your progress over time. Free and open-source.",
+  title: "Kreotype | Keyboard Playground",
+  description: "Test your typing speed, compete on leaderboards, and track your progress over time.",
   openGraph: {
-    title: "Kreotype — The Keyboard Playground",
-    description: "Test your typing speed, compete on leaderboards, and track your progress over time. Free and open-source.",
+    title: "Kreotype | Keyboard Playground",
+    description: "Test your typing speed, compete on leaderboards, and track your progress over time.",
     images: [{ url: "/images/og-image.svg", width: 1200, height: 630 }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kreotype — The Keyboard Playground",
+    title: "Kreotype | Keyboard Playground",
     description: "Test your typing speed, compete on leaderboards, and track your progress over time.",
     images: ["/images/og-image.svg"],
   },

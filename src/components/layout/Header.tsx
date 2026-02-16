@@ -20,7 +20,7 @@ const navLinks = [
     href: "/",
     label: "Typing Test",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="5" width="20" height="14" rx="2" ry="2" />
         <line x1="6" y1="15" x2="6" y2="15" />
         <line x1="10" y1="15" x2="14" y2="15" />
@@ -36,7 +36,7 @@ const navLinks = [
     href: "/leaderboards",
     label: "Leaderboard",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
         <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
         <path d="M4 22h16" />
@@ -51,7 +51,7 @@ const navLinks = [
     label: "Shop",
     external: true,
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="9" cy="21" r="1" />
         <circle cx="20" cy="21" r="1" />
         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
@@ -62,7 +62,7 @@ const navLinks = [
     href: "/settings",
     label: "Settings",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
         <circle cx="12" cy="12" r="3" />
       </svg>
@@ -72,7 +72,7 @@ const navLinks = [
 
 export function Header() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const { user, isLoading } = useUserData();
   const isFocused = useFocusModeStore((s) => s.isFocused);
   const showUITemporarily = useFocusModeStore((s) => s.showUITemporarily);
@@ -167,7 +167,7 @@ export function Header() {
 
           {/* Center: Main Navigation Icons */}
           <nav
-            className="hidden md:flex items-center justify-center gap-4 sm:gap-6 md:gap-10 text-secondary absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200"
+            className="hidden md:flex items-center justify-center gap-3 md:gap-5 lg:gap-8 text-secondary absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200"
             style={{
               opacity: showFullHeader ? 1 : 0,
               visibility: showFullHeader ? "visible" : "hidden",
@@ -179,13 +179,13 @@ export function Header() {
               if (link.external) {
                 return (
                   <a key={link.href} href={link.href} target="_blank" rel="noreferrer noopener" className="hover:text-text transition-colors cursor-pointer p-1" title={link.label}>
-                    <span className="scale-90 md:scale-100 block">{link.icon}</span>
+                    {link.icon}
                   </a>
                 );
               }
               return (
                 <Link key={link.href} href={link.href} className={`hover:text-text transition-colors cursor-pointer p-1 ${mounted && isActive ? "text-primary" : ""}`} title={link.label}>
-                  <span className="scale-90 md:scale-100 block">{link.icon}</span>
+                  {link.icon}
                 </Link>
               );
             })}
@@ -193,7 +193,7 @@ export function Header() {
 
           {/* Right: Actions and Profile */}
           <div
-            className="flex justify-end items-center gap-3 sm:gap-6 text-secondary transition-opacity duration-200"
+            className="flex justify-end items-center gap-2 md:gap-3 lg:gap-5 text-secondary transition-opacity duration-200"
             style={{
               opacity: showFullHeader ? 1 : 0,
               visibility: showFullHeader ? "visible" : "hidden",
@@ -207,7 +207,7 @@ export function Header() {
                 title="Change Theme"
                 onClick={() => setIsThemeOpen(!isThemeOpen)}
               >
-                <Palette size={20} />
+                <Palette size={18} />
                 <span className="hidden lg:inline text-[11px] font-bold uppercase tracking-widest">{currentTheme.label}</span>
                 <ChevronDown size={14} className={`transition-transform duration-200 ${isThemeOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -244,8 +244,8 @@ export function Header() {
               )}
             </div>
 
-            {/* Streak Counter */}
-            {session?.user && !isLoading && (user?.streak ?? 0) > 0 && (
+            {/* Streak Counter — only once session and user data are resolved */}
+            {mounted && sessionStatus !== "loading" && session?.user && !isLoading && (user?.streak ?? 0) > 0 && (
               <StreakCounter streak={user!.streak!} />
             )}
 
@@ -260,15 +260,17 @@ export function Header() {
               className={`hover:text-text transition-colors cursor-pointer relative ${isNotificationOpen ? "text-primary" : ""}`}
               title="Notifications"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
               {!isNotificationOpen && <span className="absolute -top-1 -right-1 bg-primary w-2 h-2 rounded-full border-2 border-background" />}
             </button>
 
-            {/* Profile Dropdown */}
-            {session?.user ? (
+            {/* Profile — skeleton while session resolves, then real content */}
+            {!mounted || sessionStatus === "loading" ? (
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-surface animate-pulse" />
+            ) : session?.user ? (
               <div className="relative" ref={userDropdownRef}>
                 <button
                   onClick={() => {
@@ -280,7 +282,7 @@ export function Header() {
                   className={`flex items-center gap-1.5 md:gap-2 px-1.5 py-1 rounded-xl transition-all cursor-pointer hover:bg-surface/50 group ${isUserOpen ? 'bg-surface/50 text-text' : 'text-secondary hover:text-text'}`}
                   title="Account"
                 >
-                  <div className={`w-8 h-8 md:w-9 md:h-9 rounded-full bg-background border flex items-center justify-center overflow-hidden transition-colors ${isUserOpen ? 'border-primary/50' : 'border-surface group-hover:border-secondary'}`}>
+                  <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full bg-background border flex items-center justify-center overflow-hidden transition-colors ${isUserOpen ? 'border-primary/50' : 'border-surface group-hover:border-secondary'}`}>
                     <span className="text-xs md:text-sm font-bold">
                       {(session.user.name || session.user.email || "U").charAt(0).toUpperCase()}
                     </span>
@@ -321,10 +323,10 @@ export function Header() {
             ) : (
               <Link
                 href="/login"
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface border border-surface flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
+                className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-surface border border-surface flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
                 title="Sign in"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary w-5 h-5 md:w-6 md:h-6">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary w-5 h-5">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
