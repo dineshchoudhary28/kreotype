@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAdmin } from "@/hooks/use-admin";
 import { LogViewer } from "@/components/features/admin/LogViewer";
 import { ConfigurationEditor } from "@/components/features/admin/ConfigurationEditor";
-import { User, Shield, BookText, Settings } from "lucide-react";
+import { User, BookText, Settings } from "lucide-react";
 
 type Tab = "users" | "logs" | "configuration";
 
@@ -12,6 +12,7 @@ export default function AdminPage() {
   const { isAdmin, loading: adminLoading } = useAdmin();
   const [activeTab, setActiveTab] = useState<Tab>("users");
   const [username, setUsername] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

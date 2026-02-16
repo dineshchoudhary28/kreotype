@@ -16,6 +16,7 @@ export interface PaceCaretConfig {
 export function usePaceCaret(config: PaceCaretConfig) {
     const { words, elapsedTime, startTime } = useTypingTestStore();
 
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization -- react-compiler limitation with zustand store selectors
     const pacePosition = useMemo(() => {
         if (!config.enabled || !startTime || !words || words.length === 0) {
             return { wordIndex: 0, charIndex: 0 };

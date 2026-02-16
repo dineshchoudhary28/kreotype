@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 type LogType = "auth_failure" | "banned_action" | "admin_action" | "error" | "suspicious_result";
 
 interface LogData {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 

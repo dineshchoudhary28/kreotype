@@ -11,6 +11,7 @@ export default function InventoryPage() {
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<Badge[]>([]);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- syncing server data into local state on user load */
   useEffect(() => {
     if (user) {
       setSelectedBadges(user.inventory?.badges ?? []);
@@ -18,6 +19,7 @@ export default function InventoryPage() {
       setEarnedBadges(userEarnedBadges);
     }
   }, [user]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleBadgeClick = (badgeId: string) => {
     setSelectedBadges(prev => {

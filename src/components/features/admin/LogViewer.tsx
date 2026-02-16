@@ -6,6 +6,7 @@ interface Log {
   _id: string;
   type: string;
   message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
   userId: string | null;
   important: boolean;

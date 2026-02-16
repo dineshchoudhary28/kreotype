@@ -171,6 +171,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Update user stats (PBs and Hashes)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: Record<string, any> = {};
 
     if (isPb) {

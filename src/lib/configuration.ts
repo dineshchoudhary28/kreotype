@@ -3,6 +3,7 @@ import { Configuration } from "@/server/models/Configuration";
 import { logError } from "@/lib/logger";
 
 // In-memory cache for the configuration
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let cachedConfig: any = null;
 let lastFetchTimestamp = 0;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes

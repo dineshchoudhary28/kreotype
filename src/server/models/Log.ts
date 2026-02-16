@@ -4,6 +4,7 @@ export interface ILog extends Document {
   _id: Types.ObjectId;
   type: string;
   message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
   userId: Types.ObjectId | null;
   important: boolean;

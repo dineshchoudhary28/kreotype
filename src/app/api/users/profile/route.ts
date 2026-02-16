@@ -21,6 +21,7 @@ export async function PATCH(request: NextRequest) {
 
   const { bio, keyboard, socialProfiles } = parsed.data;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updates: Record<string, any> = {};
   if (bio !== undefined) updates["profileDetails.bio"] = bio;
   if (keyboard !== undefined) updates["profileDetails.keyboard"] = keyboard;

@@ -86,9 +86,9 @@ interface TypingTestState {
   // Actions
   setWords: (words: string[]) => void;
   startTest: () => void;
-  handleInput: (char: string) => void;
+  handleInput: (char: string, difficulty?: "normal" | "expert" | "master") => void;
   handleBackspace: () => void;
-  handleSpace: () => void;
+  handleSpace: (difficulty?: "normal" | "expert" | "master") => void;
   recordKeydown: (code: string) => void;
   recordKeyup: (code: string) => void;
   finishTest: () => void;
@@ -318,7 +318,9 @@ export const useTypingTestStore = create<TypingTestState>()(
     });
   },
 
-  handleInput: (char) => {
+  handleInput: (char, difficulty = "normal") => {
+    let shouldFinishOnError = false;
+
     set((draft) => {
       if (draft.isFinished) return;
 
@@ -350,9 +352,15 @@ export const useTypingTestStore = create<TypingTestState>()(
       draft.input = draft.input + char;
       draft.elapsedTime = now - (draft.startTime || now);
 
-      // Stats are now calculated in tick() to avoid blocking on every keystroke
-      // This reduces input latency from 30-50ms to <16ms
+      // Master: any wrong key immediately ends the test
+      if (difficulty === "master" && isError) {
+        shouldFinishOnError = true;
+      }
     });
+
+    if (shouldFinishOnError) {
+      get().finishTest();
+    }
   },
 
   handleBackspace: () => {
@@ -382,8 +390,9 @@ export const useTypingTestStore = create<TypingTestState>()(
     });
   },
 
-  handleSpace: () => {
+  handleSpace: (difficulty = "normal") => {
     let shouldFinish = false;
+    let shouldFinishOnExpertError = false;
 
     set((draft) => {
       if (draft.isFinished || draft.currentCharIndex === 0) return;
@@ -395,6 +404,12 @@ export const useTypingTestStore = create<TypingTestState>()(
       const isWordCorrect =
         currentWord.chars.every((c) => c.state === "correct") &&
         !currentWord.chars.some((c) => c.state === "extra");
+
+      // Expert: submitting a wrong word immediately ends the test
+      if (difficulty === "expert" && !isWordCorrect) {
+        shouldFinishOnExpertError = true;
+        return;
+      }
 
       currentWord.isCorrect = isWordCorrect;
       draft.lastWordTimestamp = now;
@@ -413,8 +428,8 @@ export const useTypingTestStore = create<TypingTestState>()(
       // Stats are calculated in tick() to avoid blocking
     });
 
-    if (shouldFinish) {
-      get().finishTest(); // Call outside set() but based on atomic check
+    if (shouldFinish || shouldFinishOnExpertError) {
+      get().finishTest();
     }
   },
 

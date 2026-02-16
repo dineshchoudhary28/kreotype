@@ -24,7 +24,8 @@ function generateWords(
   mode: string,
   value: string,
   punctuation: boolean,
-  numbers: boolean
+  numbers: boolean,
+  caseMode: "normal" | "upper" | "lower" | "camel"
 ): string[] {
   let words: string[] = [];
 
@@ -66,6 +67,13 @@ function generateWords(
     });
   }
 
+  // Apply case transformation
+  if (caseMode === "upper") {
+    words = words.map((w) => w.toUpperCase());
+  } else if (caseMode === "lower") {
+    words = words.map((w) => w.toLowerCase());
+  }
+
   return words;
 }
 
@@ -74,6 +82,7 @@ export function TypingTestPage() {
   const wordsContainerRef = useRef<HTMLDivElement>(null);
   const wordsInnerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const caretRef = useRef<HTMLDivElement>(null);
   // Timeout ref: delays setting isInputFocused=false so UI button clicks don't flash the blur overlay
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -90,9 +99,13 @@ export function TypingTestPage() {
   const value = useConfigStore((s) => s.value);
   const punctuation = useConfigStore((s) => s.punctuation);
   const numbers = useConfigStore((s) => s.numbers);
+  const caseMode = useConfigStore((s) => s.caseMode);
+  const difficulty = useConfigStore((s) => s.difficulty);
+  const caretStyle = useConfigStore((s) => s.caretStyle);
   const language = useConfigStore((s) => s.language);
 
   // Typing test store
+  const testId = useTypingTestStore((s) => s.testId);
   const words = useTypingTestStore((s) => s.words);
   const currentWordIndex = useTypingTestStore((s) => s.currentWordIndex);
   const currentCharIndex = useTypingTestStore((s) => s.currentCharIndex);
@@ -123,14 +136,14 @@ export function TypingTestPage() {
 
   // Initialize words on mount or config change
   const initializeTest = useCallback(() => {
-    const newWords = generateWords(mode, value, punctuation, numbers);
+    const newWords = generateWords(mode, value, punctuation, numbers, caseMode);
     setWords(newWords);
     if (mode === "time") {
       setTimeLeft(parseInt(value, 10));
     }
     inputRef.current?.focus();
     setIsInputFocused(true);
-  }, [mode, value, punctuation, numbers, setWords, setTimeLeft]);
+  }, [mode, value, punctuation, numbers, caseMode, setWords, setTimeLeft]);
 
   useEffect(() => {
     setTimeout(() => initializeTest(), 0);
@@ -215,9 +228,12 @@ export function TypingTestPage() {
     }
   }, [currentWordIndex]);
 
-  // On every new word set: reset scroll AND measure line height before the browser paints
-  // useLayoutEffect runs synchronously after DOM mutations → no one-frame flash
+  // On every new test (testId changes): reset scroll AND measure line height before the browser paints.
+  // useLayoutEffect runs synchronously after DOM mutations → no one-frame flash.
+  // Depends on testId (not words) so it does NOT fire on every keystroke — only when a new
+  // test is initialized (setWords/resetTest both regenerate testId).
   useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional pre-paint DOM measurement, not a cascading render
     setLineOffset(0);
 
     if (!wordsInnerRef.current) return;
@@ -234,7 +250,54 @@ export function TypingTestPage() {
 
     const lh = nextLineEl.offsetTop - firstTop;
     if (lh > 0) setContainerHeight(lh * 3);
-  }, [words]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: testId changes only on new test, not on every keystroke
+  }, [testId]);
+
+  // Smooth floating caret: position the caret div at the active character's location.
+  // Use offsetTop/offsetLeft (layout-based, immune to CSS transforms) instead of
+  // getBoundingClientRect() which captures mid-animation viewport coordinates during
+  // the translateY scroll transition and causes the caret to jump on line scroll.
+  useEffect(() => {
+    if (caretStyle === "off" || !caretRef.current || !wordsInnerRef.current) return;
+
+    const wordEl = wordsInnerRef.current.querySelector(
+      `[data-word-index="${currentWordIndex}"]`
+    ) as HTMLElement | null;
+    if (!wordEl) return;
+
+    // Current translateY applied to wordsInnerRef
+    const translateY = lineOffset * (containerHeight / 3);
+
+    let left: number;
+    let top: number;
+    let height: number;
+
+    const charEls = Array.from(wordEl.querySelectorAll("[data-char]")) as HTMLElement[];
+
+    if (currentCharIndex < charEls.length) {
+      // Position at the left edge of the current char
+      // charEl.offsetTop is relative to wordEl (its offsetParent); wordEl.offsetTop is relative to wordsContainerRef
+      const charEl = charEls[currentCharIndex];
+      left = wordEl.offsetLeft + charEl.offsetLeft;
+      top = wordEl.offsetTop + charEl.offsetTop - translateY;
+      height = charEl.offsetHeight;
+    } else if (charEls.length > 0) {
+      // Past the last char: position at the right edge of the last char
+      const lastEl = charEls[charEls.length - 1];
+      left = wordEl.offsetLeft + lastEl.offsetLeft + lastEl.offsetWidth;
+      top = wordEl.offsetTop + lastEl.offsetTop - translateY;
+      height = lastEl.offsetHeight;
+    } else {
+      // Empty word — position at word left
+      left = wordEl.offsetLeft;
+      top = wordEl.offsetTop - translateY;
+      height = wordEl.offsetHeight;
+    }
+
+    caretRef.current.style.left = `${left}px`;
+    caretRef.current.style.top = `${top}px`;
+    caretRef.current.style.height = `${height}px`;
+  }, [currentWordIndex, currentCharIndex, words, caretStyle, lineOffset, containerHeight]);
 
   // Global listener to refocus input when blurred (keyboard + touch)
   // Also handles Tab+Enter restart at document level so it works regardless of input focus
@@ -360,7 +423,7 @@ export function TypingTestPage() {
       // Space to move to next word
       if (e.key === " ") {
         e.preventDefault();
-        handleSpace();
+        handleSpace(difficulty);
         return;
       }
 
@@ -374,10 +437,10 @@ export function TypingTestPage() {
       // Regular character input (skip "Unidentified" from mobile — handled by beforeinput)
       if (e.key.length === 1 && e.key !== "Unidentified" && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        handleInput(e.key);
+        handleInput(e.key, difficulty);
       }
     },
-    [isFinished, isPaused, isActive, handleInput, handleBackspace, handleSpace, resetTest, incrementTab, recordKeydown, setShowUITemporarily]
+    [isFinished, isPaused, isActive, difficulty, handleInput, handleBackspace, handleSpace, resetTest, incrementTab, recordKeydown, setShowUITemporarily]
   );
 
   const handleKeyUp = useCallback((e: React.KeyboardEvent) => {
@@ -410,9 +473,9 @@ export function TypingTestPage() {
         e.preventDefault();
         for (const char of nativeEvent.data) {
           if (char === " ") {
-            handleSpace();
+            handleSpace(difficulty);
           } else {
-            handleInput(char);
+            handleInput(char, difficulty);
           }
         }
       } else if (
@@ -425,7 +488,7 @@ export function TypingTestPage() {
         e.preventDefault();
       }
     },
-    [isFinished, isPaused, handleInput, handleSpace, handleBackspace, setShowUITemporarily]
+    [isFinished, isPaused, difficulty, handleInput, handleSpace, handleBackspace, setShowUITemporarily]
   );
 
   // Fallback input handler for older mobile browsers that don't support beforeinput.
@@ -443,9 +506,9 @@ export function TypingTestPage() {
       if (!isFinished && !isPaused && value) {
         for (const char of value) {
           if (char === " ") {
-            handleSpace();
+            handleSpace(difficulty);
           } else {
-            handleInput(char);
+            handleInput(char, difficulty);
           }
         }
       }
@@ -453,7 +516,7 @@ export function TypingTestPage() {
       // Always clear to prevent autocomplete/suggestion buildup
       target.value = "";
     },
-    [isFinished, isPaused, handleInput, handleSpace]
+    [isFinished, isPaused, difficulty, handleInput, handleSpace]
   );
 
   // Composition event handlers for mobile virtual keyboards with predictive text.
@@ -471,9 +534,9 @@ export function TypingTestPage() {
       if (data && !isFinished && !isPaused) {
         for (const char of data) {
           if (char === " ") {
-            handleSpace();
+            handleSpace(difficulty);
           } else {
-            handleInput(char);
+            handleInput(char, difficulty);
           }
         }
       }
@@ -483,7 +546,7 @@ export function TypingTestPage() {
         inputRef.current.value = "";
       }
     },
-    [isFinished, isPaused, handleInput, handleSpace]
+    [isFinished, isPaused, difficulty, handleInput, handleSpace]
   );
 
   // Block copy/paste (cheating prevention)
@@ -667,6 +730,18 @@ export function TypingTestPage() {
           </div>
         )}
 
+        {/* Floating smooth caret — positioned absolutely over the words container */}
+        {caretStyle !== "off" && isInputFocused && words.length > 0 && (
+          <div
+            ref={caretRef}
+            className="absolute w-0.5 bg-primary z-10 pointer-events-none rounded-full"
+            style={{
+              transition: `left ${caretStyle === "slow" ? 150 : caretStyle === "medium" ? 75 : 30}ms ease, top ${caretStyle === "slow" ? 150 : caretStyle === "medium" ? 75 : 30}ms ease`,
+              willChange: "left, top",
+            }}
+          />
+        )}
+
         <div
           ref={wordsInnerRef}
           className={clsx(
@@ -703,7 +778,7 @@ export function TypingTestPage() {
                 wordIndex={wordIndex}
                 isCurrentWord={wordIndex === currentWordIndex}
                 currentCharIndex={wordIndex === currentWordIndex ? currentCharIndex : -1}
-                showCursor={isInputFocused}
+                showCursor={isInputFocused && caretStyle === "off"}
               />
             ))
           )}
@@ -791,7 +866,7 @@ function Word({ wordData, wordIndex, isCurrentWord, currentCharIndex, showCursor
         }
 
         return (
-          <span key={charIndex} className={`relative ${colorClass}`}>
+          <span key={charIndex} data-char className={`relative ${colorClass}`}>
             {isCursor && (
               <span className="absolute left-0 top-0 w-0.5 h-full bg-primary animate-pulse" />
             )}

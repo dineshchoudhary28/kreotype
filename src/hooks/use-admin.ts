@@ -8,6 +8,7 @@ export function useAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- deriving admin status from session on auth change */
   useEffect(() => {
     if (status === "loading") {
       return;
@@ -17,8 +18,6 @@ export function useAdmin() {
       setIsAdmin(false);
       return;
     }
-    // This is a placeholder for a real admin check.
-    // In a real application, you would have a more robust way of determining admin status.
     const ADMIN_USER_IDS = process.env.NEXT_PUBLIC_ADMIN_USER_IDS?.split(",") || [];
     const userId = session?.user?.id;
     if (userId && ADMIN_USER_IDS.includes(userId)) {
@@ -26,6 +25,7 @@ export function useAdmin() {
     }
     setLoading(false);
   }, [session, status]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return { isAdmin, loading };
 }

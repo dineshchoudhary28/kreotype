@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
 
   const { type, limit } = query.data;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filter: Record<string, any> = {};
   if (type) {
     filter.type = type;

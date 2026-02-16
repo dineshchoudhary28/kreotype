@@ -16,6 +16,10 @@ export const useConfigStore = create<ConfigStore>()(
       updateConfig: (partial) => set((state) => ({ ...state, ...partial })),
       resetConfig: () => set(defaultConfig),
     }),
-    { name: "kreotype-config" }
+    {
+      name: "kreotype-config",
+      // Merge persisted state with defaults so new fields (e.g. caseMode) are never undefined
+      merge: (persisted, current) => ({ ...current, ...(persisted as Partial<ConfigStore>) }),
+    }
   )
 );

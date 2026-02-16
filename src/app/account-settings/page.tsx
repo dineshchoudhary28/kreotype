@@ -356,7 +356,7 @@ export default function AccountSettingsPage() {
                 <div className="flex flex-col gap-3 max-w-sm mt-2">
                   {!otpSent ? (
                     <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl flex flex-col gap-3">
-                      <p className="text-xs text-secondary">We'll send a verification code to your email to reset your password.</p>
+                      <p className="text-xs text-secondary">We&apos;ll send a verification code to your email to reset your password.</p>
                       <div className="flex gap-2">
                         <button
                           onClick={() => apiAction("/api/auth/otp/request", "POST", { email: username, type: "reset" }, () => setOtpSent(true))}

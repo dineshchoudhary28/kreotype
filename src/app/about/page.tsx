@@ -28,7 +28,7 @@ export default function AboutPage() {
             distraction-free experience that emulates natural keyboard typing.
           </p>
           <p className="text-base text-secondary leading-relaxed">
-            Whether you're a developer looking to code faster, a writer aiming for efficiency, or simply
+            Whether you&apos;re a developer looking to code faster, a writer aiming for efficiency, or simply
             someone who wants to type better, Kreotype provides the tools and insights you need to track
             your progress and achieve your goals.
           </p>
