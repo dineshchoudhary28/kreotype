@@ -45,6 +45,8 @@ export function Footer() {
 
             {/* Page Links */}
             <Link href="/about" className="hover:text-text transition-colors">About</Link>
+            <Link href="/terms" className="hover:text-text transition-colors">Terms</Link>
+            <Link href="/privacy" className="hover:text-text transition-colors">Privacy</Link>
           </div>
 
           {/* Right: Copyright */}
