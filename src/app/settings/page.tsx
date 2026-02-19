@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const caseMode = useConfigStore((s) => s.caseMode);
   const difficulty = useConfigStore((s) => s.difficulty);
   const caretStyle = useConfigStore((s) => s.caretStyle);
+  const smoothCaret = useConfigStore((s) => s.smoothCaret);
   const setConfig = useConfigStore((s) => s.setConfig);
 
   const saveConfig = async <K extends keyof Config>(key: K, value: Config[K]) => {
@@ -28,7 +29,7 @@ export default function SettingsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         mode: s.mode, value: s.value, punctuation: s.punctuation, numbers: s.numbers,
-        caseMode: s.caseMode, difficulty: s.difficulty, caretStyle: s.caretStyle,
+        caseMode: s.caseMode, difficulty: s.difficulty, caretStyle: s.caretStyle, smoothCaret: s.smoothCaret,
         language: s.language, sidebarExpanded: s.sidebarExpanded, pageWidth: s.pageWidth,
         [key]: value,
       }),
@@ -117,10 +118,34 @@ export default function SettingsPage() {
           </div>
         </SettingSection>
 
+        {/* ── Caret Style ─────────────────────────────────────────── */}
+        <SettingSection
+          title="Caret Style"
+          description="Visual appearance of the caret while typing"
+        >
+          <div className="flex gap-3 flex-wrap">
+            {([
+              { value: "off",       label: "off",       hint: "no caret, use inline cursor" },
+              { value: "line",      label: "line",      hint: "thin vertical bar" },
+              { value: "block",     label: "block",     hint: "semi-transparent filled box" },
+              { value: "underline", label: "underline", hint: "bar under the character" },
+              { value: "outline",   label: "outline",   hint: "bordered box around character" },
+            ] as const).map(({ value, label, hint }) => (
+              <OptionCard
+                key={value}
+                active={caretStyle === value}
+                onClick={() => saveConfig("caretStyle", value)}
+                label={label}
+                hint={hint}
+              />
+            ))}
+          </div>
+        </SettingSection>
+
         {/* ── Smooth Caret ───────────────────────────────────────── */}
         <SettingSection
           title="Smooth Caret"
-          description="Controls how the caret moves between characters while typing"
+          description="Controls how quickly the caret animates between characters"
         >
           <div className="flex gap-3 flex-wrap">
             {([
@@ -131,8 +156,8 @@ export default function SettingsPage() {
             ] as const).map(({ value, label, hint }) => (
               <OptionCard
                 key={value}
-                active={caretStyle === value}
-                onClick={() => saveConfig("caretStyle", value)}
+                active={smoothCaret === value}
+                onClick={() => saveConfig("smoothCaret", value)}
                 label={label}
                 hint={hint}
               />

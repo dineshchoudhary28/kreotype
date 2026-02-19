@@ -102,6 +102,7 @@ export function TypingTestPage() {
   const caseMode = useConfigStore((s) => s.caseMode);
   const difficulty = useConfigStore((s) => s.difficulty);
   const caretStyle = useConfigStore((s) => s.caretStyle);
+  const smoothCaret = useConfigStore((s) => s.smoothCaret);
   const language = useConfigStore((s) => s.language);
 
   // Typing test store
@@ -254,10 +255,13 @@ export function TypingTestPage() {
   }, [testId]);
 
   // Smooth floating caret: position the caret div at the active character's location.
+  // useLayoutEffect (not useEffect) fires synchronously after DOM mutations and before the
+  // browser paints — this ensures the caret is correctly positioned on the very first render
+  // rather than sitting at 0,0 for one frame (or until the next keystroke).
   // Use offsetTop/offsetLeft (layout-based, immune to CSS transforms) instead of
   // getBoundingClientRect() which captures mid-animation viewport coordinates during
   // the translateY scroll transition and causes the caret to jump on line scroll.
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (caretStyle === "off" || !caretRef.current || !wordsInnerRef.current) return;
 
     const wordEl = wordsInnerRef.current.querySelector(
@@ -271,32 +275,44 @@ export function TypingTestPage() {
     let left: number;
     let top: number;
     let height: number;
+    let width: number;
 
     const charEls = Array.from(wordEl.querySelectorAll("[data-char]")) as HTMLElement[];
 
     if (currentCharIndex < charEls.length) {
       // Position at the left edge of the current char
-      // charEl.offsetTop is relative to wordEl (its offsetParent); wordEl.offsetTop is relative to wordsContainerRef
       const charEl = charEls[currentCharIndex];
       left = wordEl.offsetLeft + charEl.offsetLeft;
       top = wordEl.offsetTop + charEl.offsetTop - translateY;
       height = charEl.offsetHeight;
+      width = charEl.offsetWidth;
     } else if (charEls.length > 0) {
       // Past the last char: position at the right edge of the last char
       const lastEl = charEls[charEls.length - 1];
       left = wordEl.offsetLeft + lastEl.offsetLeft + lastEl.offsetWidth;
       top = wordEl.offsetTop + lastEl.offsetTop - translateY;
       height = lastEl.offsetHeight;
+      width = lastEl.offsetWidth;
     } else {
       // Empty word — position at word left
       left = wordEl.offsetLeft;
       top = wordEl.offsetTop - translateY;
       height = wordEl.offsetHeight;
+      width = 8;
     }
 
-    caretRef.current.style.left = `${left}px`;
-    caretRef.current.style.top = `${top}px`;
-    caretRef.current.style.height = `${height}px`;
+    const el = caretRef.current;
+    // Width: line is always 2px; all other styles match the character width
+    el.style.width = caretStyle === "line" ? "2px" : `${width}px`;
+    el.style.left = `${left}px`;
+    // Underline sits at the bottom of the character cell (3px tall)
+    if (caretStyle === "underline") {
+      el.style.top = `${top + height - 3}px`;
+      el.style.height = "3px";
+    } else {
+      el.style.top = `${top}px`;
+      el.style.height = `${height}px`;
+    }
   }, [currentWordIndex, currentCharIndex, words, caretStyle, lineOffset, containerHeight]);
 
   // Global listener to refocus input when blurred (keyboard + touch)
@@ -342,31 +358,28 @@ export function TypingTestPage() {
       }
     };
 
-    // For touch/click: only auto-refocus when the test is actively running.
-    // Clicking anywhere in the page (except header/nav) should bring focus back to the input.
-    // This handles config bar buttons, restart button, and any other UI elements.
-    const refocusInputOnInteraction = (e: Event) => {
+    document.addEventListener("keydown", refocusInputOnKey);
+    document.addEventListener("keyup", handleGlobalKeyUp);
+    return () => {
+      document.removeEventListener("keydown", refocusInputOnKey);
+      document.removeEventListener("keyup", handleGlobalKeyUp);
+    };
+  }, [isInputFocused, isFinished, isActive, initializeTest, resetTest]);
+
+  // Dismiss blur overlay when clicking any config/control element (sidebar, TestConfig, restart).
+  // These buttons use onMouseDown preventDefault so they never CAUSE blur, but if blur is already
+  // showing (from a prior click on empty space), this listener dismisses it on their click.
+  useEffect(() => {
+    const handleSafeClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest("header") || target.closest("[data-mobile-menu]") || target.closest("nav")) {
-        return;
-      }
-      if (!isInputFocused && !isFinished) {
+      if (target.closest("[data-typing-safe]") && !isFinished) {
         inputRef.current?.focus();
         setIsInputFocused(true);
       }
     };
-
-    document.addEventListener("keydown", refocusInputOnKey);
-    document.addEventListener("keyup", handleGlobalKeyUp);
-    document.addEventListener("touchstart", refocusInputOnInteraction);
-    document.addEventListener("click", refocusInputOnInteraction);
-    return () => {
-      document.removeEventListener("keydown", refocusInputOnKey);
-      document.removeEventListener("keyup", handleGlobalKeyUp);
-      document.removeEventListener("touchstart", refocusInputOnInteraction);
-      document.removeEventListener("click", refocusInputOnInteraction);
-    };
-  }, [isInputFocused, isFinished, isActive, initializeTest, resetTest]);
+    document.addEventListener("click", handleSafeClick);
+    return () => document.removeEventListener("click", handleSafeClick);
+  }, [isFinished]);
 
   // Track Tab key state for Tab+Enter restart
   const tabPressedRef = useRef(false);
@@ -730,14 +743,41 @@ export function TypingTestPage() {
           </div>
         )}
 
-        {/* Floating smooth caret — positioned absolutely over the words container */}
+        {/* Floating caret — positioned absolutely, style varies by caretStyle */}
         {caretStyle !== "off" && isInputFocused && words.length > 0 && (
           <div
             ref={caretRef}
-            className="absolute w-0.5 bg-primary z-10 pointer-events-none rounded-full"
+            className={clsx(
+              "absolute z-10 pointer-events-none",
+              !isActive && "animate-[caretBlink_1s_ease-in-out_infinite]"
+            )}
             style={{
-              transition: `left ${caretStyle === "slow" ? 150 : caretStyle === "medium" ? 75 : 30}ms ease, top ${caretStyle === "slow" ? 150 : caretStyle === "medium" ? 75 : 30}ms ease`,
+              transition: smoothCaret === "off"
+                ? "none"
+                : `left ${smoothCaret === "slow" ? 150 : smoothCaret === "medium" ? 75 : 30}ms ease, top ${smoothCaret === "slow" ? 150 : smoothCaret === "medium" ? 75 : 30}ms ease`,
               willChange: "left, top",
+              // line: thin 2px vertical bar
+              ...(caretStyle === "line" && {
+                background: "var(--color-primary)",
+                borderRadius: "9999px",
+              }),
+              // block: semi-transparent filled rectangle
+              ...(caretStyle === "block" && {
+                background: "var(--color-primary)",
+                opacity: 0.28,
+                borderRadius: "3px",
+              }),
+              // underline: flat bar at the bottom of the character cell
+              ...(caretStyle === "underline" && {
+                background: "var(--color-primary)",
+                borderRadius: "2px",
+              }),
+              // outline: bordered box, transparent fill
+              ...(caretStyle === "outline" && {
+                border: "2px solid var(--color-primary)",
+                borderRadius: "3px",
+                boxSizing: "border-box" as const,
+              }),
             }}
           />
         )}
@@ -790,6 +830,8 @@ export function TypingTestPage() {
         <button
           className="text-secondary hover:text-text transition-colors cursor-pointer p-2 rounded-lg hover:bg-surface group"
           title="Restart Test (Tab + Enter)"
+          onMouseDown={(e) => e.preventDefault()}
+          data-typing-safe=""
           onClick={() => {
             initializeTest();
             resetTest();

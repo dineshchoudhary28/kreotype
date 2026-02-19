@@ -34,7 +34,7 @@ const values: Record<string, string[]> = {
   words: ["10", "25", "50", "100"],
 };
 
-export function TestConfig() {
+export function TestConfig({ leftSlot }: { leftSlot?: ReactNode }) {
   const mode = useConfigStore((s) => s.mode);
   const value = useConfigStore((s) => s.value);
   const punctuation = useConfigStore((s) => s.punctuation);
@@ -50,7 +50,8 @@ export function TestConfig() {
   const currentValues = values[mode];
 
   return (
-    <div className="flex flex-col items-center w-full mt-4 px-4 md:px-0">
+    <div className="flex items-center justify-center w-full mt-4 px-4 md:px-0 gap-2">
+      {leftSlot}
       <div className="bg-surface rounded-2xl flex flex-col shadow-2xl border border-surface overflow-hidden w-full max-w-[1000px] md:w-fit">
         {/* Basic Config */}
         <div className="px-4 md:px-6 py-2.5 flex flex-wrap md:flex-nowrap items-center justify-center md:justify-start gap-4 md:gap-8 text-[12px] md:text-[13px] font-medium text-secondary">
@@ -58,6 +59,8 @@ export function TestConfig() {
           <div className="flex items-center gap-4 md:gap-6 border-b md:border-b-0 md:border-r border-surface pb-2 md:pb-0 md:pr-8 w-full md:w-auto justify-center md:justify-start">
             <button
               onClick={() => setConfig("punctuation", !punctuation)}
+              onMouseDown={(e) => e.preventDefault()}
+              data-typing-safe=""
               className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer ${punctuation ? "text-primary" : ""}`}
             >
               <span className="text-[13px] md:text-[14px]">@</span>
@@ -65,6 +68,8 @@ export function TestConfig() {
             </button>
             <button
               onClick={() => setConfig("numbers", !numbers)}
+              onMouseDown={(e) => e.preventDefault()}
+              data-typing-safe=""
               className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer ${numbers ? "text-primary" : ""}`}
             >
               <span className="text-[13px] md:text-[14px]">#</span>
@@ -82,6 +87,8 @@ export function TestConfig() {
               <button
                 key={m}
                 onClick={() => handleModeChange(m)}
+                onMouseDown={(e) => e.preventDefault()}
+                data-typing-safe=""
                 className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer capitalize ${
                   mode === m ? "text-primary" : "text-secondary"
                 }`}
@@ -99,6 +106,8 @@ export function TestConfig() {
                 <button
                   key={v}
                   onClick={() => setConfig("value", v)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  data-typing-safe=""
                   className={`hover:text-text transition-colors cursor-pointer ${
                     value === v ? "text-primary" : "text-secondary"
                   }`}
