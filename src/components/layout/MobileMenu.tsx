@@ -8,6 +8,7 @@ import { themes } from "@/data/themes";
 import { useState } from "react";
 import { Palette, Check, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
+import { MAINTENANCE_MODE } from "@/lib/maintenance";
 
 const navLinks = [
   {
@@ -216,7 +217,7 @@ export function MobileMenu({ onClose, topOffset }: MobileMenuProps) {
               </svg>
             </button>
           </div>
-        ) : (
+        ) : !MAINTENANCE_MODE ? (
           <Link
             href="/login"
             className="w-full bg-primary text-background font-bold py-4 px-6 rounded-xl text-center hover:opacity-90 transition-opacity"
@@ -224,7 +225,7 @@ export function MobileMenu({ onClose, topOffset }: MobileMenuProps) {
           >
             Sign In
           </Link>
-        )}
+        ) : null}
       </div>
     </motion.div>
     </>

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { XpProgressBar } from "@/components/features/XpProgressBar";
 import { cn } from "@/lib/utils";
+import { MAINTENANCE_MODE, showMaintenanceToast } from "@/lib/maintenance";
 
 interface ProfileUser {
   _id: string;
@@ -127,6 +128,10 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
+    if (MAINTENANCE_MODE) {
+      showMaintenanceToast();
+      return;
+    }
     if (authStatus === "authenticated" && session?.user?.name && !profile) {
       setUsername(session.user.name);
       loadProfile(session.user.name);
@@ -135,6 +140,10 @@ export default function ProfilePage() {
 
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
+    if (MAINTENANCE_MODE) {
+      showMaintenanceToast();
+      return;
+    }
     if (!username.trim()) return;
     loadProfile(username.trim());
   };
@@ -200,8 +209,14 @@ export default function ProfilePage() {
             <User size={48} />
           </div>
           <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-bold text-text">No profile selected</h2>
-            <p className="text-sm text-secondary">Search for a user to see their typing performance.</p>
+            <h2 className="text-lg font-bold text-text">
+              {MAINTENANCE_MODE ? "Profiles unavailable" : "No profile selected"}
+            </h2>
+            <p className="text-sm text-secondary">
+              {MAINTENANCE_MODE
+                ? "Backend services are currently on hold. Core typing features remain available."
+                : "Search for a user to see their typing performance."}
+            </p>
           </div>
         </div>
       )}

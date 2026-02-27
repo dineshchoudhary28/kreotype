@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { XpProgressBar } from "@/components/features/XpProgressBar";
+import { MAINTENANCE_MODE, showMaintenanceToast } from "@/lib/maintenance";
 import {
   User,
   Mail,
@@ -108,6 +109,14 @@ function formatDate(ts: string): string {
 export default function AccountPage() {
   const { status } = useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    if (MAINTENANCE_MODE) {
+      showMaintenanceToast();
+      router.replace("/");
+    }
+  }, [router]);
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [pbs, setPbs] = useState<Record<string, PersonalBest>>({});
@@ -206,6 +215,8 @@ export default function AccountPage() {
     }
     return map;
   }, [activity]);
+
+  if (MAINTENANCE_MODE) return null;
 
   if (status === "loading" || loading) {
     return (

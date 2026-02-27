@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
+import { MAINTENANCE_MODE, showMaintenanceToast } from "@/lib/maintenance";
 
 type LeaderboardType = "allTime" | "weekly" | "daily";
 type TimeMode = "15" | "60";
@@ -77,10 +78,16 @@ export default function LeaderboardsPage() {
   }, [type, timeMode]);
 
   useEffect(() => {
+    if (MAINTENANCE_MODE) {
+      showMaintenanceToast();
+      setLoading(false);
+      return;
+    }
     fetchLeaderboard(1);
   }, [fetchLeaderboard]);
 
   useEffect(() => {
+    if (MAINTENANCE_MODE) return;
     const ttl = CACHE_TTL[type];
     setCountdown(ttl);
 
@@ -330,6 +337,14 @@ export default function LeaderboardsPage() {
                   Your rank is calculated based on your highest WPM in the last 24 hours for the selected mode.
                 </p>
               </div>
+            </div>
+          ) : MAINTENANCE_MODE ? (
+            <div className="bg-surface border border-surface rounded-2xl p-6 text-center">
+              <div className="w-12 h-12 bg-background rounded-xl flex items-center justify-center mx-auto mb-4 border border-surface">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <h3 className="text-sm font-bold text-text mb-2">Leaderboards on hold</h3>
+              <p className="text-xs text-secondary">Backend services are currently on hold. Core typing features remain available.</p>
             </div>
           ) : (
             <div className="bg-surface border border-surface rounded-2xl p-6 text-center">

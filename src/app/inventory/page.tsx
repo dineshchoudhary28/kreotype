@@ -1,13 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useUserData } from "@/hooks/use-user-data";
 import { badges, type Badge } from "@/data/badges";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { MAINTENANCE_MODE, showMaintenanceToast } from "@/lib/maintenance";
 
 export default function InventoryPage() {
+  const router = useRouter();
   const { user, isLoading } = useUserData();
+
+  useEffect(() => {
+    if (MAINTENANCE_MODE) {
+      showMaintenanceToast();
+      router.replace("/");
+    }
+  }, [router]);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<Badge[]>([]);
 
@@ -50,6 +60,8 @@ export default function InventoryPage() {
       toast.error("An error occurred.");
     }
   };
+
+  if (MAINTENANCE_MODE) return null;
 
   if (isLoading) {
     return <div>Loading...</div>;

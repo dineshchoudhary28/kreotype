@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { MAINTENANCE_MODE, showMaintenanceToast } from "@/lib/maintenance";
 
 export default function LoginPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    if (MAINTENANCE_MODE) {
+      showMaintenanceToast();
+      router.replace("/");
+    }
+  }, [router]);
+
+  if (MAINTENANCE_MODE) return null;
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [otp, setOtp] = useState("");

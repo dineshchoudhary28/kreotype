@@ -5,6 +5,7 @@ import { useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { type CompletedEventInput } from "@/server/validators/result";
 import { useTypingTestStore } from "@/store/useTypingTestStore";
+import { MAINTENANCE_MODE } from "@/lib/maintenance";
 
 export function LocalResultSyncer() {
   const { status } = useSession();
@@ -62,6 +63,7 @@ export function LocalResultSyncer() {
   }, [setIsSyncing]);
 
   useEffect(() => {
+    if (MAINTENANCE_MODE) return;
     if (status === "authenticated" && !hasCheckedRef.current) {
       hasCheckedRef.current = true;
       const localResultsJson = localStorage.getItem("kreotype_local_results");

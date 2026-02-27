@@ -14,6 +14,7 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MAINTENANCE_MODE, showMaintenanceToast } from "@/lib/maintenance";
 
 type Tab = "account" | "authentication" | "blockedUsers" | "tags";
 
@@ -25,6 +26,14 @@ interface BlockedUser {
 export default function AccountSettingsPage() {
   const { status } = useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    if (MAINTENANCE_MODE) {
+      showMaintenanceToast();
+      router.replace("/");
+    }
+  }, [router]);
+
   const [activeTab, setActiveTab] = useState<Tab>("account");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -115,6 +124,8 @@ export default function AccountSettingsPage() {
     { id: "blockedUsers", label: "blocked users", icon: <Users size={14} /> },
     { id: "tags", label: "tags", icon: <Tag size={14} /> },
   ];
+
+  if (MAINTENANCE_MODE) return null;
 
   if (status === "loading") {
     return (

@@ -18,6 +18,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
 import { CompletedEventInput } from "@/server/validators/result";
+import { MAINTENANCE_MODE } from "@/lib/maintenance";
 
 
 const swarm65Images = [
@@ -137,7 +138,12 @@ export function TestResults({ stats, onRestart, onNext }: TestResultsProps) {
         timezoneOffset: new Date().getTimezoneOffset(),
       };
 
-      if (status === "authenticated") {
+      if (MAINTENANCE_MODE) {
+        saveToLocalStorage(resultData);
+        toast.info("Result saved locally", {
+          description: "Backend services are currently on hold. Core typing features remain available.",
+        });
+      } else if (status === "authenticated") {
         try {
           const res = await fetch("/api/results", {
             method: "POST",

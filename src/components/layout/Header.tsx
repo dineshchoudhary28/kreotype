@@ -12,6 +12,7 @@ import { MobileMenu } from "./MobileMenu";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUserData } from "@/hooks/use-user-data";
 import { StreakCounter } from "@/components/features/StreakCounter";
+import { MAINTENANCE_MODE } from "@/lib/maintenance";
 
 const ANNOUNCEMENT_STORAGE_KEY = "kreotype_announcement_dismissed";
 
@@ -320,7 +321,7 @@ export function Header() {
                   </div>
                 )}
               </div>
-            ) : (
+            ) : !MAINTENANCE_MODE ? (
               <Link
                 href="/login"
                 className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-surface border border-surface flex items-center justify-center cursor-pointer overflow-hidden hover:border-secondary transition-colors"
@@ -331,7 +332,7 @@ export function Header() {
                   <circle cx="12" cy="7" r="4" />
                 </svg>
               </Link>
-            )}
+            ) : null}
             
             {/* Mobile Menu Button — transitions between hamburger and X */}
             <button

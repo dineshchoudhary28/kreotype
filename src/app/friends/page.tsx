@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
+import { MAINTENANCE_MODE, showMaintenanceToast } from "@/lib/maintenance";
 
 interface FriendRequest {
   _id: string;
@@ -38,6 +39,14 @@ function friendsSince(dateStr: string): string {
 export default function FriendsPage() {
   const { status } = useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    if (MAINTENANCE_MODE) {
+      showMaintenanceToast();
+      router.replace("/");
+    }
+  }, [router]);
+
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,6 +144,8 @@ export default function FriendsPage() {
       setActionLoading(null);
     }
   };
+
+  if (MAINTENANCE_MODE) return null;
 
   if (status === "loading" || loading) {
     return (

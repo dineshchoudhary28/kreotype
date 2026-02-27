@@ -1,15 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAdmin } from "@/hooks/use-admin";
 import { LogViewer } from "@/components/features/admin/LogViewer";
 import { ConfigurationEditor } from "@/components/features/admin/ConfigurationEditor";
 import { User, BookText, Settings } from "lucide-react";
+import { MAINTENANCE_MODE, showMaintenanceToast } from "@/lib/maintenance";
 
 type Tab = "users" | "logs" | "configuration";
 
 export default function AdminPage() {
+  const router = useRouter();
   const { isAdmin, loading: adminLoading } = useAdmin();
+
+  useEffect(() => {
+    if (MAINTENANCE_MODE) {
+      showMaintenanceToast();
+      router.replace("/");
+    }
+  }, [router]);
   const [activeTab, setActiveTab] = useState<Tab>("users");
   const [username, setUsername] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,6 +79,8 @@ export default function AdminPage() {
       setLoading(false);
     }
   };
+
+  if (MAINTENANCE_MODE) return null;
 
   if (adminLoading) {
     return <div>Loading...</div>;
