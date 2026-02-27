@@ -83,6 +83,7 @@ export function TypingTestPage() {
   const wordsInnerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
+  const charWidthRef = useRef(0);
   // Timeout ref: delays setting isInputFocused=false so UI button clicks don't flash the blur overlay
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -91,6 +92,8 @@ export function TypingTestPage() {
 
   // 3-line scroll state (Monkeytype-style translateY)
   const [lineOffset, setLineOffset] = useState(0);
+  // Single line mode: horizontal scroll offset
+  const [charScrollOffset, setCharScrollOffset] = useState(0);
   // 0 = not yet measured; real value set by useLayoutEffect after words render
   const [containerHeight, setContainerHeight] = useState(0);
 
@@ -104,6 +107,7 @@ export function TypingTestPage() {
   const caretStyle = useConfigStore((s) => s.caretStyle);
   const smoothCaret = useConfigStore((s) => s.smoothCaret);
   const language = useConfigStore((s) => s.language);
+  const singleLineMode = useConfigStore((s) => s.singleLineMode);
 
   // Typing test store
   const testId = useTypingTestStore((s) => s.testId);
@@ -236,6 +240,7 @@ export function TypingTestPage() {
   useLayoutEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional pre-paint DOM measurement, not a cascading render
     setLineOffset(0);
+    setCharScrollOffset(0);
 
     if (!wordsInnerRef.current) return;
 
@@ -269,7 +274,7 @@ export function TypingTestPage() {
     ) as HTMLElement | null;
     if (!wordEl) return;
 
-    // Current translateY applied to wordsInnerRef
+    // Current translateY applied to wordsInnerRef (for multi-line mode)
     const translateY = lineOffset * (containerHeight / 3);
 
     let left: number;
@@ -301,10 +306,31 @@ export function TypingTestPage() {
       width = 8;
     }
 
+    // Single line mode: calculate scroll offset and caret position together
+    let currentScrollOffset = 0;
+    let finalLeft = left;
+
+    if (singleLineMode && wordsContainerRef.current) {
+      const containerWidth = wordsContainerRef.current.offsetWidth;
+      const containerCenter = containerWidth / 2;
+
+      // Check if we need to scroll (caret has passed center)
+      if (left > containerCenter) {
+        currentScrollOffset = left - containerCenter;
+        finalLeft = containerCenter;
+      }
+      // Else: caret stays at its normal position (left)
+
+      // Update character width ref for scroll calculations
+      if (charWidthRef.current === 0 && width > 0) {
+        charWidthRef.current = width;
+      }
+    }
+
     const el = caretRef.current;
     // Width: line is always 2px; all other styles match the character width
     el.style.width = caretStyle === "line" ? "2px" : `${width}px`;
-    el.style.left = `${left}px`;
+    el.style.left = `${finalLeft}px`;
     // Underline sits at the bottom of the character cell (3px tall)
     if (caretStyle === "underline") {
       el.style.top = `${top + height - 3}px`;
@@ -313,7 +339,12 @@ export function TypingTestPage() {
       el.style.top = `${top}px`;
       el.style.height = `${height}px`;
     }
-  }, [currentWordIndex, currentCharIndex, words, caretStyle, lineOffset, containerHeight]);
+
+    // Apply horizontal scroll for single line mode
+    if (singleLineMode) {
+      setCharScrollOffset(currentScrollOffset);
+    }
+  }, [currentWordIndex, currentCharIndex, words, caretStyle, lineOffset, containerHeight, singleLineMode]);
 
   // Global listener to refocus input when blurred (keyboard + touch)
   // Also handles Tab+Enter restart at document level so it works regardless of input focus
@@ -695,12 +726,20 @@ export function TypingTestPage() {
         ref={wordsContainerRef}
         // text-2xl md:text-3xl is here so that the em unit in the fallback height resolves
         // to the same font-size as the words — not the inherited body 16px.
-        className="mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto overflow-hidden rounded-2xl cursor-text text-2xl md:text-3xl"
+        className={clsx(
+          "mt-4 md:mt-8 relative w-full max-w-[1500px] mx-auto rounded-2xl cursor-text text-2xl md:text-3xl",
+          singleLineMode ? "overflow-hidden" : "overflow-hidden"
+        )}
         style={{
           // Before first DOM measurement: calc(3 × leading-relaxed × 1em + 2 row-gaps).
           // em now resolves to text-2xl (24px) on mobile → 3×39px + 8px = 125px
           //                   text-3xl (30px) on desktop → 3×49px + 16px = 163px
-          height: containerHeight > 0 ? `${containerHeight}px` : "calc(3 * 1.625em + 1rem)",
+          // In single line mode: just 1 line height
+          height: singleLineMode
+            ? "calc(1.625em + 0.5rem)"
+            : containerHeight > 0
+              ? `${containerHeight}px`
+              : "calc(3 * 1.625em + 1rem)",
         }}
       >
         {/* Full-size transparent input overlay — real dimensions so mobile keyboards activate */}
@@ -785,11 +824,15 @@ export function TypingTestPage() {
         <div
           ref={wordsInnerRef}
           className={clsx(
-            "text-2xl md:text-3xl leading-relaxed md:leading-relaxed font-['Inter'] tracking-wide flex flex-wrap gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2",
+            "text-2xl md:text-3xl leading-relaxed md:leading-relaxed font-['Inter'] tracking-wide gap-x-2 md:gap-x-3 gap-y-1 md:gap-y-2",
+            !singleLineMode && "flex flex-wrap",
+            singleLineMode && "flex-nowrap inline-flex whitespace-nowrap",
             !isInputFocused && !isActive && "blur-sm"
           )}
           style={{
-            transform: `translateY(-${lineOffset * (containerHeight / 3)}px)`,
+            transform: singleLineMode
+              ? `translateX(-${charScrollOffset}px)`
+              : `translateY(-${lineOffset * (containerHeight / 3)}px)`,
             transition: "transform 0.15s ease",
           }}
         >

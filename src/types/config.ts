@@ -12,6 +12,7 @@ export const configSchema = z.object({
   language: z.string(),
   sidebarExpanded: z.boolean(),
   pageWidth: z.enum(["100", "125", "150", "200", "max"]),
+  singleLineMode: z.boolean(),
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -28,6 +29,7 @@ export const defaultConfig: Config = {
   language: "english",
   sidebarExpanded: false,
   pageWidth: "150",
+  singleLineMode: false,
 };
 
 export function mergeWithDefaults(partial: Partial<Config>): Config {

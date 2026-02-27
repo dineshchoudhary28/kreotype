@@ -39,6 +39,7 @@ export function TestConfig({ leftSlot }: { leftSlot?: ReactNode }) {
   const value = useConfigStore((s) => s.value);
   const punctuation = useConfigStore((s) => s.punctuation);
   const numbers = useConfigStore((s) => s.numbers);
+  const singleLineMode = useConfigStore((s) => s.singleLineMode);
   const setConfig = useConfigStore((s) => s.setConfig);
   const updateConfig = useConfigStore((s) => s.updateConfig);
 
@@ -74,6 +75,19 @@ export function TestConfig({ leftSlot }: { leftSlot?: ReactNode }) {
             >
               <span className="text-[13px] md:text-[14px]">#</span>
               <span>numbers</span>
+            </button>
+            <button
+              onClick={() => setConfig("singleLineMode", !singleLineMode)}
+              onMouseDown={(e) => e.preventDefault()}
+              data-typing-safe=""
+              className={`flex items-center gap-1.5 md:gap-2 hover:text-text transition-colors cursor-pointer ${singleLineMode ? "text-primary" : ""}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+              <span>single line</span>
             </button>
           </div>
 
